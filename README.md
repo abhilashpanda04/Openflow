@@ -4,25 +4,35 @@
   <img src="assets/logo.svg" alt="Openflow logo" width="140" />
 </p>
 
-Openflow is a macOS menu bar app for fast speech-to-text. It records from your microphone, sends audio to a local ASR backend, and returns transcript text to clipboard or the active app.
+<p align="center">
+  <a href="https://github.com/abhilashpanda04/Openflow/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/abhilashpanda04/Openflow"></a>
+  <img alt="Platform" src="https://img.shields.io/badge/platform-macOS%2013%2B-black">
+  <img alt="Swift" src="https://img.shields.io/badge/swift-5.9%2B-orange">
+</p>
 
-## Highlights
+Openflow is an open-source macOS menu bar application for low-friction speech-to-text. It captures microphone audio, sends it to an ASR backend, and returns transcript output to the clipboard or directly into the active application.
 
-- Global hotkey start/stop recording (`Cmd+Shift+Space` by default).
-- Backend lifecycle controls directly in the menu bar (`Start`, `Stop`, `Retry`, `Refresh`).
-- Warm-up UX with readiness states and progress feedback.
-- Supports managed local backend and external backend URL modes.
-- Packaging flow for `.app` and `.dmg` distribution.
+## Overview
 
-## Project Structure
+Openflow is designed for users who need quick dictation without switching context. The app runs in the menu bar, supports a global hotkey workflow, and provides backend readiness visibility so transcription state is clear before recording begins.
 
-- `Sources/OpenflowMac` - Swift macOS app source.
-- `packaging/` - DMG/build packaging scripts and metadata.
-- `assets/` - repository assets (logo, visuals for docs).
+## Key Capabilities
 
-## Quick Start
+- Global hotkey recording control (`Cmd+Shift+Space` by default).
+- Menu bar backend actions (`Start`, `Stop`, `Retry`, `Refresh`).
+- Readiness and warm-up state tracking with user-visible status.
+- Output routing to clipboard, active app, both, or none.
+- Support for both managed local backend and external backend URL modes.
 
-From `mac-app/`:
+## Installation
+
+### Option 1: Download a release build
+
+Download the latest packaged build from GitHub Releases:
+
+- https://github.com/abhilashpanda04/Openflow/releases/latest
+
+### Option 2: Build from source
 
 ```bash
 swift build
@@ -31,58 +41,44 @@ swift run Openflow
 
 When prompted, grant Microphone access in macOS.
 
-## Backend Startup
+## System Requirements
 
-Openflow can start the backend for you from the menu:
+- macOS 13 or later
+- Swift 5.9 or later (source builds)
+- Local ASR backend reachable at configured backend URL
 
-- Click `Start Backend`.
-- Openflow tracks readiness via `/health`.
-- Once loaded, you will see `Openflow is ready`.
+## Architecture At A Glance
 
-Bundled runtime layout used by packaged app:
+- `Sources/OpenflowMac` - Swift macOS app source
+- `packaging/` - DMG/build scripts and app metadata
+- `assets/` - repository assets (logo and visuals)
 
-```text
-<App Resources>/backend-runtime/
-  bin/python3
-  qwen_server.py
-```
+At runtime, the app communicates with a backend endpoint (`/health`, `/transcribe`) and can either manage a local backend process or monitor readiness for an externally managed backend.
 
-If bundled runtime is unavailable (dev mode), Openflow falls back to local launchers (`uv` then `backend/.venv/bin/python`).
+## Settings
 
-If `Backend URL` points to an external host, Openflow does not manage the process and instead waits for readiness.
+Openflow is configured from the app menu: `Openflow` -> `Settings...`.
 
-## Environment Variables
+Key settings users can control:
 
-Openflow reads these optional environment variables at startup:
+- **Backend URL**: connect to a local backend or an external backend endpoint.
+- **Output Mode**: choose where transcripts go (`Clipboard`, `Active App`, `Both`, or `None`).
+- **Global Hotkey**: set your preferred key combination for start/stop recording.
+- **API Token**: add a backend token when your server requires authenticated requests.
+- **Request Timeout and Retry**: adjust request timeout and retry behavior for slower networks or backends.
+- **Max Upload Size**: set the allowed audio upload limit per recording.
 
-- `OPENFLOW_BACKEND_URL` (default: `http://127.0.0.1:8001`)
-- `OPENFLOW_TIMEOUT_SECONDS` (default: `45`)
-- `OPENFLOW_RETRY_COUNT` (default: `2`)
-- `OPENFLOW_RETRY_BASE_DELAY_MS` (default: `250`)
-- `OPENFLOW_AUTO_COPY` (`true`/`false`, default: `true`)
-- `OPENFLOW_OUTPUT_MODE` (`clipboard`, `active-app`, `both`, `none`)
-- `OPENFLOW_HOTKEY` (default: `Cmd+Shift+Space`)
-- `OPENFLOW_API_TOKEN` (optional, sent as `X-API-Token`)
-- `OPENFLOW_MAX_UPLOAD_BYTES` (default: `26214400`)
+Settings are applied immediately after save.
 
-## Packaging
+## Open-Source Project Docs
 
-From `mac-app/`:
+- Contribution guide: `CONTRIBUTING.md`
+- Security policy: `SECURITY.md`
 
-```bash
-swift build -c release
-./packaging/create_dmg.sh
-```
+## Privacy And Data Handling
 
-Optional signing/notarization inputs:
+Openflow is designed for local-first usage with a user-configurable backend URL. Transcript handling depends on the backend you run or connect to; review your backend deployment and retention settings before production use.
 
-- `CODESIGN_IDENTITY`: Developer ID Application certificate name.
-- `NOTARY_PROFILE`: profile configured for `xcrun notarytool`.
+## License
 
-Example:
-
-```bash
-CODESIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
-NOTARY_PROFILE="openflow-notary" \
-./packaging/create_dmg.sh
-```
+No license file is currently included in this repository.
