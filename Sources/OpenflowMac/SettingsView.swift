@@ -1,3 +1,5 @@
+import AppKit
+import Carbon.HIToolbox
 import SwiftUI
 
 extension Notification.Name {
@@ -10,6 +12,9 @@ struct SettingsView: View {
     @State private var retryCount = UserDefaults.standard.string(forKey: UserSettingKey.retryCount) ?? "2"
     @State private var retryDelayMs = UserDefaults.standard.string(forKey: UserSettingKey.retryBaseDelayMs) ?? "250"
     @State private var hotkey = UserDefaults.standard.string(forKey: UserSettingKey.hotkey) ?? "cmd+shift+space"
+    @State private var hotkeyDisplay = HotKeyConfiguration.parse(UserDefaults.standard.string(forKey: UserSettingKey.hotkey) ?? "cmd+shift+space").displayText
+    @State private var isRecordingHotkey = false
+    @State private var hotkeyCaptureMonitor: Any?
     @State private var apiToken = UserDefaults.standard.string(forKey: UserSettingKey.apiToken) ?? ""
     @State private var maxUploadBytes = UserDefaults.standard.string(forKey: UserSettingKey.maxUploadBytes) ?? "26214400"
     @State private var outputMode = TranscriptOutputMode.parse(UserDefaults.standard.string(forKey: UserSettingKey.outputMode)) ?? .activeApp
@@ -63,9 +68,33 @@ struct SettingsView: View {
                 }
 
                 settingRow("Hotkey") {
-                    TextField("cmd+shift+space", text: $hotkey)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 220)
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 8) {
+                            Text(isRecordingHotkey ? "Press shortcut..." : hotkeyDisplay)
+                                .font(.system(size: 12, weight: .medium, design: .monospaced))
+                                .foregroundStyle(isRecordingHotkey ? .orange : .primary)
+                                .frame(width: 220, alignment: .leading)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 7)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                        .fill(Color(nsColor: .textBackgroundColor))
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                        .stroke(isRecordingHotkey ? Color.orange.opacity(0.7) : Color.secondary.opacity(0.3), lineWidth: 1)
+                                )
+
+                            Button(isRecordingHotkey ? "Cancel" : "Record") {
+                                toggleHotkeyCapture()
+                            }
+                            .buttonStyle(.bordered)
+                        }
+
+                        Text("Press a key with Cmd/Shift/Option/Ctrl. Example: Cmd+Shift+Space")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
 
@@ -109,6 +138,9 @@ struct SettingsView: View {
         }
         .padding(20)
         .frame(width: 600)
+        .onDisappear {
+            stopHotkeyCapture()
+        }
     }
 
     private func settingsCard<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
@@ -136,6 +168,8 @@ struct SettingsView: View {
     }
 
     private func save() {
+        stopHotkeyCapture()
+
         let defaults = UserDefaults.standard
         defaults.set(backendBaseURL.trimmingCharacters(in: .whitespacesAndNewlines), forKey: UserSettingKey.backendBaseURL)
         defaults.set(timeoutSeconds.trimmingCharacters(in: .whitespacesAndNewlines), forKey: UserSettingKey.timeoutSeconds)
@@ -156,10 +190,56 @@ struct SettingsView: View {
         timeoutSeconds = String(Int(defaults.requestTimeoutSeconds))
         retryCount = String(defaults.maxRetryCount)
         retryDelayMs = String(defaults.retryBaseDelayMs)
-        hotkey = defaults.hotKey.displayText.lowercased()
+        hotkey = "cmd+shift+space"
+        hotkeyDisplay = defaults.hotKey.displayText
         apiToken = ""
         maxUploadBytes = String(defaults.maxUploadBytes)
         outputMode = defaults.outputMode
         statusMessage = "Defaults loaded. Click Save to apply."
+    }
+
+    private func toggleHotkeyCapture() {
+        if isRecordingHotkey {
+            stopHotkeyCapture()
+            statusMessage = "Hotkey capture cancelled."
+            return
+        }
+
+        isRecordingHotkey = true
+        statusMessage = "Press your shortcut now."
+        hotkeyCaptureMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown]) { event in
+            handleHotkeyCapture(event)
+        }
+    }
+
+    private func stopHotkeyCapture() {
+        isRecordingHotkey = false
+        if let hotkeyCaptureMonitor {
+            NSEvent.removeMonitor(hotkeyCaptureMonitor)
+            self.hotkeyCaptureMonitor = nil
+        }
+    }
+
+    private func handleHotkeyCapture(_ event: NSEvent) -> NSEvent? {
+        guard isRecordingHotkey else {
+            return event
+        }
+
+        if event.keyCode == UInt16(kVK_Escape) {
+            stopHotkeyCapture()
+            statusMessage = "Hotkey capture cancelled."
+            return nil
+        }
+
+        guard let captured = HotKeyConfiguration.capture(from: event) else {
+            statusMessage = "Use at least one modifier (Cmd/Shift/Option/Ctrl) with a supported key."
+            return nil
+        }
+
+        hotkey = captured.storageValue
+        hotkeyDisplay = captured.configuration.displayText
+        stopHotkeyCapture()
+        statusMessage = "Hotkey set to \(captured.configuration.displayText). Click Save to apply."
+        return nil
     }
 }

@@ -9,12 +9,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case transcribing
     }
 
-    private enum BackendStartupState {
+    private enum BackendStartupState: Equatable {
         case notStarted
         case starting
         case warming
+        case degraded
         case ready
         case failed(String)
+    }
+
+    private enum LiveBackendHealth {
+        case healthy
+        case degraded
+        case unreachable
+    }
+
+    private enum BackendSetupPhase {
+        case idle
+        case agreementAccepted
+        case checkingRuntime
+        case launchingBackend
+        case warmingModel
+        case ready
+        case failed
     }
 
     private var config = AppConfig.load()
@@ -36,10 +53,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var backendWarmupTimer: Timer?
     private var backendStatusIconTimer: Timer?
     private var backendStatusIconFrame = 0
+    private var healthMonitorTimer: Timer?
     private var hasShownLongWarmupNotice = false
+    private var backendSetupPhase: BackendSetupPhase = .idle
+    private var backendSetupProgress: Double = 0
+    private var backendSetupStartedAt: Date?
+    private var backendSetupReadyCloseTimer: Timer?
+    private var backendSetupTimeoutSeconds: TimeInterval = 180
+    private var backendDownloadDetected = false
+    private var lastDownloadProgressAt: Date?
+    private var hasShownDownloadStallWarning = false
+    private var recentBackendOutputLines: [String] = []
     private let appSessionID = UUID().uuidString
     private var outputTargetApplication: NSRunningApplication?
     private let settingsWindowController = SettingsWindowController()
+    private let backendSetupDialogController = BackendSetupDialogController()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -52,7 +80,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         reloadConfiguration(rebuildHotkey: false)
         setupStatusItem()
         requestNotificationAuthorizationIfNeeded()
+        backendSupervisor.onProcessExit = { [weak self] status in
+            self?.handleBackendProcessExit(status: status)
+        }
+        backendSupervisor.onOutputLine = { [weak self] line in
+            self?.handleBackendOutputLine(line)
+        }
+        configureBackendSetupDialogActions()
+        startHealthMonitorIfNeeded()
         registerHotKey()
+        presentLaunchGuideIfNeeded()
         probeBackendReadiness { ready in
             if ready {
                 self.markBackendReady(triggerQueuedRecording: false, notifyUser: false)
@@ -67,6 +104,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         stopBackendWarmupPolling()
         stopBackendStatusIconAnimation()
+        stopHealthMonitor()
+        stopBackendSetupReadyCloseTimer()
         backendSupervisor.stop()
         NotificationCenter.default.removeObserver(self)
     }
@@ -187,6 +226,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         retryBackend.isEnabled = canRetryBackend
         menu.addItem(retryBackend)
 
+        if backendSetupDialogController.isVisible {
+            let showSetupProgress = NSMenuItem(title: "Show Setup Progress", action: #selector(showSetupProgressAction), keyEquivalent: "")
+            showSetupProgress.target = self
+            menu.addItem(showSetupProgress)
+        }
+
         let refreshBackendStatus = NSMenuItem(title: "Refresh Backend Status", action: #selector(refreshBackendStatusAction), keyEquivalent: "")
         refreshBackendStatus.target = self
         refreshBackendStatus.isEnabled = state != .transcribing
@@ -280,9 +325,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             } else if self.backendSupervisor.isRunning {
                 self.transitionBackendState(to: .warming)
                 self.setBackendNotice("Backend is still loading. Please wait a little longer.")
-                self.transcriptPanel.showWarming(
-                    queuedRecording: self.queuedRecordingIntent,
-                    subtitle: "Loading speech model..."
+                self.transcriptPanel.dismissRecordingOverlay()
+                self.updateSetupProgress(
+                    phase: .warmingModel,
+                    progress: max(self.backendSetupProgress, 60),
+                    status: "Loading speech model",
+                    detail: "Live health check: backend is still warming up."
                 )
             } else {
                 self.transitionBackendState(to: .notStarted)
@@ -306,10 +354,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc
+    private func showSetupProgressAction() {
+        backendSetupDialogController.focus()
+    }
+
+    @objc
     private func stopBackendAction() {
         queuedRecordingIntent = false
         stopBackendWarmupPolling()
+        stopBackendSetupReadyCloseTimer()
         backendSupervisor.stop()
+        backendSetupDialogController.hide()
+        resetSetupProgress()
         isBackendReady = false
         transitionBackendState(to: .notStarted)
         if isManagedLocalBackendURL {
@@ -317,6 +373,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             setBackendNotice("External backend mode: no managed process to stop.")
         }
+        transcriptPanel.dismissRecordingOverlay()
+    }
+
+    private func handleBackendProcessExit(status: Int32) {
+        if case .notStarted = backendStartupState {
+            return
+        }
+        if case .ready = backendStartupState {
+            transitionBackendState(to: .failed("Backend stopped unexpectedly (exit code: \(status))."))
+            setBackendNotice("Backend stopped unexpectedly. Click Retry Startup.")
+            showSetupFailure(reason: "Backend stopped unexpectedly (exit code \(status)).")
+            return
+        }
+
+        transitionBackendState(to: .failed("Backend process exited during warm-up (exit code: \(status))."))
+        setBackendNotice("Backend exited during warm-up. Click Retry Startup.")
+        queuedRecordingIntent = false
+        stopBackendWarmupPolling()
+        showSetupFailure(reason: "Backend exited during warm-up (exit code \(status)).")
         transcriptPanel.dismissRecordingOverlay()
     }
 
@@ -404,17 +479,76 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func probeBackendReadiness(completion: @escaping (Bool) -> Void) {
+        probeBackendHealth { health in
+            completion(health == .healthy)
+        }
+    }
+
+    private func probeBackendHealth(completion: @escaping (LiveBackendHealth) -> Void) {
         let requestID = "\(appSessionID)-health-\(UUID().uuidString.prefix(8))"
         asrClient.checkHealth(requestID: requestID) { result in
             DispatchQueue.main.async {
                 switch result {
                 case .success(let health):
                     self.log("Health check request_id=\(requestID) status=\(health.status) model_loaded=\(health.modelLoaded)")
-                    completion(health.modelLoaded)
+                    completion(health.modelLoaded ? .healthy : .degraded)
                 case .failure(let error):
                     self.log("Health check failed request_id=\(requestID) error=\(error.localizedDescription)")
-                    completion(false)
+                    completion(.unreachable)
                 }
+            }
+        }
+    }
+
+    private func startHealthMonitorIfNeeded() {
+        guard healthMonitorTimer == nil else {
+            return
+        }
+
+        let timer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
+            self?.refreshLiveBackendHealth()
+        }
+        healthMonitorTimer = timer
+        RunLoop.main.add(timer, forMode: .common)
+    }
+
+    private func stopHealthMonitor() {
+        healthMonitorTimer?.invalidate()
+        healthMonitorTimer = nil
+    }
+
+    private func refreshLiveBackendHealth() {
+        if case .starting = backendStartupState {
+            return
+        }
+        if case .warming = backendStartupState {
+            return
+        }
+
+        probeBackendHealth { health in
+            switch health {
+            case .healthy:
+                if self.backendStartupState != .ready {
+                    self.transitionBackendState(to: .ready)
+                }
+                if self.backendNoticeText == "Backend reachable but model not ready yet." ||
+                    self.backendNoticeText == "Backend is unreachable. Check URL or start backend." {
+                    self.setBackendNotice(nil)
+                }
+
+            case .degraded:
+                if self.backendStartupState != .degraded {
+                    self.transitionBackendState(to: .degraded)
+                }
+                self.setBackendNotice("Backend reachable but model not ready yet.")
+
+            case .unreachable:
+                if self.backendSupervisor.isRunning {
+                    self.transitionBackendState(to: .warming)
+                } else {
+                    self.transitionBackendState(to: .notStarted)
+                }
+                self.setBackendNotice("Backend is unreachable. Check URL or start backend.")
             }
         }
     }
@@ -429,19 +563,57 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             queuedRecordingIntent = true
         }
 
+        if backendSetupPhase == .failed || backendSetupPhase == .idle || backendSetupPhase == .ready {
+            resetSetupProgress()
+        }
+
+        if isManagedLocalBackendURL, !hasAcceptedBackendSetupAgreement() {
+            let accepted = presentBackendSetupAgreementDialog()
+            if !accepted {
+                setBackendNotice("Backend setup cancelled. Accept agreement to continue.")
+                queuedRecordingIntent = false
+                return
+            }
+            updateSetupProgress(
+                phase: .agreementAccepted,
+                progress: 10,
+                status: "Agreement accepted",
+                detail: "Preparing backend setup..."
+            )
+        }
+
         if isBackendReady {
             markBackendReady(triggerQueuedRecording: true, notifyUser: false)
             return
         }
 
         if case .starting = backendStartupState {
-            transcriptPanel.showWarming(queuedRecording: queuedRecordingIntent, subtitle: warmingSubtitle())
+            transcriptPanel.dismissRecordingOverlay()
+            updateSetupProgress(
+                phase: .warmingModel,
+                progress: max(60, backendSetupProgress),
+                status: "Loading speech model",
+                detail: warmingDetailMessage(elapsedSeconds: Date().timeIntervalSince(backendWarmupStartedAt ?? Date()))
+            )
             return
         }
         if case .warming = backendStartupState {
-            transcriptPanel.showWarming(queuedRecording: queuedRecordingIntent, subtitle: warmingSubtitle())
+            transcriptPanel.dismissRecordingOverlay()
+            updateSetupProgress(
+                phase: .warmingModel,
+                progress: max(60, backendSetupProgress),
+                status: "Loading speech model",
+                detail: warmingDetailMessage(elapsedSeconds: Date().timeIntervalSince(backendWarmupStartedAt ?? Date()))
+            )
             return
         }
+
+        updateSetupProgress(
+            phase: .checkingRuntime,
+            progress: max(25, backendSetupProgress),
+            status: "Checking backend runtime",
+            detail: "Locating bundled runtime or local backend environment..."
+        )
 
         probeBackendReadiness { ready in
             if ready {
@@ -453,28 +625,57 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 do {
                     let launchInfo = try self.backendSupervisor.start()
                     self.log("Started backend command=\(launchInfo.commandDescription) cwd=\(launchInfo.workingDirectory.path)")
+                    self.updateSetupProgress(
+                        phase: .launchingBackend,
+                        progress: max(40, self.backendSetupProgress),
+                        status: "Backend process launched",
+                        detail: launchInfo.commandDescription
+                    )
                 } catch BackendSupervisorError.alreadyRunning {
                     self.log("Backend process already running")
+                    self.updateSetupProgress(
+                        phase: .launchingBackend,
+                        progress: max(40, self.backendSetupProgress),
+                        status: "Backend already running",
+                        detail: "Connecting to existing local process..."
+                    )
                 } catch {
                     self.transitionBackendState(to: .failed("Could not start backend. \(error.localizedDescription)"))
                     self.transcriptPanel.dismissRecordingOverlay()
                     self.setBackendNotice("Could not start backend. \(error.localizedDescription)")
                     self.queuedRecordingIntent = false
+                    self.showSetupFailure(reason: "Could not start backend. \(error.localizedDescription)")
                     return
                 }
             } else {
                 self.setBackendNotice("External backend URL mode. Start your server manually, then Openflow will auto-detect readiness.")
+                self.updateSetupProgress(
+                    phase: .launchingBackend,
+                    progress: max(40, self.backendSetupProgress),
+                    status: "Waiting for external backend",
+                    detail: "Start your backend at \(self.config.backendBaseURL.absoluteString), then Openflow will continue."
+                )
             }
 
             self.transitionBackendState(to: .starting)
             self.beginBackendWarmupPolling()
-            self.transcriptPanel.showWarming(queuedRecording: self.queuedRecordingIntent, subtitle: self.warmingSubtitle())
+            self.transcriptPanel.dismissRecordingOverlay()
+            self.updateSetupProgress(
+                phase: .warmingModel,
+                progress: max(60, self.backendSetupProgress),
+                status: "Loading speech model",
+                detail: self.warmingDetailMessage(elapsedSeconds: 0)
+            )
         }
     }
 
     private func beginBackendWarmupPolling() {
         stopBackendWarmupPolling()
         backendWarmupStartedAt = Date()
+        backendSetupTimeoutSeconds = 180
+        backendDownloadDetected = false
+        lastDownloadProgressAt = nil
+        hasShownDownloadStallWarning = false
         hasShownLongWarmupNotice = false
 
         let timer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { [weak self] _ in
@@ -489,23 +690,53 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
 
                 self.transitionBackendState(to: .warming)
-                self.transcriptPanel.showWarming(queuedRecording: self.queuedRecordingIntent, subtitle: self.warmingSubtitle())
-
                 let elapsed = Date().timeIntervalSince(self.backendWarmupStartedAt ?? Date())
+                let minimumProgress = self.warmingProgressFloor(elapsedSeconds: elapsed, timeoutSeconds: self.backendSetupTimeoutSeconds)
+                self.updateSetupProgress(
+                    phase: .warmingModel,
+                    progress: max(minimumProgress, self.backendSetupProgress),
+                    status: "Loading speech model",
+                    detail: self.warmingDetailMessage(elapsedSeconds: elapsed)
+                )
+
+                if self.backendDownloadDetected {
+                    let lastProgress = self.lastDownloadProgressAt ?? (self.backendWarmupStartedAt ?? Date())
+                    let stalledFor = Date().timeIntervalSince(lastProgress)
+                    if stalledFor >= 480 {
+                        if !self.hasShownDownloadStallWarning {
+                            self.hasShownDownloadStallWarning = true
+                            self.setBackendNotice("Download appears stalled. Check internet/VPN, or keep waiting.")
+                        }
+                        self.updateSetupProgress(
+                            phase: .checkingRuntime,
+                            progress: max(55, self.backendSetupProgress),
+                            status: "Download appears stalled",
+                            detail: "No model download progress for \(Int(stalledFor))s. You can keep waiting, retry, or abort setup."
+                        )
+                    }
+                    return
+                }
+
                 if elapsed >= 45, !self.hasShownLongWarmupNotice {
                     self.hasShownLongWarmupNotice = true
                     self.setBackendNotice("Still loading... first run can take longer.")
                 }
-                if elapsed >= 180 {
+                if elapsed >= self.backendSetupTimeoutSeconds {
                     self.stopBackendWarmupPolling()
-                    self.transitionBackendState(to: .failed("Backend startup timed out after 3 minutes. Retry startup or check backend logs."))
+                    let timeoutMinutes = Int(self.backendSetupTimeoutSeconds / 60)
+                    self.transitionBackendState(to: .failed("Backend startup timed out after \(timeoutMinutes) minutes. Retry startup or check backend logs."))
                     self.transcriptPanel.dismissRecordingOverlay()
                     if self.isManagedLocalBackendURL {
-                        self.setBackendNotice("Backend startup timed out. Retry startup or check logs.")
+                        self.setBackendNotice("Backend startup timed out. Retry setup and verify network access.")
                     } else {
                         self.setBackendNotice("External backend not ready yet. Verify URL/server, then retry.")
                     }
                     self.queuedRecordingIntent = false
+                    if self.backendDownloadDetected {
+                        self.showSetupFailure(reason: "Backend setup timed out after \(timeoutMinutes) minutes while downloading model files. Check internet/VPN access and retry.")
+                    } else {
+                        self.showSetupFailure(reason: "Backend startup timed out after \(timeoutMinutes) minutes.")
+                    }
                 }
             }
         }
@@ -521,13 +752,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func markBackendReady(triggerQueuedRecording: Bool, notifyUser: Bool) {
         stopBackendWarmupPolling()
+        stopBackendSetupReadyCloseTimer()
         transitionBackendState(to: .ready)
         isBackendReady = true
         setBackendNotice(nil)
+        updateSetupProgress(
+            phase: .ready,
+            progress: 100,
+            status: "Speech engine is ready",
+            detail: "Backend setup finished successfully."
+        )
+        backendSetupDialogController.showReady(
+            detail: queuedRecordingIntent ? "Ready. Recording will start now." : "Ready. You can start recording.",
+            startRecordingEnabled: true
+        )
+        scheduleBackendSetupReadyAutoClose()
         transcriptPanel.dismissRecordingOverlay()
 
         if notifyUser {
-            deliverReadyNotificationIfAuthorized()
+            notifyBackendReady()
         }
 
         if triggerQueuedRecording, queuedRecordingIntent {
@@ -638,12 +881,38 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         rebuildMenu()
     }
 
-    private func warmingSubtitle() -> String {
-        let elapsedSeconds = Int(Date().timeIntervalSince(backendWarmupStartedAt ?? Date()))
-        if queuedRecordingIntent {
-            return "Warming up... ~\(elapsedSeconds)s elapsed. Recording starts automatically when ready."
+    private func warmingProgressFloor(elapsedSeconds: TimeInterval, timeoutSeconds: TimeInterval) -> Double {
+        let timeout = max(60, timeoutSeconds)
+        let cappedElapsed = min(timeout, max(0, elapsedSeconds))
+        return 60 + ((cappedElapsed / timeout) * 30)
+    }
+
+    private func warmingDetailMessage(elapsedSeconds: TimeInterval) -> String {
+        let elapsed = Int(max(0, elapsedSeconds))
+        var detail: String
+
+        if backendDownloadDetected {
+            detail = "Downloading speech model files (\(elapsed)s elapsed). No timeout is applied while download progresses."
+        } else {
+            detail = "Model warm-up is still running on this Mac (\(elapsed)s elapsed)."
         }
-        return "Warming up... ~\(elapsedSeconds)s elapsed. We'll notify you when ready."
+
+        if elapsed >= 30 {
+            detail += " First run can take a few minutes."
+        }
+        if elapsed >= 90 {
+            detail += " This is normal on slower CPUs or with low memory."
+        }
+
+        if let lastLine = recentBackendOutputLines.last, !lastLine.isEmpty {
+            detail += " Latest backend log: \(lastLine)"
+        }
+
+        if queuedRecordingIntent {
+            detail += " Recording will start automatically when setup finishes."
+        }
+
+        return detail
     }
 
     private var canRetryBackend: Bool {
@@ -661,6 +930,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return "Backend: starting service..."
         case .warming:
             return "Backend: loading speech model..."
+        case .degraded:
+            return "Backend: reachable, model not ready"
         case .ready:
             return "Backend: healthy"
         case .failed:
@@ -668,7 +939,313 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    private func configureBackendSetupDialogActions() {
+        backendSetupDialogController.onRetry = { [weak self] in
+            self?.startBackendFlow(userRequestedRecording: false)
+        }
+        backendSetupDialogController.onOpenSettings = { [weak self] in
+            self?.settingsWindowController.show()
+        }
+        backendSetupDialogController.onViewLogs = { [weak self] in
+            self?.openBackendLogs()
+        }
+        backendSetupDialogController.onStartRecording = { [weak self] in
+            guard let self else {
+                return
+            }
+            if self.state == .idle, self.isBackendReady {
+                self.startRecording()
+            }
+        }
+        backendSetupDialogController.onAbort = { [weak self] in
+            self?.abortBackendSetup()
+        }
+    }
+
+    private func abortBackendSetup() {
+        if backendSetupPhase == .idle || backendSetupPhase == .failed || backendSetupPhase == .ready {
+            return
+        }
+
+        queuedRecordingIntent = false
+        stopBackendWarmupPolling()
+        stopBackendSetupReadyCloseTimer()
+        transitionBackendState(to: .notStarted)
+        backendSupervisor.stop()
+        isBackendReady = false
+        transcriptPanel.dismissRecordingOverlay()
+        setBackendNotice("Backend setup aborted by user.")
+        showSetupFailure(reason: "Setup aborted by user.")
+    }
+
+    private func updateSetupProgress(phase: BackendSetupPhase, progress: Double, status: String, detail: String) {
+        if backendSetupStartedAt == nil {
+            backendSetupStartedAt = Date()
+        }
+
+        backendSetupPhase = phase
+        backendSetupProgress = max(backendSetupProgress, min(100, max(0, progress)))
+
+        let elapsedText = "Elapsed: \(setupElapsedText())"
+        let allowClose = phase == .ready || phase == .failed
+
+        if backendSetupDialogController.isVisible {
+            backendSetupDialogController.updateProgress(
+                status: status,
+                detail: detail,
+                percent: backendSetupProgress,
+                elapsed: elapsedText,
+                allowClose: allowClose
+            )
+        } else {
+            backendSetupDialogController.showProgress(
+                status: status,
+                detail: detail,
+                percent: backendSetupProgress,
+                elapsed: elapsedText,
+                allowClose: allowClose
+            )
+        }
+
+        rebuildMenu()
+    }
+
+    private func showSetupFailure(reason: String) {
+        stopBackendSetupReadyCloseTimer()
+        backendSetupPhase = .failed
+        backendSetupProgress = max(backendSetupProgress, 1)
+        let details = [reason, latestBackendOutputDetail()]
+            .filter { !$0.isEmpty }
+            .joined(separator: "\n")
+        backendSetupDialogController.showFailure(
+            status: "Backend setup failed",
+            detail: details,
+            percent: backendSetupProgress
+        )
+        rebuildMenu()
+    }
+
+    private func resetSetupProgress() {
+        stopBackendSetupReadyCloseTimer()
+        backendSetupPhase = .idle
+        backendSetupProgress = 0
+        backendSetupStartedAt = nil
+        backendSetupTimeoutSeconds = 180
+        backendDownloadDetected = false
+        lastDownloadProgressAt = nil
+        hasShownDownloadStallWarning = false
+        recentBackendOutputLines = []
+        rebuildMenu()
+    }
+
+    private func scheduleBackendSetupReadyAutoClose() {
+        stopBackendSetupReadyCloseTimer()
+        let timer = Timer.scheduledTimer(withTimeInterval: 2.2, repeats: false) { [weak self] _ in
+            guard let self else {
+                return
+            }
+            self.backendSetupDialogController.hide()
+            if self.backendSetupPhase == .ready {
+                self.resetSetupProgress()
+            }
+        }
+        backendSetupReadyCloseTimer = timer
+        RunLoop.main.add(timer, forMode: .common)
+    }
+
+    private func stopBackendSetupReadyCloseTimer() {
+        backendSetupReadyCloseTimer?.invalidate()
+        backendSetupReadyCloseTimer = nil
+    }
+
+    private func setupElapsedText() -> String {
+        guard let started = backendSetupStartedAt else {
+            return "0s"
+        }
+        let elapsed = Int(Date().timeIntervalSince(started))
+        return "\(elapsed)s"
+    }
+
+    private func handleBackendOutputLine(_ line: String) {
+        let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmed.isEmpty {
+            recentBackendOutputLines.append(trimmed)
+            if recentBackendOutputLines.count > 12 {
+                recentBackendOutputLines.removeFirst(recentBackendOutputLines.count - 12)
+            }
+        }
+
+        if trimmed.localizedCaseInsensitiveContains("Fetching"), trimmed.localizedCaseInsensitiveContains("files") {
+            backendDownloadDetected = true
+            lastDownloadProgressAt = Date()
+            hasShownDownloadStallWarning = false
+            var downloadDetail = "Openflow is downloading speech model assets. This can take several minutes on first run."
+            if let fraction = extractFraction(from: trimmed) {
+                let fractionPercent = Int((fraction * 100).rounded())
+                let mapped = 45 + (fraction * 13)
+                backendSetupProgress = max(backendSetupProgress, mapped)
+                downloadDetail = "Downloading model files (\(fractionPercent)%). This can take several minutes on first run."
+                lastDownloadProgressAt = Date()
+            }
+            updateSetupProgress(
+                phase: .checkingRuntime,
+                progress: max(45, backendSetupProgress),
+                status: "Downloading model files",
+                detail: downloadDetail
+            )
+        }
+
+        guard backendSetupPhase == .warmingModel || backendSetupPhase == .launchingBackend || backendSetupPhase == .checkingRuntime else {
+            return
+        }
+
+        if line.localizedCaseInsensitiveContains("Model loaded successfully") {
+            backendDownloadDetected = false
+            updateSetupProgress(
+                phase: .warmingModel,
+                progress: max(95, backendSetupProgress),
+                status: "Finalizing speech engine",
+                detail: "Model loaded. Waiting for backend health check..."
+            )
+            return
+        }
+
+        if line.localizedCaseInsensitiveContains("Loading Qwen") {
+            backendDownloadDetected = false
+            updateSetupProgress(
+                phase: .warmingModel,
+                progress: max(62, backendSetupProgress),
+                status: "Loading speech model",
+                detail: "Initializing model runtime..."
+            )
+        }
+
+        if line.localizedCaseInsensitiveContains("Loading checkpoint shards"),
+           let percent = extractPercentage(from: line) {
+            backendDownloadDetected = false
+            let mapped = 60 + (Double(percent) * 0.35)
+            updateSetupProgress(
+                phase: .warmingModel,
+                progress: max(mapped, backendSetupProgress),
+                status: "Loading model checkpoints",
+                detail: "Model warm-up in progress (\(percent)%)."
+            )
+        }
+    }
+
+    private func latestBackendOutputDetail() -> String {
+        guard let last = recentBackendOutputLines.last else {
+            return ""
+        }
+        return "Last backend log: \(last)"
+    }
+
+    private func extractPercentage(from text: String) -> Int? {
+        guard let regex = try? NSRegularExpression(pattern: "([0-9]{1,3})%") else {
+            return nil
+        }
+        let range = NSRange(text.startIndex..<text.endIndex, in: text)
+        guard let match = regex.firstMatch(in: text, range: range), match.numberOfRanges > 1,
+              let valueRange = Range(match.range(at: 1), in: text),
+              let value = Int(text[valueRange]) else {
+            return nil
+        }
+        return min(100, max(0, value))
+    }
+
+    private func extractFraction(from text: String) -> Double? {
+        guard let regex = try? NSRegularExpression(pattern: "([0-9]+)\\s*/\\s*([0-9]+)") else {
+            return nil
+        }
+        let range = NSRange(text.startIndex..<text.endIndex, in: text)
+        guard let match = regex.firstMatch(in: text, range: range), match.numberOfRanges > 2,
+              let completedRange = Range(match.range(at: 1), in: text),
+              let totalRange = Range(match.range(at: 2), in: text),
+              let completed = Double(text[completedRange]),
+              let total = Double(text[totalRange]),
+              total > 0 else {
+            return nil
+        }
+        return min(1, max(0, completed / total))
+    }
+
+    private func openBackendLogs() {
+        let consoleURL = URL(fileURLWithPath: "/System/Applications/Utilities/Console.app")
+        if FileManager.default.fileExists(atPath: consoleURL.path) {
+            NSWorkspace.shared.openApplication(at: consoleURL, configuration: NSWorkspace.OpenConfiguration()) { _, error in
+                if let error {
+                    self.showError("Could not open Console: \(error.localizedDescription)")
+                }
+            }
+            return
+        }
+
+        let fallbackLog = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+            .appendingPathComponent("../openflow.log")
+            .standardizedFileURL
+        if FileManager.default.fileExists(atPath: fallbackLog.path) {
+            NSWorkspace.shared.activateFileViewerSelecting([fallbackLog])
+        } else {
+            showError("No log viewer available. Open macOS Console and search for Openflow logs.")
+        }
+    }
+
+    private func hasAcceptedBackendSetupAgreement() -> Bool {
+        UserDefaults.standard.bool(forKey: UserSettingKey.backendSetupAgreementAccepted)
+    }
+
+    private func presentLaunchGuideIfNeeded() {
+        let defaults = UserDefaults.standard
+        if defaults.bool(forKey: UserSettingKey.launchGuideShown) {
+            return
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            let alert = NSAlert()
+            alert.messageText = "Welcome to Openflow"
+            alert.informativeText = "Openflow runs in the menu bar. Click the waveform icon near the clock to open controls. You can start backend setup now, or open Settings first."
+            alert.alertStyle = .informational
+            alert.addButton(withTitle: "Start Backend Setup")
+            alert.addButton(withTitle: "Open Settings")
+            alert.addButton(withTitle: "Not Now")
+
+            NSApp.activate(ignoringOtherApps: true)
+            let response = alert.runModal()
+            defaults.set(true, forKey: UserSettingKey.launchGuideShown)
+
+            if response == .alertFirstButtonReturn {
+                self.startBackendFlow(userRequestedRecording: false)
+            } else if response == .alertSecondButtonReturn {
+                self.settingsWindowController.show()
+            }
+        }
+    }
+
+    private func presentBackendSetupAgreementDialog() -> Bool {
+        let alert = NSAlert()
+        alert.messageText = "Backend Setup Agreement"
+        alert.informativeText = "Openflow will install and run a local speech engine runtime on this Mac. Initial setup and model warm-up may take several minutes, and may use significant disk/memory. Audio is processed locally by this backend service. Do you agree to continue?"
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "Agree and Continue")
+        alert.addButton(withTitle: "Cancel")
+        alert.showsSuppressionButton = true
+        alert.suppressionButton?.title = "Don't ask again on this Mac"
+
+        NSApp.activate(ignoringOtherApps: true)
+        let response = alert.runModal()
+        let accepted = response == .alertFirstButtonReturn
+        if accepted {
+            UserDefaults.standard.set(true, forKey: UserSettingKey.backendSetupAgreementAccepted)
+        }
+        return accepted
+    }
+
     private func requestNotificationAuthorizationIfNeeded() {
+        guard canUseUserNotifications else {
+            log("Skipping notification authorization in non-bundled run")
+            return
+        }
+
         let center = UNUserNotificationCenter.current()
         center.requestAuthorization(options: [.alert, .sound]) { granted, error in
             if let error {
@@ -679,7 +1256,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func deliverReadyNotificationIfAuthorized() {
+    private func notifyBackendReady() {
+        if !canUseUserNotifications {
+            presentReadyFallbackNotification()
+            return
+        }
+
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            switch settings.authorizationStatus {
+            case .authorized, .provisional, .ephemeral:
+                self.deliverReadyLocalNotification()
+            default:
+                DispatchQueue.main.async {
+                    self.presentReadyFallbackNotification()
+                }
+            }
+        }
+    }
+
+    private func deliverReadyLocalNotification() {
+        guard canUseUserNotifications else {
+            return
+        }
+
         let content = UNMutableNotificationContent()
         content.title = "Openflow is ready"
         content.body = "Speech engine loaded. You can record now."
@@ -694,7 +1293,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         UNUserNotificationCenter.current().add(request) { error in
             if let error {
                 self.log("Failed to post ready notification: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    self.presentReadyFallbackNotification()
+                }
             }
+        }
+    }
+
+    private func presentReadyFallbackNotification() {
+        setBackendNotice("Backend ready. You can start recording now.")
+        _ = NSApp.requestUserAttention(.informationalRequest)
+
+        if !NSApp.isActive {
+            showInfo("Openflow is ready. Speech engine loaded.")
         }
     }
 
@@ -723,8 +1334,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    private func showInfo(_ message: String) {
+        DispatchQueue.main.async {
+            NSApp.activate(ignoringOtherApps: true)
+            let alert = NSAlert()
+            alert.messageText = "Openflow"
+            alert.informativeText = message
+            alert.alertStyle = .informational
+            alert.runModal()
+        }
+    }
+
     private func log(_ message: String) {
         NSLog("[Openflow] \(message)")
+    }
+
+    private var canUseUserNotifications: Bool {
+        Bundle.main.bundleURL.pathExtension.lowercased() == "app"
     }
 
     private func outputModeLabel() -> String {

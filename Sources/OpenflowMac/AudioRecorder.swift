@@ -29,7 +29,7 @@ final class AudioRecorder: NSObject {
 
                 do {
                     let url = FileManager.default.temporaryDirectory
-                        .appendingPathComponent("quickasr-\(UUID().uuidString).wav")
+                        .appendingPathComponent("openflow-\(UUID().uuidString).wav")
 
                     let settings: [String: Any] = [
                         AVFormatIDKey: kAudioFormatLinearPCM,

@@ -49,15 +49,17 @@ enum TranscriptOutputMode: String, CaseIterable {
 }
 
 enum UserSettingKey {
-    static let backendBaseURL = "quickasr.backend_base_url"
-    static let timeoutSeconds = "quickasr.timeout_seconds"
-    static let retryCount = "quickasr.retry_count"
-    static let retryBaseDelayMs = "quickasr.retry_base_delay_ms"
-    static let outputMode = "quickasr.output_mode"
-    static let autoCopy = "quickasr.auto_copy"
-    static let hotkey = "quickasr.hotkey"
-    static let apiToken = "quickasr.api_token"
-    static let maxUploadBytes = "quickasr.max_upload_bytes"
+    static let backendBaseURL = "openflow.backend_base_url"
+    static let timeoutSeconds = "openflow.timeout_seconds"
+    static let retryCount = "openflow.retry_count"
+    static let retryBaseDelayMs = "openflow.retry_base_delay_ms"
+    static let outputMode = "openflow.output_mode"
+    static let autoCopy = "openflow.auto_copy"
+    static let hotkey = "openflow.hotkey"
+    static let apiToken = "openflow.api_token"
+    static let maxUploadBytes = "openflow.max_upload_bytes"
+    static let backendSetupAgreementAccepted = "openflow.backend_setup_agreement_accepted"
+    static let launchGuideShown = "openflow.launch_guide_shown"
 }
 
 struct AppConfig {
@@ -87,35 +89,35 @@ struct AppConfig {
         let environment = ProcessInfo.processInfo.environment
         let defaults = UserDefaults.standard
 
-        let backendRaw = environment["QUICKASR_BACKEND_URL"]
+        let backendRaw = envValue(environment, "BACKEND_URL")
             ?? defaults.string(forKey: UserSettingKey.backendBaseURL)
         let backendURL = URL(string: backendRaw ?? "") ?? AppConfig.default.backendBaseURL
 
-        let timeoutRaw = environment["QUICKASR_TIMEOUT_SECONDS"]
+        let timeoutRaw = envValue(environment, "TIMEOUT_SECONDS")
             ?? defaults.string(forKey: UserSettingKey.timeoutSeconds)
         let timeout = Double(timeoutRaw ?? "")
             .flatMap { $0 > 0 ? $0 : nil } ?? AppConfig.default.requestTimeoutSeconds
 
-        let retryCountRaw = environment["QUICKASR_RETRY_COUNT"]
+        let retryCountRaw = envValue(environment, "RETRY_COUNT")
             ?? defaults.string(forKey: UserSettingKey.retryCount)
         let retryCount = Int(retryCountRaw ?? "")
             .flatMap { $0 >= 0 ? $0 : nil } ?? AppConfig.default.maxRetryCount
 
-        let retryDelayRaw = environment["QUICKASR_RETRY_BASE_DELAY_MS"]
+        let retryDelayRaw = envValue(environment, "RETRY_BASE_DELAY_MS")
             ?? defaults.string(forKey: UserSettingKey.retryBaseDelayMs)
         let retryDelay = Int(retryDelayRaw ?? "")
             .flatMap { $0 >= 25 ? $0 : nil } ?? AppConfig.default.retryBaseDelayMs
 
-        let legacyAutoCopyRaw = environment["QUICKASR_AUTO_COPY"]
+        let legacyAutoCopyRaw = envValue(environment, "AUTO_COPY")
             ?? defaults.string(forKey: UserSettingKey.autoCopy)
         let autoCopy = parseBool(legacyAutoCopyRaw, fallback: AppConfig.default.autoCopyTranscript)
 
         let outputMode: TranscriptOutputMode
-        if let explicitOutputMode = TranscriptOutputMode.parse(environment["QUICKASR_OUTPUT_MODE"]) {
+        if let explicitOutputMode = TranscriptOutputMode.parse(envValue(environment, "OUTPUT_MODE")) {
             outputMode = explicitOutputMode
         } else if let persistedMode = TranscriptOutputMode.parse(defaults.string(forKey: UserSettingKey.outputMode)) {
             outputMode = persistedMode
-        } else if environment["QUICKASR_AUTO_COPY"] != nil {
+        } else if envValue(environment, "AUTO_COPY") != nil {
             outputMode = autoCopy ? .clipboard : .none
         } else if defaults.string(forKey: UserSettingKey.autoCopy) != nil {
             outputMode = autoCopy ? .clipboard : .none
@@ -123,16 +125,16 @@ struct AppConfig {
             outputMode = AppConfig.default.outputMode
         }
 
-        let hotkeyRaw = environment["QUICKASR_HOTKEY"]
+        let hotkeyRaw = envValue(environment, "HOTKEY")
             ?? defaults.string(forKey: UserSettingKey.hotkey)
         let hotKey = HotKeyConfiguration.parse(hotkeyRaw)
 
-        let tokenRaw = environment["QUICKASR_API_TOKEN"]
+        let tokenRaw = envValue(environment, "API_TOKEN")
             ?? defaults.string(forKey: UserSettingKey.apiToken)
         let tokenValue = tokenRaw?.trimmingCharacters(in: .whitespacesAndNewlines)
         let token = tokenValue?.isEmpty == false ? tokenValue : nil
 
-        let maxUploadRaw = environment["QUICKASR_MAX_UPLOAD_BYTES"]
+        let maxUploadRaw = envValue(environment, "MAX_UPLOAD_BYTES")
             ?? defaults.string(forKey: UserSettingKey.maxUploadBytes)
         let maxUploadBytes = Int(maxUploadRaw ?? "")
             .flatMap { $0 > 0 ? $0 : nil } ?? AppConfig.default.maxUploadBytes
@@ -163,5 +165,9 @@ struct AppConfig {
         default:
             return fallback
         }
+    }
+
+    private static func envValue(_ environment: [String: String], _ keySuffix: String) -> String? {
+        environment["OPENFLOW_\(keySuffix)"]
     }
 }

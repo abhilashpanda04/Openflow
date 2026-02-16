@@ -7,12 +7,12 @@ let package = Package(
         .macOS(.v13),
     ],
     products: [
-        .executable(name: "Openflow", targets: ["QuickASRMac"]),
+        .executable(name: "Openflow", targets: ["OpenflowMac"]),
     ],
     targets: [
         .executableTarget(
-            name: "QuickASRMac",
-            path: "Sources/QuickASRMac"
+            name: "OpenflowMac",
+            path: "Sources/OpenflowMac"
         ),
     ]
 )
