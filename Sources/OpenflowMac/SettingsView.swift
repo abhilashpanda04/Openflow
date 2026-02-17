@@ -18,7 +18,9 @@ struct SettingsView: View {
     @State private var apiToken = UserDefaults.standard.string(forKey: UserSettingKey.apiToken) ?? ""
     @State private var maxUploadBytes = UserDefaults.standard.string(forKey: UserSettingKey.maxUploadBytes) ?? "26214400"
     @State private var outputMode = TranscriptOutputMode.parse(UserDefaults.standard.string(forKey: UserSettingKey.outputMode)) ?? .activeApp
+    @State private var modelName = ModelName(rawValue: UserDefaults.standard.string(forKey: UserSettingKey.modelName) ?? "") ?? .fast06B
     @State private var statusMessage = ""
+    @State private var showModelRestartNotice = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -28,6 +30,32 @@ struct SettingsView: View {
                 Text("These settings are applied instantly after saving.")
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
+            }
+
+            settingsCard(title: "Model") {
+                settingRow("Speech Model") {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Picker("Model", selection: $modelName) {
+                            ForEach(ModelName.allCases, id: \.self) { model in
+                                Text(model.displayName).tag(model)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .frame(width: 280)
+                        
+                        Text(modelName.description)
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 330, alignment: .leading)
+                        
+                        if showModelRestartNotice {
+                            Text("Model changed. Restart backend to apply.")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(.orange)
+                                .frame(width: 330, alignment: .leading)
+                        }
+                    }
+                }
             }
 
             settingsCard(title: "Connection") {
@@ -171,6 +199,11 @@ struct SettingsView: View {
         stopHotkeyCapture()
 
         let defaults = UserDefaults.standard
+        
+        // Check if model changed
+        let previousModel = ModelName(rawValue: defaults.string(forKey: UserSettingKey.modelName) ?? "") ?? .fast06B
+        let modelChanged = previousModel != modelName
+        
         defaults.set(backendBaseURL.trimmingCharacters(in: .whitespacesAndNewlines), forKey: UserSettingKey.backendBaseURL)
         defaults.set(timeoutSeconds.trimmingCharacters(in: .whitespacesAndNewlines), forKey: UserSettingKey.timeoutSeconds)
         defaults.set(retryCount.trimmingCharacters(in: .whitespacesAndNewlines), forKey: UserSettingKey.retryCount)
@@ -179,8 +212,15 @@ struct SettingsView: View {
         defaults.set(apiToken.trimmingCharacters(in: .whitespacesAndNewlines), forKey: UserSettingKey.apiToken)
         defaults.set(maxUploadBytes.trimmingCharacters(in: .whitespacesAndNewlines), forKey: UserSettingKey.maxUploadBytes)
         defaults.set(outputMode.rawValue, forKey: UserSettingKey.outputMode)
+        defaults.set(modelName.rawValue, forKey: UserSettingKey.modelName)
 
-        statusMessage = "Saved. Applied immediately."
+        if modelChanged {
+            showModelRestartNotice = true
+            statusMessage = "Saved. Restart backend to apply model change."
+        } else {
+            showModelRestartNotice = false
+            statusMessage = "Saved. Applied immediately."
+        }
         NotificationCenter.default.post(name: .quickASRSettingsDidChange, object: nil)
     }
 
@@ -195,6 +235,8 @@ struct SettingsView: View {
         apiToken = ""
         maxUploadBytes = String(defaults.maxUploadBytes)
         outputMode = defaults.outputMode
+        modelName = defaults.modelName
+        showModelRestartNotice = false
         statusMessage = "Defaults loaded. Click Save to apply."
     }
 

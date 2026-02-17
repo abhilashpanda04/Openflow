@@ -623,7 +623,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
             if self.isManagedLocalBackendURL {
                 do {
-                    let launchInfo = try self.backendSupervisor.start()
+                    let launchInfo = try self.backendSupervisor.start(modelName: self.config.modelName)
                     self.log("Started backend command=\(launchInfo.commandDescription) cwd=\(launchInfo.workingDirectory.path)")
                     self.updateSetupProgress(
                         phase: .launchingBackend,

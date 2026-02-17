@@ -48,6 +48,29 @@ enum TranscriptOutputMode: String, CaseIterable {
     }
 }
 
+enum ModelName: String, CaseIterable {
+    case fast06B = "Qwen/Qwen3-ASR-0.6B"
+    case accurate17B = "Qwen/Qwen3-ASR-1.7B"
+
+    var displayName: String {
+        switch self {
+        case .fast06B:
+            return "Fast (0.6B) — Recommended"
+        case .accurate17B:
+            return "Higher Accuracy (1.7B)"
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .fast06B:
+            return "Faster inference, lower memory usage. Best for most users."
+        case .accurate17B:
+            return "Better accuracy for challenging audio. Requires more VRAM/RAM."
+        }
+    }
+}
+
 enum UserSettingKey {
     static let backendBaseURL = "openflow.backend_base_url"
     static let timeoutSeconds = "openflow.timeout_seconds"
@@ -60,6 +83,7 @@ enum UserSettingKey {
     static let maxUploadBytes = "openflow.max_upload_bytes"
     static let backendSetupAgreementAccepted = "openflow.backend_setup_agreement_accepted"
     static let launchGuideShown = "openflow.launch_guide_shown"
+    static let modelName = "openflow.model_name"
 }
 
 struct AppConfig {
@@ -72,6 +96,7 @@ struct AppConfig {
     let hotKey: HotKeyConfiguration
     let apiToken: String?
     let maxUploadBytes: Int
+    let modelName: ModelName
 
     static let `default` = AppConfig(
         backendBaseURL: URL(string: "http://127.0.0.1:8001")!,
@@ -82,7 +107,8 @@ struct AppConfig {
         outputMode: .activeApp,
         hotKey: .default,
         apiToken: nil,
-        maxUploadBytes: 25 * 1024 * 1024
+        maxUploadBytes: 25 * 1024 * 1024,
+        modelName: .fast06B
     )
 
     static func load() -> AppConfig {
@@ -139,6 +165,17 @@ struct AppConfig {
         let maxUploadBytes = Int(maxUploadRaw ?? "")
             .flatMap { $0 > 0 ? $0 : nil } ?? AppConfig.default.maxUploadBytes
 
+        let modelName: ModelName
+        if let modelRaw = envValue(environment, "MODEL_NAME"),
+           let envModel = ModelName(rawValue: modelRaw) {
+            modelName = envModel
+        } else if let persistedModelRaw = defaults.string(forKey: UserSettingKey.modelName),
+                  let persistedModel = ModelName(rawValue: persistedModelRaw) {
+            modelName = persistedModel
+        } else {
+            modelName = AppConfig.default.modelName
+        }
+
         return AppConfig(
             backendBaseURL: backendURL,
             requestTimeoutSeconds: timeout,
@@ -148,7 +185,8 @@ struct AppConfig {
             outputMode: outputMode,
             hotKey: hotKey,
             apiToken: token,
-            maxUploadBytes: maxUploadBytes
+            maxUploadBytes: maxUploadBytes,
+            modelName: modelName
         )
     }
 

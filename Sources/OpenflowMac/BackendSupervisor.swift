@@ -49,12 +49,12 @@ final class BackendSupervisor {
         process?.isRunning == true
     }
 
-    func start() throws -> BackendLaunchInfo {
+    func start(modelName: ModelName? = nil) throws -> BackendLaunchInfo {
         if isRunning {
             throw BackendSupervisorError.alreadyRunning
         }
 
-        let launch = try resolveLaunchCommand()
+        let launch = try resolveLaunchCommand(modelName: modelName)
 
         let process = Process()
         process.currentDirectoryURL = launch.workingDirectory
@@ -156,8 +156,10 @@ final class BackendSupervisor {
         throw BackendSupervisorError.backendDirectoryNotFound
     }
 
-    private func resolveLaunchCommand() throws -> BackendLaunchCommand {
-        if let bundledLaunch = resolveBundledLaunchCommand() {
+    private func resolveLaunchCommand(modelName: ModelName? = nil) throws -> BackendLaunchCommand {
+        let modelEnv = modelName.map { ["OPENFLOW_MODEL_NAME": $0.rawValue] }
+        
+        if let bundledLaunch = resolveBundledLaunchCommand(modelName: modelName) {
             return bundledLaunch
         }
 
@@ -168,7 +170,7 @@ final class BackendSupervisor {
                 executableURL: URL(fileURLWithPath: "/usr/bin/env"),
                 arguments: ["uv", "run", "python", "qwen_server.py"],
                 workingDirectory: backendDirectory,
-                environment: nil,
+                environment: modelEnv,
                 description: "uv run python qwen_server.py"
             )
         }
@@ -179,7 +181,7 @@ final class BackendSupervisor {
                 executableURL: venvPython,
                 arguments: ["qwen_server.py"],
                 workingDirectory: backendDirectory,
-                environment: nil,
+                environment: modelEnv,
                 description: "./.venv/bin/python qwen_server.py"
             )
         }
@@ -187,7 +189,7 @@ final class BackendSupervisor {
         throw BackendSupervisorError.launcherUnavailable
     }
 
-    private func resolveBundledLaunchCommand() -> BackendLaunchCommand? {
+    private func resolveBundledLaunchCommand(modelName: ModelName? = nil) -> BackendLaunchCommand? {
         let fileManager = FileManager.default
 
         for resourcesRoot in resourceRootCandidates() {
@@ -218,14 +220,13 @@ final class BackendSupervisor {
             }
 
             let sitePackages = sitePackagesCandidates.first(where: { fileManager.fileExists(atPath: $0.path) })
-            let environment: [String: String]?
+            var environment: [String: String] = [:]
             if let sitePackages {
-                environment = [
-                    "PYTHONPATH": sitePackages.path,
-                    "PYTHONNOUSERSITE": "1",
-                ]
-            } else {
-                environment = ["PYTHONNOUSERSITE": "1"]
+                environment["PYTHONPATH"] = sitePackages.path
+            }
+            environment["PYTHONNOUSERSITE"] = "1"
+            if let modelName {
+                environment["OPENFLOW_MODEL_NAME"] = modelName.rawValue
             }
 
             return BackendLaunchCommand(
