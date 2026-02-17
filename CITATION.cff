@@ -6,4 +6,4 @@ authors:
   - family-names: Panda
     given-names: Abhilash
 repository-code: "https://github.com/abhilashpanda04/Openflow"
-license: "NOASSERTION"
+license: "Apache-2.0"

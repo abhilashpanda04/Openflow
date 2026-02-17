@@ -8,6 +8,7 @@
   <a href="https://github.com/abhilashpanda04/Openflow/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/abhilashpanda04/Openflow"></a>
   <img alt="Platform" src="https://img.shields.io/badge/platform-macOS%2013%2B-black">
   <img alt="Swift" src="https://img.shields.io/badge/swift-5.9%2B-orange">
+  <img alt="License" src="https://img.shields.io/badge/license-Apache%202.0-blue">
 </p>
 
 Openflow is an open-source macOS menu bar application for low-friction speech-to-text. It captures microphone audio, sends it to an ASR backend, and returns transcript output to the clipboard or directly into the active application.
@@ -91,4 +92,4 @@ Openflow is designed for local-first usage with a user-configurable backend URL.
 
 ## License
 
-No license file is currently included in this repository.
+This project is licensed under the Apache License 2.0. See `LICENSE`.
