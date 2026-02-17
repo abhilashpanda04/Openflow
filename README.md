@@ -74,6 +74,16 @@ Settings are applied immediately after save.
 
 - Contribution guide: `CONTRIBUTING.md`
 - Security policy: `SECURITY.md`
+- Third-party notices: `THIRD_PARTY_NOTICES.md`
+- Citation metadata: `CITATION.cff`
+
+## Model Attribution
+
+Openflow can be used with the Qwen ASR model family. For `Qwen/Qwen3-ASR-1.7B`, see:
+
+- Model page: `https://huggingface.co/Qwen/Qwen3-ASR-1.7B`
+- License: Apache-2.0
+- Research citation: `Qwen3-ASR Technical Report (arXiv:2601.21337)`
 
 ## Privacy And Data Handling
 

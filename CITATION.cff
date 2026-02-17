@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+title: Openflow
+message: "If you use this software, please cite it using the metadata in this file."
+type: software
+authors:
+  - family-names: Panda
+    given-names: Abhilash
+repository-code: "https://github.com/abhilashpanda04/Openflow"
+license: "NOASSERTION"
