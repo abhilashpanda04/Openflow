@@ -161,6 +161,12 @@ final class BackendSupervisor {
     private func resolveLaunchCommand(modelName: ModelName? = nil) throws -> BackendLaunchCommand {
         let modelEnv = modelName.map { ["OPENFLOW_MODEL_NAME": $0.rawValue] }
         
+        // Try app-installed backend first (from BackendInstaller)
+        if let installedLaunch = resolveInstalledBackendCommand(modelName: modelName) {
+            return installedLaunch
+        }
+        
+        // Fall back to old bundled runtime (for compatibility)
         if let bundledLaunch = resolveBundledLaunchCommand(modelName: modelName) {
             return bundledLaunch
         }
@@ -189,6 +195,35 @@ final class BackendSupervisor {
         }
 
         throw BackendSupervisorError.launcherUnavailable
+    }
+    
+    private func resolveInstalledBackendCommand(modelName: ModelName? = nil) -> BackendLaunchCommand? {
+        let installer = BackendInstaller.shared
+        
+        guard FileManager.default.isExecutableFile(atPath: installer.venvPythonPath.path) else {
+            return nil
+        }
+        
+        guard let backendSource = installer.bundledBackendSourcePath else {
+            return nil
+        }
+        
+        guard FileManager.default.fileExists(atPath: backendSource.appendingPathComponent("qwen_server.py").path) else {
+            return nil
+        }
+        
+        var environment: [String: String] = [:]
+        if let modelName {
+            environment["OPENFLOW_MODEL_NAME"] = modelName.rawValue
+        }
+        
+        return BackendLaunchCommand(
+            executableURL: installer.venvPythonPath,
+            arguments: ["qwen_server.py"],
+            workingDirectory: backendSource,
+            environment: environment,
+            description: "installed backend: \(installer.venvPythonPath.lastPathComponent) qwen_server.py"
+        )
     }
 
     private func resolveBundledLaunchCommand(modelName: ModelName? = nil) -> BackendLaunchCommand? {
