@@ -14,5 +14,10 @@ let package = Package(
             name: "OpenflowMac",
             path: "Sources/OpenflowMac"
         ),
+        .testTarget(
+            name: "OpenflowMacTests",
+            dependencies: ["OpenflowMac"],
+            path: "Tests/OpenflowMacTests"
+        ),
     ]
 )

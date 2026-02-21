@@ -62,8 +62,13 @@ final class ASRClient {
     private let session: URLSession
     private let config: ASRClientConfiguration
 
-    init(config: ASRClientConfiguration) {
+    init(config: ASRClientConfiguration, session: URLSession? = nil) {
         self.config = config
+
+        if let session {
+            self.session = session
+            return
+        }
 
         let sessionConfiguration = URLSessionConfiguration.default
         sessionConfiguration.timeoutIntervalForRequest = config.timeoutSeconds

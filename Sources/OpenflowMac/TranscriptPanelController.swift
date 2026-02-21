@@ -338,3 +338,35 @@ final class TranscriptPanelController {
         NSPasteboard.general.setString(text, forType: .string)
     }
 }
+
+#if DEBUG
+extension TranscriptPanelController {
+    func _test_transcriptText() -> String {
+        transcriptView?.string ?? ""
+    }
+
+    func _test_languageText() -> String {
+        languageLabel?.stringValue ?? ""
+    }
+
+    func _test_recordingTitleText() -> String {
+        recordingTitleLabel?.stringValue ?? ""
+    }
+
+    func _test_recordingSubtitleText() -> String {
+        recordingSubtitleLabel?.stringValue ?? ""
+    }
+
+    func _test_isRecordingPanelVisible() -> Bool {
+        recordingPanel?.isVisible == true
+    }
+
+    func _test_isTranscriptPanelVisible() -> Bool {
+        transcriptPanel?.isVisible == true
+    }
+
+    func _test_triggerCopyTranscript() {
+        copyTranscript()
+    }
+}
+#endif
