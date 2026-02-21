@@ -30,7 +30,7 @@ release: ## Build optimized release .app bundle
 	@echo "$(BLUE)Building release .app bundle...$(NC)"
 	@./packaging/build-app.sh release yes
 
-dmg: release ## Create distribution DMG (includes backend)
+dmg: release ## Create distribution DMG (app only, no bundled backend)
 	@echo "$(BLUE)Creating release DMG...$(NC)"
 	@./packaging/create_dmg.sh
 
