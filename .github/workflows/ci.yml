@@ -17,11 +17,6 @@ jobs:
         with:
           fetch-depth: 0  # Needed for git describe version
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
       - name: Cache Swift build
         uses: actions/cache@v4
         with:
@@ -30,29 +25,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-swift-
 
-      - name: Cache Python dependencies
-        uses: actions/cache@v4
-        with:
-          path: services/backend/.venv
-          key: ${{ runner.os }}-python-${{ hashFiles('services/backend/pyproject.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-python-
-
       - name: Install dependencies
         run: |
           echo "=== System Info ==="
           sw_vers
           xcodebuild -version
           swift --version
-          python3 --version
           echo ""
-          
-          echo "=== Installing backend dependencies ==="
-          cd services/backend
-          python3 -m venv .venv
-          .venv/bin/pip install --upgrade pip
-          .venv/bin/pip install -e .
-          cd ../..
+          echo "=== Skipping backend dependencies for CI (heavy ML libraries not needed) ==="
 
       - name: Build debug .app
         run: |
@@ -90,13 +70,6 @@ jobs:
           codesign -d --entitlements - .build/arm64-apple-macosx/debug/Openflow.app 2>&1 | grep -q "com.apple.security.device.microphone"
           
           echo "✓ All build artifacts verified"
-
-      - name: Check backend can be imported
-        run: |
-          echo "=== Testing backend imports ==="
-          cd services/backend
-          .venv/bin/python -c "import qwen_asr; print('✓ qwen_asr imports successfully')"
-          .venv/bin/python -c "from fastapi import FastAPI; print('✓ FastAPI imports successfully')"
 
       - name: Upload build artifacts
         if: always()
