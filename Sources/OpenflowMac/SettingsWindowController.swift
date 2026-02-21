@@ -20,3 +20,11 @@ final class SettingsWindowController {
         window?.makeKeyAndOrderFront(nil)
     }
 }
+
+#if DEBUG
+extension SettingsWindowController {
+    func _test_windowExists() -> Bool {
+        window != nil
+    }
+}
+#endif
