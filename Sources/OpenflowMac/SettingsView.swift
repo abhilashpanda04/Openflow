@@ -26,10 +26,10 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 18) {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Openflow Settings")
-                    .font(.system(size: 24, weight: .semibold))
+                    .font(AppStyle.SwiftUI.titleFont)
                 Text("These settings are applied instantly after saving.")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
+                    .font(AppStyle.SwiftUI.helperFont)
+                    .foregroundStyle(AppStyle.SwiftUI.secondaryText)
             }
 
             settingsCard(title: "Model") {
@@ -41,18 +41,18 @@ struct SettingsView: View {
                             }
                         }
                         .pickerStyle(.menu)
-                        .frame(width: 280)
-                        
+                        .frame(width: AppStyle.Metrics.pickerWidth)
+
                         Text(modelName.description)
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                            .frame(width: 330, alignment: .leading)
-                        
+                            .font(AppStyle.SwiftUI.helperFont)
+                            .foregroundStyle(AppStyle.SwiftUI.secondaryText)
+                            .frame(width: AppStyle.Metrics.contentWidth, alignment: .leading)
+
                         if showModelRestartNotice {
                             Text("Model changed. Restart backend to apply.")
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundStyle(.orange)
-                                .frame(width: 330, alignment: .leading)
+                                .font(AppStyle.SwiftUI.helperFont)
+                                .foregroundStyle(AppStyle.SwiftUI.accentWarm)
+                                .frame(width: AppStyle.Metrics.contentWidth, alignment: .leading)
                         }
                     }
                 }
@@ -63,24 +63,24 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         TextField("http://127.0.0.1:8001", text: $backendBaseURL)
                             .textFieldStyle(.roundedBorder)
-                            .frame(width: 330)
+                            .frame(width: AppStyle.Metrics.contentWidth)
                         Text("Use localhost/127.0.0.1 for managed startup. External URLs require manual backend start.")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                            .frame(width: 330, alignment: .leading)
+                            .font(AppStyle.SwiftUI.helperFont)
+                            .foregroundStyle(AppStyle.SwiftUI.secondaryText)
+                            .frame(width: AppStyle.Metrics.contentWidth, alignment: .leading)
                     }
                 }
 
                 settingRow("API Token") {
                     TextField("Optional", text: $apiToken)
                         .textFieldStyle(.roundedBorder)
-                        .frame(width: 220)
+                        .frame(width: AppStyle.Metrics.compactControlWidth)
                 }
 
                 settingRow("Max Upload Bytes") {
                     TextField("26214400", text: $maxUploadBytes)
                         .textFieldStyle(.roundedBorder)
-                        .frame(width: 140)
+                        .frame(width: AppStyle.Metrics.smallFieldWidth)
                 }
             }
 
@@ -92,16 +92,16 @@ struct SettingsView: View {
                         }
                     }
                     .pickerStyle(.menu)
-                    .frame(width: 220)
+                    .frame(width: AppStyle.Metrics.compactControlWidth)
                 }
 
                 settingRow("Hotkey") {
                     VStack(alignment: .leading, spacing: 6) {
                         HStack(spacing: 8) {
                             Text(isRecordingHotkey ? "Press shortcut..." : hotkeyDisplay)
-                                .font(.system(size: 12, weight: .medium, design: .monospaced))
-                                .foregroundStyle(isRecordingHotkey ? .orange : .primary)
-                                .frame(width: 220, alignment: .leading)
+                                .font(AppStyle.SwiftUI.monoFont)
+                                .foregroundStyle(isRecordingHotkey ? AppStyle.SwiftUI.accentWarm : .primary)
+                                .frame(width: AppStyle.Metrics.compactControlWidth, alignment: .leading)
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 7)
                                 .background(
@@ -110,7 +110,7 @@ struct SettingsView: View {
                                 )
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                        .stroke(isRecordingHotkey ? Color.orange.opacity(0.7) : Color.secondary.opacity(0.3), lineWidth: 1)
+                                        .stroke(isRecordingHotkey ? AppStyle.SwiftUI.accentWarm.opacity(0.7) : Color.secondary.opacity(0.3), lineWidth: 1)
                                 )
 
                             Button(isRecordingHotkey ? "Cancel" : "Record") {
@@ -120,8 +120,12 @@ struct SettingsView: View {
                         }
 
                         Text("Press a key with Cmd/Shift/Option/Ctrl. Example: Cmd+Shift+Space")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
+                            .font(AppStyle.SwiftUI.helperFont)
+                            .foregroundStyle(AppStyle.SwiftUI.secondaryText)
+
+                        Text("If recording fails, enable Openflow in System Settings > Privacy & Security > Microphone, then relaunch.")
+                            .font(AppStyle.SwiftUI.helperFont)
+                            .foregroundStyle(AppStyle.SwiftUI.subtleText)
                     }
                 }
             }
@@ -130,19 +134,19 @@ struct SettingsView: View {
                 settingRow("Timeout (seconds)") {
                     TextField("45", text: $timeoutSeconds)
                         .textFieldStyle(.roundedBorder)
-                        .frame(width: 120)
+                        .frame(width: AppStyle.Metrics.numericFieldWidth)
                 }
 
                 settingRow("Retry Count") {
                     TextField("2", text: $retryCount)
                         .textFieldStyle(.roundedBorder)
-                        .frame(width: 120)
+                        .frame(width: AppStyle.Metrics.numericFieldWidth)
                 }
 
                 settingRow("Retry Delay (ms)") {
                     TextField("250", text: $retryDelayMs)
                         .textFieldStyle(.roundedBorder)
-                        .frame(width: 120)
+                        .frame(width: AppStyle.Metrics.numericFieldWidth)
                 }
             }
 
@@ -154,8 +158,8 @@ struct SettingsView: View {
                 Spacer()
 
                 Text(statusMessage)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.secondary)
+                    .font(AppStyle.SwiftUI.bodyFont.weight(.medium))
+                    .foregroundStyle(AppStyle.SwiftUI.secondaryText)
 
                 Button("Save") {
                     save()
@@ -174,22 +178,22 @@ struct SettingsView: View {
     private func settingsCard<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.secondary)
+                .font(AppStyle.SwiftUI.sectionFont)
+                .foregroundStyle(AppStyle.SwiftUI.secondaryText)
             content()
         }
-        .padding(14)
+        .padding(AppStyle.Metrics.cardPadding)
         .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color(nsColor: .windowBackgroundColor).opacity(0.86))
+            RoundedRectangle(cornerRadius: AppStyle.Metrics.cardCornerRadius, style: .continuous)
+                .fill(AppStyle.SwiftUI.cardBackground)
         )
     }
 
     private func settingRow<Content: View>(_ label: String, @ViewBuilder content: () -> Content) -> some View {
         HStack {
             Text(label)
-                .font(.system(size: 13, weight: .medium))
-                .frame(width: 165, alignment: .leading)
+                .font(AppStyle.SwiftUI.bodyFont.weight(.medium))
+                .frame(width: AppStyle.Metrics.rowLabelWidth, alignment: .leading)
             content()
             Spacer()
         }

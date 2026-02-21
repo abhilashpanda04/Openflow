@@ -76,7 +76,7 @@ final class BackendSetupDialogController {
         statusLabel?.stringValue = "Speech engine is ready"
         detailLabel?.stringValue = detail
         elapsedLabel?.stringValue = "Setup complete"
-        hintLabel?.stringValue = "Openflow is ready to transcribe audio."
+        hintLabel?.stringValue = "Openflow is ready to transcribe audio. If recording fails, enable Openflow in System Settings > Privacy & Security > Microphone, then relaunch."
         percentLabel?.stringValue = "100%"
         progressIndicator?.doubleValue = 100
         progressIndicator?.isIndeterminate = false
@@ -129,21 +129,21 @@ final class BackendSetupDialogController {
         percent.frame = NSRect(x: 422, y: 198, width: 74, height: 20)
         percent.alignment = .right
         percent.font = NSFont.monospacedDigitSystemFont(ofSize: 14, weight: .semibold)
-        percent.textColor = .secondaryLabelColor
+        percent.textColor = AppStyle.Palette.hintText
         content.addSubview(percent)
         percentLabel = percent
 
         let detail = NSTextField(wrappingLabelWithString: "This can take a few minutes on first run.")
         detail.frame = NSRect(x: 24, y: 138, width: 472, height: 46)
-        detail.font = NSFont.systemFont(ofSize: 13)
-        detail.textColor = .secondaryLabelColor
+        detail.font = AppStyle.Typography.body
+        detail.textColor = AppStyle.Palette.hintText
         content.addSubview(detail)
         detailLabel = detail
 
         let elapsed = NSTextField(labelWithString: "Elapsed: 0s")
         elapsed.frame = NSRect(x: 24, y: 116, width: 320, height: 18)
         elapsed.font = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .regular)
-        elapsed.textColor = .tertiaryLabelColor
+        elapsed.textColor = AppStyle.Palette.subtleText
         content.addSubview(elapsed)
         elapsedLabel = elapsed
 
@@ -160,8 +160,8 @@ final class BackendSetupDialogController {
 
         let hint = NSTextField(labelWithString: "First-time setup can take several minutes depending on network and hardware.")
         hint.frame = NSRect(x: 24, y: 60, width: 472, height: 18)
-        hint.font = NSFont.systemFont(ofSize: 11)
-        hint.textColor = .secondaryLabelColor
+        hint.font = AppStyle.Typography.helper
+        hint.textColor = AppStyle.Palette.hintText
         content.addSubview(hint)
         hintLabel = hint
 

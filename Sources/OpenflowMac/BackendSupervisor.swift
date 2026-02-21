@@ -132,6 +132,8 @@ final class BackendSupervisor {
         var candidates: [URL] = [
             cwd.appendingPathComponent("../backend").standardizedFileURL,
             cwd.appendingPathComponent("backend").standardizedFileURL,
+            cwd.appendingPathComponent("../services/backend").standardizedFileURL,
+            cwd.appendingPathComponent("services/backend").standardizedFileURL,
         ]
 
         var executableDirectory = URL(fileURLWithPath: CommandLine.arguments[0]).standardizedFileURL

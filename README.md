@@ -51,10 +51,25 @@ When prompted, grant Microphone access in macOS.
 ## Architecture At A Glance
 
 - `Sources/OpenflowMac` - Swift macOS app source
+- `services/backend` - Python ASR backend service
 - `packaging/` - DMG/build scripts and app metadata
 - `assets/` - repository assets (logo and visuals)
 
 At runtime, the app communicates with a backend endpoint (`/health`, `/transcribe`) and can either manage a local backend process or monitor readiness for an externally managed backend.
+
+## Backend (Local)
+
+The repo includes a vendored backend in `services/backend`.
+
+```bash
+cd services/backend
+python3 -m venv .venv
+source .venv/bin/activate
+./.venv/bin/pip install -e .
+./.venv/bin/python qwen_server.py
+```
+
+Once running, keep the Openflow app pointed at `http://127.0.0.1:8001`.
 
 ## Settings
 
