@@ -626,6 +626,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
 
             if self.isManagedLocalBackendURL {
+                // Check if backend needs installation
+                if !BackendInstaller.shared.isInstalled {
+                    self.installBackendThenStart()
+                    return
+                }
+                
                 do {
                     let launchInfo = try self.backendSupervisor.start(modelName: self.config.modelName)
                     self.log("Started backend command=\(launchInfo.commandDescription) cwd=\(launchInfo.workingDirectory.path)")
@@ -1481,12 +1487,105 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let trimmed = rawText.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.hasPrefix("ASRTranscription(") && trimmed.contains("text=''") {
             return ""
-        }
-        return trimmed
-    }
-}
-
-#if DEBUG
+         }
+         return trimmed
+     }
+ 
+     // MARK: - Backend Installation
+ 
+     private func installBackendThenStart() {
+         updateSetupProgress(
+             phase: .checkingRuntime,
+             progress: 0,
+             status: "Initializing backend setup",
+             detail: "Checking system requirements..."
+         )
+         
+         // Start installation in background
+         Task.detached(priority: .userInitiated) { [weak self] in
+             do {
+                 try await self?.performBackendInstallation()
+                 
+                 // After installation, try to start backend
+                 DispatchQueue.main.async {
+                     self?.startBackendFlow(userRequestedRecording: self?.queuedRecordingIntent ?? false)
+                 }
+             } catch {
+                 DispatchQueue.main.async {
+                     self?.transitionBackendState(to: .failed("Backend installation failed. \(error.localizedDescription)"))
+                     self?.transcriptPanel.dismissRecordingOverlay()
+                     self?.setBackendNotice("Backend installation failed. \(error.localizedDescription)")
+                     self?.queuedRecordingIntent = false
+                     self?.showSetupFailure(reason: "Backend installation failed. \(error.localizedDescription)")
+                 }
+             }
+         }
+     }
+ 
+     private func performBackendInstallation() async throws {
+         let pythonInstaller = PythonInstaller.shared
+         let backendInstaller = BackendInstaller.shared
+         
+         // Step 1: Check or install Python
+         if let pythonPath = pythonInstaller.detectPython() {
+             self.log("Found Python at: \(pythonPath.path)")
+             DispatchQueue.main.async {
+                 self.updateSetupProgress(
+                     phase: .checkingRuntime,
+                     progress: 0.2,
+                     status: "Checking system requirements",
+                     detail: "Found Python 3.12+"
+                 )
+             }
+         } else {
+             self.log("Python 3.12+ not found, downloading...")
+             DispatchQueue.main.async {
+                 self.updateSetupProgress(
+                     phase: .checkingRuntime,
+                     progress: 0.1,
+                     status: "Downloading Python",
+                     detail: "Downloading Python 3.12 (~50MB)..."
+                 )
+             }
+             
+             // Download and install Python
+             _ = try await pythonInstaller.downloadAndInstallPython { [weak self] progress, status in
+                 DispatchQueue.main.async {
+                     self?.updateSetupProgress(
+                         phase: .checkingRuntime,
+                         progress: 0.1 + (progress * 0.15),
+                         status: "Installing Python",
+                         detail: status
+                     )
+                 }
+             }
+             
+             self.log("Python installed successfully")
+         }
+         
+         // Step 2: Install backend dependencies with retry
+         guard let pythonPath = pythonInstaller.detectPython() else {
+             throw BackendInstallerError.pythonNotAvailable
+         }
+         
+         self.log("Installing backend dependencies...")
+         
+         try await backendInstaller.installWithRetry(pythonPath: pythonPath, progressCallback: { [weak self] progress, status in
+             DispatchQueue.main.async {
+                 self?.updateSetupProgress(
+                     phase: .launchingBackend,
+                     progress: 0.25 + (progress * 0.65),
+                     status: "Installing dependencies",
+                     detail: status
+                 )
+             }
+         }, maxRetries: 5)
+         
+         self.log("Backend installation complete!")
+     }
+ }
+ 
+ #if DEBUG
 extension AppDelegate {
     func _test_applicationDidFinishLaunching() {
         applicationDidFinishLaunching(Notification(name: Notification.Name("test.launch")))
@@ -1927,12 +2026,12 @@ extension AppDelegate {
         shouldAutoShowTranscriptPanel()
     }
 
-    func _test_stopBackendForCleanup() {
-        stopBackendWarmupPolling()
-        stopBackendStatusIconAnimation()
-        stopHealthMonitor()
-        stopBackendSetupReadyCloseTimer()
-        backendSupervisor.stop()
-    }
-}
-#endif
+     func _test_stopBackendForCleanup() {
+         stopBackendWarmupPolling()
+         stopBackendStatusIconAnimation()
+         stopHealthMonitor()
+         stopBackendSetupReadyCloseTimer()
+         backendSupervisor.stop()
+     }
+ }
+ #endif
