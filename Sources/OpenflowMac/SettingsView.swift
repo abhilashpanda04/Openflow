@@ -285,3 +285,89 @@ struct SettingsView: View {
         return nil
     }
 }
+
+#if DEBUG
+extension SettingsView {
+    mutating func _test_restoreDefaults() {
+        restoreDefaults()
+    }
+
+    mutating func _test_save() {
+        save()
+    }
+
+    mutating func _test_toggleHotkeyCapture() {
+        toggleHotkeyCapture()
+    }
+
+    mutating func _test_stopHotkeyCapture() {
+        stopHotkeyCapture()
+    }
+
+    mutating func _test_handleHotkeyCapture(_ event: NSEvent) -> NSEvent? {
+        handleHotkeyCapture(event)
+    }
+
+    mutating func _test_setBackendBaseURL(_ value: String) {
+        backendBaseURL = value
+    }
+
+    mutating func _test_setTimeoutSeconds(_ value: String) {
+        timeoutSeconds = value
+    }
+
+    mutating func _test_setRetryCount(_ value: String) {
+        retryCount = value
+    }
+
+    mutating func _test_setRetryDelayMs(_ value: String) {
+        retryDelayMs = value
+    }
+
+    mutating func _test_setHotkey(_ value: String, display: String) {
+        hotkey = value
+        hotkeyDisplay = display
+    }
+
+    mutating func _test_setApiToken(_ value: String) {
+        apiToken = value
+    }
+
+    mutating func _test_setMaxUploadBytes(_ value: String) {
+        maxUploadBytes = value
+    }
+
+    mutating func _test_setOutputMode(_ mode: TranscriptOutputMode) {
+        outputMode = mode
+    }
+
+    mutating func _test_setModelName(_ model: ModelName) {
+        modelName = model
+    }
+
+    func _test_statusMessage() -> String {
+        statusMessage
+    }
+
+    func _test_hotkeyStorageValue() -> String {
+        hotkey
+    }
+
+    func _test_hotkeyDisplayValue() -> String {
+        hotkeyDisplay
+    }
+
+    func _test_isRecordingHotkey() -> Bool {
+        isRecordingHotkey
+    }
+
+    func _test_showModelRestartNotice() -> Bool {
+        showModelRestartNotice
+    }
+
+    @ViewBuilder
+    func _test_body() -> some View {
+        body
+    }
+}
+#endif

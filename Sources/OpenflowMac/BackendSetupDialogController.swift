@@ -237,3 +237,47 @@ final class BackendSetupDialogController {
         onAbort?()
     }
 }
+
+#if DEBUG
+extension BackendSetupDialogController {
+    func _test_statusText() -> String {
+        statusLabel?.stringValue ?? ""
+    }
+
+    func _test_detailText() -> String {
+        detailLabel?.stringValue ?? ""
+    }
+
+    func _test_elapsedText() -> String {
+        elapsedLabel?.stringValue ?? ""
+    }
+
+    func _test_percentText() -> String {
+        percentLabel?.stringValue ?? ""
+    }
+
+    func _test_progressValue() -> Double {
+        progressIndicator?.doubleValue ?? -1
+    }
+
+    func _test_triggerRetry() {
+        retryTapped()
+    }
+
+    func _test_triggerOpenSettings() {
+        openSettingsTapped()
+    }
+
+    func _test_triggerViewLogs() {
+        viewLogsTapped()
+    }
+
+    func _test_triggerStartRecording() {
+        startRecordingTapped()
+    }
+
+    func _test_triggerAbort() {
+        abortTapped()
+    }
+}
+#endif

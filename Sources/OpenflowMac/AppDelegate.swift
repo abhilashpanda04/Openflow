@@ -1170,6 +1170,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func openBackendLogs() {
+        if isRunningUnitTests {
+            return
+        }
+
         let consoleURL = URL(fileURLWithPath: "/System/Applications/Utilities/Console.app")
         if FileManager.default.fileExists(atPath: consoleURL.path) {
             NSWorkspace.shared.openApplication(at: consoleURL, configuration: NSWorkspace.OpenConfiguration()) { _, error in
@@ -1200,6 +1204,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
+        if isRunningUnitTests {
+            defaults.set(true, forKey: UserSettingKey.launchGuideShown)
+            return
+        }
+
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             let alert = NSAlert()
             alert.messageText = "Welcome to Openflow"
@@ -1222,6 +1231,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func presentBackendSetupAgreementDialog() -> Bool {
+        if isRunningUnitTests {
+            UserDefaults.standard.set(true, forKey: UserSettingKey.backendSetupAgreementAccepted)
+            return true
+        }
+
         let alert = NSAlert()
         alert.messageText = "Backend Setup Agreement"
         alert.informativeText = "Openflow will install and run a local speech engine runtime on this Mac. Initial setup and model warm-up may take several minutes, and may use significant disk/memory. Audio is processed locally by this backend service. Do you agree to continue?"
@@ -1304,7 +1318,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setBackendNotice("Backend ready. You can start recording now.")
         _ = NSApp.requestUserAttention(.informationalRequest)
 
-        if !NSApp.isActive {
+        if !NSApp.isActive && !isRunningUnitTests {
             showInfo("Openflow is ready. Speech engine loaded.")
         }
     }
@@ -1324,6 +1338,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func showError(_ message: String) {
+        if isRunningUnitTests {
+            log("Suppressed error alert in tests: \(message)")
+            return
+        }
+
         DispatchQueue.main.async {
             NSApp.activate(ignoringOtherApps: true)
             let alert = NSAlert()
@@ -1335,6 +1354,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func showInfo(_ message: String) {
+        if isRunningUnitTests {
+            log("Suppressed info alert in tests: \(message)")
+            return
+        }
+
         DispatchQueue.main.async {
             NSApp.activate(ignoringOtherApps: true)
             let alert = NSAlert()
@@ -1351,6 +1375,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var canUseUserNotifications: Bool {
         Bundle.main.bundleURL.pathExtension.lowercased() == "app"
+    }
+
+    private var isRunningUnitTests: Bool {
+        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+            || NSClassFromString("XCTestCase") != nil
     }
 
     private func outputModeLabel() -> String {
@@ -1452,3 +1481,454 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return trimmed
     }
 }
+
+#if DEBUG
+extension AppDelegate {
+    func _test_applicationDidFinishLaunching() {
+        applicationDidFinishLaunching(Notification(name: Notification.Name("test.launch")))
+    }
+
+    func _test_applicationWillTerminate() {
+        applicationWillTerminate(Notification(name: Notification.Name("test.terminate")))
+    }
+
+    func _test_setupStatusItem() {
+        setupStatusItem()
+    }
+
+    func _test_registerHotKey() {
+        registerHotKey()
+    }
+
+    func _test_settingsDidChange() {
+        settingsDidChange()
+    }
+
+    func _test_reloadConfiguration(rebuildHotkey: Bool) {
+        reloadConfiguration(rebuildHotkey: rebuildHotkey)
+    }
+
+    func _test_refreshBackendStatusAction() {
+        refreshBackendStatusAction()
+    }
+
+    func _test_refreshLiveBackendHealth() {
+        refreshLiveBackendHealth()
+    }
+
+    func _test_startHealthMonitorIfNeeded() {
+        startHealthMonitorIfNeeded()
+    }
+
+    func _test_stopHealthMonitor() {
+        stopHealthMonitor()
+    }
+
+    func _test_startBackendAction() {
+        startBackendAction()
+    }
+
+    func _test_retryBackendAction() {
+        retryBackendAction()
+    }
+
+    func _test_showSetupProgressAction() {
+        showSetupProgressAction()
+    }
+
+    func _test_stopBackendAction() {
+        stopBackendAction()
+    }
+
+    func _test_openSettingsAction() {
+        openSettingsAction()
+    }
+
+    func _test_transitionRecordingState(_ state: String) {
+        switch state {
+        case "recording":
+            transition(to: .recording)
+        case "transcribing":
+            transition(to: .transcribing)
+        default:
+            transition(to: .idle)
+        }
+    }
+
+    func _test_recordingState() -> String {
+        switch state {
+        case .idle:
+            return "idle"
+        case .recording:
+            return "recording"
+        case .transcribing:
+            return "transcribing"
+        }
+    }
+
+    func _test_currentMenuBarSymbolName() -> String {
+        currentMenuBarSymbolName()
+    }
+
+    func _test_toggleRecordingFromHotKey() {
+        toggleRecordingFromHotKey()
+    }
+
+    func _test_toggleRecordingMenuAction() {
+        toggleRecordingMenuAction()
+    }
+
+    func _test_toggleRecording() {
+        toggleRecording()
+    }
+
+    func _test_startRecording() {
+        startRecording()
+    }
+
+    func _test_stopRecordingAndTranscribe() {
+        stopRecordingAndTranscribe()
+    }
+
+    func _test_markBackendReady(triggerQueuedRecording: Bool, notifyUser: Bool) {
+        markBackendReady(triggerQueuedRecording: triggerQueuedRecording, notifyUser: notifyUser)
+    }
+
+    func _test_beginBackendWarmupPolling() {
+        beginBackendWarmupPolling()
+    }
+
+    func _test_configureBackendSetupDialogActions() {
+        configureBackendSetupDialogActions()
+    }
+
+    func _test_setConfig(_ config: AppConfig) {
+        self.config = config
+    }
+
+    func _test_setASRClient(_ asrClient: ASRClient) {
+        self.asrClient = asrClient
+    }
+
+    func _test_startBackendFlow(userRequestedRecording: Bool) {
+        startBackendFlow(userRequestedRecording: userRequestedRecording)
+    }
+
+    func _test_transitionBackendState(_ state: String) {
+        switch state {
+        case "notStarted":
+            transitionBackendState(to: .notStarted)
+        case "starting":
+            transitionBackendState(to: .starting)
+        case "warming":
+            transitionBackendState(to: .warming)
+        case "degraded":
+            transitionBackendState(to: .degraded)
+        case "ready":
+            transitionBackendState(to: .ready)
+        case "failed":
+            transitionBackendState(to: .failed("failed"))
+        default:
+            transitionBackendState(to: .notStarted)
+        }
+    }
+
+    func _test_backendStartupState() -> String {
+        switch backendStartupState {
+        case .notStarted:
+            return "notStarted"
+        case .starting:
+            return "starting"
+        case .warming:
+            return "warming"
+        case .degraded:
+            return "degraded"
+        case .ready:
+            return "ready"
+        case .failed:
+            return "failed"
+        }
+    }
+
+    func _test_setBackendSetupPhase(_ phase: String) {
+        switch phase {
+        case "idle":
+            backendSetupPhase = .idle
+        case "agreementAccepted":
+            backendSetupPhase = .agreementAccepted
+        case "checkingRuntime":
+            backendSetupPhase = .checkingRuntime
+        case "launchingBackend":
+            backendSetupPhase = .launchingBackend
+        case "warmingModel":
+            backendSetupPhase = .warmingModel
+        case "ready":
+            backendSetupPhase = .ready
+        case "failed":
+            backendSetupPhase = .failed
+        default:
+            backendSetupPhase = .idle
+        }
+    }
+
+    func _test_backendSetupPhase() -> String {
+        switch backendSetupPhase {
+        case .idle:
+            return "idle"
+        case .agreementAccepted:
+            return "agreementAccepted"
+        case .checkingRuntime:
+            return "checkingRuntime"
+        case .launchingBackend:
+            return "launchingBackend"
+        case .warmingModel:
+            return "warmingModel"
+        case .ready:
+            return "ready"
+        case .failed:
+            return "failed"
+        }
+    }
+
+    func _test_setQueuedRecordingIntent(_ value: Bool) {
+        queuedRecordingIntent = value
+    }
+
+    func _test_setRecentBackendOutputLines(_ lines: [String]) {
+        recentBackendOutputLines = lines
+    }
+
+    func _test_setBackendWarmupStartedAt(_ date: Date?) {
+        backendWarmupStartedAt = date
+    }
+
+    func _test_setBackendSetupStartedAt(_ date: Date?) {
+        backendSetupStartedAt = date
+    }
+
+    func _test_setBackendDownloadDetected(_ value: Bool) {
+        backendDownloadDetected = value
+    }
+
+    func _test_setLastDownloadProgressAt(_ date: Date?) {
+        lastDownloadProgressAt = date
+    }
+
+    func _test_setBackendSetupProgress(_ value: Double) {
+        backendSetupProgress = value
+    }
+
+    func _test_setBackendSetupTimeoutSeconds(_ value: TimeInterval) {
+        backendSetupTimeoutSeconds = value
+    }
+
+    func _test_backendSetupProgress() -> Double {
+        backendSetupProgress
+    }
+
+    func _test_isBackendReady() -> Bool {
+        isBackendReady
+    }
+
+    func _test_backendNoticeText() -> String? {
+        backendNoticeText
+    }
+
+    func _test_outputModeLabel() -> String {
+        outputModeLabel()
+    }
+
+    func _test_menuBarTitle(_ state: String) -> String {
+        switch state {
+        case "recording":
+            return menuBarTitle(for: .recording)
+        case "transcribing":
+            return menuBarTitle(for: .transcribing)
+        default:
+            return menuBarTitle(for: .idle)
+        }
+    }
+
+    func _test_menuBarSymbolName(_ state: String) -> String {
+        switch state {
+        case "recording":
+            return menuBarSymbolName(for: .recording)
+        case "transcribing":
+            return menuBarSymbolName(for: .transcribing)
+        default:
+            return menuBarSymbolName(for: .idle)
+        }
+    }
+
+    func _test_startBackendMenuTitle() -> String {
+        startBackendMenuTitle()
+    }
+
+    func _test_backendStatusLine() -> String {
+        backendStatusLine()
+    }
+
+    func _test_canStartBackend() -> Bool {
+        canStartBackend
+    }
+
+    func _test_canRetryBackend() -> Bool {
+        canRetryBackend
+    }
+
+    func _test_isManagedLocalBackendURL() -> Bool {
+        isManagedLocalBackendURL
+    }
+
+    func _test_canUseUserNotifications() -> Bool {
+        canUseUserNotifications
+    }
+
+    func _test_warmingProgressFloor(elapsedSeconds: TimeInterval, timeoutSeconds: TimeInterval) -> Double {
+        warmingProgressFloor(elapsedSeconds: elapsedSeconds, timeoutSeconds: timeoutSeconds)
+    }
+
+    func _test_warmingDetailMessage(elapsedSeconds: TimeInterval) -> String {
+        warmingDetailMessage(elapsedSeconds: elapsedSeconds)
+    }
+
+    func _test_setBackendNotice(_ message: String?) {
+        setBackendNotice(message)
+    }
+
+    func _test_extractPercentage(_ text: String) -> Int? {
+        extractPercentage(from: text)
+    }
+
+    func _test_extractFraction(_ text: String) -> Double? {
+        extractFraction(from: text)
+    }
+
+    func _test_setupElapsedText() -> String {
+        setupElapsedText()
+    }
+
+    func _test_latestBackendOutputDetail() -> String {
+        latestBackendOutputDetail()
+    }
+
+    func _test_handleBackendOutputLine(_ line: String) {
+        handleBackendOutputLine(line)
+    }
+
+    func _test_updateSetupProgress(phase: String, progress: Double, status: String, detail: String) {
+        switch phase {
+        case "agreementAccepted":
+            updateSetupProgress(phase: .agreementAccepted, progress: progress, status: status, detail: detail)
+        case "checkingRuntime":
+            updateSetupProgress(phase: .checkingRuntime, progress: progress, status: status, detail: detail)
+        case "launchingBackend":
+            updateSetupProgress(phase: .launchingBackend, progress: progress, status: status, detail: detail)
+        case "warmingModel":
+            updateSetupProgress(phase: .warmingModel, progress: progress, status: status, detail: detail)
+        case "ready":
+            updateSetupProgress(phase: .ready, progress: progress, status: status, detail: detail)
+        case "failed":
+            updateSetupProgress(phase: .failed, progress: progress, status: status, detail: detail)
+        default:
+            updateSetupProgress(phase: .idle, progress: progress, status: status, detail: detail)
+        }
+    }
+
+    func _test_showSetupFailure(reason: String) {
+        showSetupFailure(reason: reason)
+    }
+
+    func _test_resetSetupProgress() {
+        resetSetupProgress()
+    }
+
+    func _test_abortBackendSetup() {
+        abortBackendSetup()
+    }
+
+    func _test_handleBackendProcessExit(status: Int32) {
+        handleBackendProcessExit(status: status)
+    }
+
+    func _test_showLastTranscript() {
+        showLastTranscript()
+    }
+
+    func _test_requestNotificationAuthorizationIfNeeded() {
+        requestNotificationAuthorizationIfNeeded()
+    }
+
+    func _test_notifyBackendReady() {
+        notifyBackendReady()
+    }
+
+    func _test_deliverReadyLocalNotification() {
+        deliverReadyLocalNotification()
+    }
+
+    func _test_presentReadyFallbackNotification() {
+        presentReadyFallbackNotification()
+    }
+
+    func _test_captureOutputTargetApplication() {
+        captureOutputTargetApplication()
+    }
+
+    func _test_setOutputTargetApplicationToCurrentApp() {
+        outputTargetApplication = NSRunningApplication.current
+    }
+
+    func _test_deliverTranscript(_ text: String) {
+        deliverTranscript(text)
+    }
+
+    func _test_copyToClipboard(_ text: String) {
+        copyToClipboard(text)
+    }
+
+    func _test_openBackendLogs() {
+        openBackendLogs()
+    }
+
+    func _test_hasAcceptedBackendSetupAgreement() -> Bool {
+        hasAcceptedBackendSetupAgreement()
+    }
+
+    func _test_presentBackendSetupAgreementDialog() -> Bool {
+        presentBackendSetupAgreementDialog()
+    }
+
+    func _test_pasteToCapturedApplication(_ text: String) {
+        pasteToCapturedApplication(text)
+    }
+
+    func _test_sendPasteShortcut() -> Bool {
+        sendPasteShortcut()
+    }
+
+    func _test_showError(_ message: String) {
+        showError(message)
+    }
+
+    func _test_showInfo(_ message: String) {
+        showInfo(message)
+    }
+
+    func _test_sanitizeTranscriptText(_ text: String) -> String {
+        sanitizeTranscriptText(text)
+    }
+
+    func _test_shouldAutoShowTranscriptPanel() -> Bool {
+        shouldAutoShowTranscriptPanel()
+    }
+
+    func _test_stopBackendForCleanup() {
+        stopBackendWarmupPolling()
+        stopBackendStatusIconAnimation()
+        stopHealthMonitor()
+        stopBackendSetupReadyCloseTimer()
+        backendSupervisor.stop()
+    }
+}
+#endif
