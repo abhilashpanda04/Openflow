@@ -121,12 +121,6 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install backend dependencies
-        run: |
-          cd services/backend
-          python -m pip install --upgrade pip
-          pip install -e .
-
       - name: Check Python syntax
         run: |
           cd services/backend
@@ -134,10 +128,10 @@ jobs:
           python -m py_compile qwen_server.py
           echo "✓ Python syntax valid"
 
-      - name: Verify imports
+      - name: Verify code structure with AST
         run: |
           cd services/backend
-          # Only verify syntax, not full imports (since nemo/torch are heavyweight)
-          python -c "import ast; ast.parse(open('app.py').read()); print('✓ app.py syntax valid')"
-          python -c "import ast; ast.parse(open('qwen_server.py').read()); print('✓ qwen_server.py syntax valid')"
-          echo "✓ Backend code syntax verified"
+          # Verify syntax without importing heavy dependencies
+          python -c "import ast; ast.parse(open('app.py').read()); print('✓ app.py AST valid')"
+          python -c "import ast; ast.parse(open('qwen_server.py').read()); print('✓ qwen_server.py AST valid')"
+          echo "✓ Backend code structure verified"
