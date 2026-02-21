@@ -26,6 +26,21 @@ Backend for the speech-to-text desktop application, powered by FastAPI and NeMo/
 - Health check: `curl http://127.0.0.1:8000/health`.
 - Root path now responds with a small status payload: `curl http://127.0.0.1:8000/`.
 
+## Security Configuration
+Both `app.py` and `qwen_server.py` support optional authentication and security hardening via environment variables:
+- **`ASR_LOCAL_API_TOKEN`**: if set, clients must send a matching `X-API-Token` header. Recommended for production use.
+- **`BACKEND_ALLOWED_ORIGINS`** (app.py only): comma-separated list of allowed CORS origins (default: `http://127.0.0.1:3000,http://localhost:3000`). Set to `*` to allow all origins (not recommended for production).
+- **`QWEN_MAX_UPLOAD_BYTES`** (qwen_server.py): maximum upload size in bytes (default: 26214400 = ~25MB).
+
+Example:
+```bash
+export ASR_LOCAL_API_TOKEN="your-secret-token-here"
+export BACKEND_ALLOWED_ORIGINS="http://127.0.0.1:3000,http://localhost:8080"
+./.venv/bin/python app.py
+```
+
+On the client side (e.g., Swift/macOS), configure the token in settings and the client will include it in the `X-API-Token` header for all requests.
+
 ## Quick checks
 ```bash
 ./.venv/bin/python -m compileall .

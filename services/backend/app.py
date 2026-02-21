@@ -10,7 +10,7 @@ import sys
 import shutil
 from typing import Optional
 
-from fastapi import FastAPI, UploadFile, File, HTTPException, Request, BackgroundTasks, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, UploadFile, File, HTTPException, Request, BackgroundTasks, WebSocket, WebSocketDisconnect, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.concurrency import run_in_threadpool
@@ -35,10 +35,20 @@ logger = logging.getLogger(__name__)
 # Initialize FastAPI app
 app = FastAPI(title="ASR Backend")
 
-# CORS Configuration
+# Authentication configuration
+LOCAL_API_TOKEN = os.getenv("ASR_LOCAL_API_TOKEN", "").strip() or None
+
+# CORS Configuration - allow configurable origins for security
+ALLOWED_ORIGINS = os.getenv("BACKEND_ALLOWED_ORIGINS", "").strip()
+if ALLOWED_ORIGINS:
+    allow_origins = [origin.strip() for origin in ALLOWED_ORIGINS.split(",") if origin.strip()]
+else:
+    # Default: only allow loopback for desktop use
+    allow_origins = ["http://127.0.0.1:3000", "http://localhost:3000"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -95,6 +105,18 @@ MAX_WORKERS = min(4, multiprocessing.cpu_count())  # Use up to 4 parallel worker
 executor = ThreadPoolExecutor(max_workers=MAX_WORKERS)
 logger.info(f"Created thread pool with {MAX_WORKERS} workers for parallel processing")
 
+# Inference concurrency control - limit concurrent model calls to prevent resource exhaustion
+# Most ASR models (especially GPU-based) are not thread-safe for concurrent inference
+inference_semaphore = asyncio.Semaphore(1)  # Allow only 1 concurrent inference
+
+
+def validate_local_token(x_api_token: str | None = Header(default=None)) -> None:
+    """Validate API token if configured via ASR_LOCAL_API_TOKEN environment variable."""
+    if LOCAL_API_TOKEN is None:
+        return
+    if x_api_token != LOCAL_API_TOKEN:
+        raise HTTPException(status_code=401, detail="Invalid or missing API token")
+
 
 def allowed_file(filename: str) -> bool:
     """Check if file extension is allowed"""
@@ -102,13 +124,14 @@ def allowed_file(filename: str) -> bool:
 
 
 @app.get("/health")
-def health_check():
+def health_check(_auth: None = Depends(validate_local_token)):
     """Health check endpoint"""
     return {
         'status': 'healthy',
         'model_loaded': asr_model is not None,
         'model_type': 'NeMo Parakeet TDT 0.6B v2',
-        'device': device if asr_model is not None else 'unknown'
+        'device': device if asr_model is not None else 'unknown',
+        'auth_enabled': LOCAL_API_TOKEN is not None
     }
 
 
@@ -124,7 +147,10 @@ def root() -> dict[str, object]:
 
 
 @app.post("/transcribe")
-async def transcribe_audio(audio: UploadFile = File(...)):
+async def transcribe_audio(
+    audio: UploadFile = File(...),
+    _auth: None = Depends(validate_local_token)
+):
     """
     Transcribe audio file to text
     Expects: multipart/form-data with 'audio' file
@@ -233,7 +259,9 @@ async def transcribe_audio(audio: UploadFile = File(...)):
                     logger.error(f"Audio conversion/transcription error: {str(e)}")
                     return "", None
 
-            transcription, info = await run_in_threadpool(run_transcription, file_path)
+            # Limit concurrent inference to prevent resource exhaustion
+            async with inference_semaphore:
+                transcription, info = await run_in_threadpool(run_transcription, file_path)
             
             # Handle invalid/empty chunks
             if info is None or transcription == "":
@@ -279,7 +307,10 @@ async def transcribe_audio(audio: UploadFile = File(...)):
 
 
 @app.post("/transcribe-stream")
-async def transcribe_stream(request: Request):
+async def transcribe_stream(
+    request: Request,
+    _auth: None = Depends(validate_local_token)
+):
     """
     Transcribe audio stream in real-time
     Expects: application/octet-stream with raw audio data
@@ -290,6 +321,11 @@ async def transcribe_stream(request: Request):
             return JSONResponse({
                 'error': 'Model not loaded. Please restart the application.'
             }, status_code=503)
+
+        # Check content length before reading body to prevent DoS
+        content_length = request.headers.get("content-length")
+        if content_length and int(content_length) > MAX_FILE_SIZE:
+            return JSONResponse({'error': f'Payload too large (max {MAX_FILE_SIZE} bytes)'}, status_code=413)
 
         # Get audio data from request body
         audio_data = await request.body()
@@ -324,7 +360,9 @@ async def transcribe_stream(request: Request):
                 
                 return text
 
-            transcription = await run_in_threadpool(process_stream, audio_data)
+            # Limit concurrent inference to prevent resource exhaustion
+            async with inference_semaphore:
+                transcription = await run_in_threadpool(process_stream, audio_data)
 
             logger.info(f"Stream transcription completed: {transcription[:100]}...")
 
@@ -349,18 +387,32 @@ async def websocket_transcribe(websocket: WebSocket):
     WebSocket endpoint for real-time transcription streaming
     Client sends audio chunks, server returns transcriptions
     """
+    # Validate token before accepting connection
+    token = dict(websocket.headers).get("x-api-token")
+    if LOCAL_API_TOKEN and token != LOCAL_API_TOKEN:
+        await websocket.close(code=1008, reason="Invalid or missing API token")
+        logger.warning("WebSocket connection rejected: invalid token")
+        return
+    
     await websocket.accept()
     logger.info("WebSocket connection established")
     
     audio_buffer = bytearray()
     BUFFER_SIZE = 128000  # ~8 seconds of audio - larger buffer for complete WebM segments
     MIN_VALID_SIZE = 50000  # Minimum 50KB for valid WebM data
+    MAX_BUFFER_SIZE = 10 * 1024 * 1024  # 10MB absolute maximum to prevent memory exhaustion
     
     try:
         while True:
             # Receive audio data from client
             data = await websocket.receive_bytes()
             audio_buffer.extend(data)
+            
+            # Enforce maximum buffer size to prevent DoS
+            if len(audio_buffer) > MAX_BUFFER_SIZE:
+                logger.warning(f"Buffer exceeded maximum size ({len(audio_buffer)} bytes), closing connection")
+                await websocket.close(code=1009, reason="Message too large")
+                return
             
             # Process buffer when it reaches threshold
             if len(audio_buffer) >= BUFFER_SIZE:
@@ -412,8 +464,9 @@ async def websocket_transcribe(websocket: WebSocket):
                         logger.error(f"Buffer conversion error: {str(e)}")
                         return "", "error"
                 
-                # Run transcription in thread pool
-                text, language = await run_in_threadpool(process_buffer, bytes(audio_buffer))
+                # Run transcription in thread pool with concurrency control
+                async with inference_semaphore:
+                    text, language = await run_in_threadpool(process_buffer, bytes(audio_buffer))
                 
                 # Send result back to client
                 if text:
