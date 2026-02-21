@@ -45,14 +45,14 @@ final class RecordingWaveView: NSView {
         let secondaryColor: NSColor
         switch mode {
         case .recording:
-            primaryColor = NSColor(calibratedRed: 0.94, green: 0.98, blue: 1.0, alpha: 0.95)
-            secondaryColor = NSColor(calibratedRed: 0.70, green: 0.86, blue: 1.0, alpha: 0.70)
+            primaryColor = AppStyle.Palette.accent
+            secondaryColor = AppStyle.Palette.accentSoft
         case .transcribing:
-            primaryColor = NSColor(calibratedRed: 0.86, green: 0.95, blue: 1.0, alpha: 0.92)
-            secondaryColor = NSColor(calibratedRed: 0.58, green: 0.78, blue: 0.98, alpha: 0.62)
+            primaryColor = AppStyle.Palette.accentSoft
+            secondaryColor = AppStyle.Palette.accent
         case .warming:
-            primaryColor = NSColor(calibratedRed: 1.0, green: 0.95, blue: 0.82, alpha: 0.95)
-            secondaryColor = NSColor(calibratedRed: 1.0, green: 0.81, blue: 0.52, alpha: 0.75)
+            primaryColor = AppStyle.Palette.accentWarm
+            secondaryColor = AppStyle.Palette.accentSoft
         }
 
         let spacing: CGFloat = 4
@@ -206,11 +206,14 @@ final class TranscriptPanelController {
 
         let language = NSTextField(labelWithString: "Language: unknown")
         language.frame = NSRect(x: 20, y: 320, width: 300, height: 20)
+        language.font = AppStyle.Typography.helper
+        language.textColor = AppStyle.Palette.hintText
         content.addSubview(language)
         languageLabel = language
 
         let copyButton = NSButton(title: "Copy", target: self, action: #selector(copyTranscript))
         copyButton.frame = NSRect(x: 520, y: 315, width: 80, height: 28)
+        copyButton.bezelStyle = .texturedRounded
         content.addSubview(copyButton)
 
         let scrollView = NSScrollView(frame: NSRect(x: 20, y: 20, width: 580, height: 285))
@@ -256,18 +259,18 @@ final class TranscriptPanelController {
         root.blendingMode = .withinWindow
         root.state = .active
         root.wantsLayer = true
-        root.layer?.cornerRadius = 24
+        root.layer?.cornerRadius = AppStyle.Metrics.panelCornerRadius
         root.layer?.masksToBounds = true
         root.layer?.borderWidth = 1
-        root.layer?.borderColor = NSColor.white.withAlphaComponent(0.34).cgColor
-        root.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.07).cgColor
+        root.layer?.borderColor = AppStyle.Palette.panelBorder.cgColor
+        root.layer?.backgroundColor = AppStyle.Palette.panelFill.cgColor
         panel.contentView = root
 
         let glowLayer = CAGradientLayer()
         glowLayer.frame = root.bounds
         glowLayer.colors = [
-            NSColor.white.withAlphaComponent(0.18).cgColor,
-            NSColor.white.withAlphaComponent(0.06).cgColor,
+            AppStyle.Palette.panelGlowTop.cgColor,
+            AppStyle.Palette.panelGlowBottom.cgColor,
             NSColor.clear.cgColor,
         ]
         glowLayer.startPoint = CGPoint(x: 0.5, y: 1.0)
@@ -277,7 +280,7 @@ final class TranscriptPanelController {
         let shadowContainer = NSView(frame: root.bounds)
         shadowContainer.autoresizingMask = [.width, .height]
         shadowContainer.wantsLayer = true
-        shadowContainer.layer?.cornerRadius = 24
+        shadowContainer.layer?.cornerRadius = AppStyle.Metrics.panelCornerRadius
         shadowContainer.layer?.shadowColor = NSColor.black.withAlphaComponent(0.25).cgColor
         shadowContainer.layer?.shadowOpacity = 0.35
         shadowContainer.layer?.shadowRadius = 24
@@ -288,13 +291,13 @@ final class TranscriptPanelController {
         let titleLabel = NSTextField(labelWithString: "Recording")
         titleLabel.frame = NSRect(x: 18, y: 84, width: 264, height: 16)
         titleLabel.textColor = NSColor.white.withAlphaComponent(0.94)
-        titleLabel.font = NSFont.systemFont(ofSize: 13, weight: .semibold)
+        titleLabel.font = AppStyle.Typography.sectionTitle
         root.addSubview(titleLabel)
 
         let subtitleLabel = NSTextField(wrappingLabelWithString: "Listening...")
         subtitleLabel.frame = NSRect(x: 18, y: 64, width: 264, height: 16)
         subtitleLabel.textColor = NSColor.white.withAlphaComponent(0.80)
-        subtitleLabel.font = NSFont.systemFont(ofSize: 11)
+        subtitleLabel.font = AppStyle.Typography.helper
         subtitleLabel.maximumNumberOfLines = 2
         root.addSubview(subtitleLabel)
 

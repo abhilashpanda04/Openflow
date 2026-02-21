@@ -6,12 +6,25 @@ Thanks for contributing.
 
 - macOS 13+
 - Swift 5.9+
+- Python 3.12+ (for the backend)
 
-From `mac-app/`:
+### macOS app
+
+From the repo root:
 
 ```bash
 swift build
 swift run Openflow
+```
+
+### Backend (local)
+
+```bash
+cd services/backend
+python3 -m venv .venv
+source .venv/bin/activate
+./.venv/bin/pip install -e .
+./.venv/bin/python qwen_server.py
 ```
 
 ## Pull Request Guidelines

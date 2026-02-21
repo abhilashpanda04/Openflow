@@ -287,9 +287,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             if state == .recording {
                 button.contentTintColor = .systemRed
             } else if state == .transcribing {
-                button.contentTintColor = .systemBlue
+                button.contentTintColor = AppStyle.Palette.accent
             } else if isBackendWarmupActive {
-                button.contentTintColor = .systemOrange
+                button.contentTintColor = AppStyle.Palette.accentWarm
             } else {
                 button.contentTintColor = nil
             }
@@ -427,7 +427,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self.transcriptPanel.showRecording()
             case .failure(let error):
                 self.transition(to: .idle)
-                self.showError("Unable to start recording: \(error.localizedDescription)")
+                if let recorderError = error as? AudioRecorderError, recorderError == .micPermissionDenied {
+                    self.showError("Microphone access is disabled. Enable Openflow in System Settings > Privacy & Security > Microphone, then relaunch.")
+                } else {
+                    self.showError("Unable to start recording: \(error.localizedDescription)")
+                }
             }
         }
     }
@@ -1203,7 +1207,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             let alert = NSAlert()
             alert.messageText = "Welcome to Openflow"
-            alert.informativeText = "Openflow runs in the menu bar. Click the waveform icon near the clock to open controls. You can start backend setup now, or open Settings first."
+            alert.informativeText = "Openflow runs in the menu bar. Click the waveform icon near the clock to open controls. You can start backend setup now, or open Settings first. If microphone access was denied, enable Openflow in System Settings > Privacy & Security > Microphone, then relaunch."
             alert.alertStyle = .informational
             alert.addButton(withTitle: "Start Backend Setup")
             alert.addButton(withTitle: "Open Settings")
