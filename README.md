@@ -35,12 +35,37 @@ Download the latest packaged build from GitHub Releases:
 
 ### Option 2: Build from source
 
+**Quick start:**
 ```bash
-swift build
-swift run Openflow
+# Build debug .app with microphone permissions
+make debug
+
+# Run the app
+open .build/arm64-apple-macosx/debug/Openflow.app
 ```
 
-When prompted, grant Microphone access in macOS.
+When the app launches, grant **Microphone** access when prompted by macOS.
+
+**Full development setup:**
+```bash
+# Install dependencies
+make install-deps
+
+# Build and test microphone permissions
+make test-mic
+
+# Set up backend (in a separate terminal)
+make backend
+```
+
+**Available build targets:**
+```bash
+make debug      # Quick debug build for testing
+make release    # Optimized release build
+make dmg        # Create distributable DMG
+make clean      # Clean build artifacts
+make help       # Show all available targets
+```
 
 ## System Requirements
 
@@ -59,8 +84,14 @@ At runtime, the app communicates with a backend endpoint (`/health`, `/transcrib
 
 ## Backend (Local)
 
-The repo includes a vendored backend in `services/backend`.
+The repo includes a Python ASR backend in `services/backend`.
 
+**Quick start with Makefile:**
+```bash
+make backend
+```
+
+**Manual setup:**
 ```bash
 cd services/backend
 python3 -m venv .venv
@@ -69,7 +100,7 @@ source .venv/bin/activate
 ./.venv/bin/python qwen_server.py
 ```
 
-Once running, keep the Openflow app pointed at `http://127.0.0.1:8001`.
+Once running, the backend listens at `http://127.0.0.1:8001`. Keep the Openflow app pointed at this URL in Settings.
 
 ## Settings
 
