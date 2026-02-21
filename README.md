@@ -155,6 +155,8 @@ All PRs and pushes are automatically tested:
 ## Open-Source Project Docs
 
 - Contribution guide: `CONTRIBUTING.md`
+- Code of conduct: `CODE_OF_CONDUCT.md`
+- Changelog: `CHANGELOG.md`
 - Security policy: `SECURITY.md`
 - Third-party notices: `THIRD_PARTY_NOTICES.md`
 - Citation metadata: `CITATION.cff`
