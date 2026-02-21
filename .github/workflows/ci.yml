@@ -94,12 +94,17 @@ jobs:
           echo "=== Checking Swift code ==="
           
           # Check for trailing whitespace
-          if grep -r '[[:space:]]$' Sources/OpenflowMac/*.swift; then
-            echo "WARNING: Found trailing whitespace"
+          if grep -r '[[:space:]]$' Sources/OpenflowMac/*.swift 2>/dev/null; then
+            echo "WARNING: Found trailing whitespace (non-fatal)"
           fi
           
           # Check file permissions
-          find Sources/OpenflowMac -name "*.swift" -type f ! -perm 644 && exit 1 || true
+          BAD_PERMS=$(find Sources/OpenflowMac -name "*.swift" -type f ! -perm 644 2>/dev/null || true)
+          if [ -n "$BAD_PERMS" ]; then
+            echo "ERROR: Files with incorrect permissions:"
+            echo "$BAD_PERMS"
+            exit 1
+          fi
           
           echo "✓ Swift code checks passed"
 
