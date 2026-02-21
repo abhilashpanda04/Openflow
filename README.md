@@ -5,6 +5,7 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/abhilashpanda04/Openflow/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/abhilashpanda04/Openflow/actions/workflows/ci.yml/badge.svg"></a>
   <a href="https://github.com/abhilashpanda04/Openflow/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/abhilashpanda04/Openflow"></a>
   <img alt="Platform" src="https://img.shields.io/badge/platform-macOS%2013%2B-black">
   <img alt="Swift" src="https://img.shields.io/badge/swift-5.9%2B-orange">
@@ -78,6 +79,8 @@ make help       # Show all available targets
 - `Sources/OpenflowMac` - Swift macOS app source
 - `services/backend` - Python ASR backend service
 - `packaging/` - DMG/build scripts and app metadata
+- `.github/workflows/` - CI/CD automation (build, test, release)
+- `scripts/` - Release and development utilities
 - `assets/` - repository assets (logo and visuals)
 
 At runtime, the app communicates with a backend endpoint (`/health`, `/transcribe`) and can either manage a local backend process or monitor readiness for an externally managed backend.
@@ -116,6 +119,38 @@ Key settings users can control:
 - **Max Upload Size**: set the allowed audio upload limit per recording.
 
 Settings are applied immediately after save.
+
+## Releases
+
+### Automated Releases
+
+Releases are automated via GitHub Actions. When a version tag is pushed, the CI/CD pipeline:
+1. Builds an optimized release .app bundle
+2. Creates a DMG with bundled Python backend
+3. Generates SHA-256 checksums
+4. Publishes a GitHub release with the DMG
+
+### Creating a Release
+
+**For maintainers:**
+```bash
+# Create and push a release tag
+./scripts/create-release.sh 0.2.0
+
+# Or manually:
+git tag -a v0.2.0 -m "Release v0.2.0"
+git push origin v0.2.0
+```
+
+The release workflow will automatically build and publish the DMG to GitHub Releases.
+
+### CI/CD Status
+
+All PRs and pushes are automatically tested:
+- ✅ Swift build validation
+- ✅ Code signing verification
+- ✅ Entitlements check (microphone permissions)
+- ✅ Backend import tests
 
 ## Open-Source Project Docs
 

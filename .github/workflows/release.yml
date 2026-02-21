@@ -1,0 +1,172 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Triggers on version tags like v1.0.0, v0.1.0, etc.
+
+permissions:
+  contents: write  # Required for creating releases
+
+jobs:
+  build-dmg:
+    name: Build macOS DMG
+    runs-on: macos-13
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for git describe
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        with:
+          path: services/backend/.venv
+          key: ${{ runner.os }}-python-${{ hashFiles('services/backend/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-python-
+
+      - name: Install dependencies
+        run: |
+          echo "=== System Info ==="
+          sw_vers
+          xcodebuild -version
+          swift --version
+          python3 --version
+          echo ""
+          
+          echo "=== Installing backend dependencies ==="
+          cd services/backend
+          python3 -m venv .venv
+          .venv/bin/pip install --upgrade pip
+          .venv/bin/pip install -e .
+          cd ../..
+          
+          echo "✓ Dependencies installed"
+
+      - name: Build release .app
+        run: |
+          echo "=== Building release .app bundle ==="
+          make release
+          
+          echo "=== Verifying build ==="
+          ls -lh .build/arm64-apple-macosx/release/Openflow.app/Contents/MacOS/Openflow
+          codesign --verify --deep --strict .build/arm64-apple-macosx/release/Openflow.app
+          echo "✓ Release build verified"
+
+      - name: Create DMG
+        run: |
+          echo "=== Creating distributable DMG ==="
+          make dmg
+          
+          echo "=== Verifying DMG ==="
+          ls -lh dist/Openflow.dmg
+          file dist/Openflow.dmg
+          echo "✓ DMG created"
+
+      - name: Generate checksums
+        run: |
+          cd dist
+          shasum -a 256 Openflow.dmg > Openflow.dmg.sha256
+          cat Openflow.dmg.sha256
+
+      - name: Create release notes
+        id: release_notes
+        run: |
+          cat > release_notes.md <<'EOF'
+          ## Openflow ${{ steps.version.outputs.version }}
+          
+          ### Installation
+          
+          1. Download `Openflow.dmg`
+          2. Open the DMG
+          3. Drag `Openflow.app` to your Applications folder
+          4. Launch Openflow from Applications
+          5. Grant microphone access when prompted
+          
+          ### First Run Setup
+          
+          The app includes a bundled Python backend. On first launch:
+          - Backend will start automatically (takes 1-3 minutes for model download)
+          - Grant microphone access in System Settings
+          - Configure your hotkey (default: Cmd+Shift+Space)
+          
+          ### What's Included
+          
+          - ✅ Openflow macOS app
+          - ✅ Bundled Python ASR backend (Qwen3-ASR-1.7B)
+          - ✅ Self-contained - no external dependencies needed
+          
+          ### System Requirements
+          
+          - macOS 13.0 or later
+          - Apple Silicon (M1/M2/M3) or Intel
+          - ~2GB disk space for model cache
+          
+          ### Verification
+          
+          **SHA-256 Checksum:**
+          ```
+          $(cat dist/Openflow.dmg.sha256)
+          ```
+          
+          ### Support
+          
+          - [Report Issues](https://github.com/${{ github.repository }}/issues)
+          - [Documentation](https://github.com/${{ github.repository }}/blob/main/README.md)
+          EOF
+          
+          cat release_notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Openflow ${{ steps.version.outputs.version }}
+          body_path: release_notes.md
+          files: |
+            dist/Openflow.dmg
+            dist/Openflow.dmg.sha256
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.version, 'alpha') || contains(steps.version.outputs.version, 'beta') || contains(steps.version.outputs.version, 'rc') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload DMG artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: openflow-dmg-${{ steps.version.outputs.version }}
+          path: |
+            dist/Openflow.dmg
+            dist/Openflow.dmg.sha256
+          retention-days: 90
+
+  # Optional: Build Intel version (if needed for universal binary later)
+  # build-universal:
+  #   name: Build Universal Binary
+  #   runs-on: macos-13
+  #   steps:
+  #     - name: Build for Intel
+  #       run: |
+  #         swift build -c release --arch x86_64
+  #     - name: Build for Apple Silicon  
+  #       run: |
+  #         swift build -c release --arch arm64
+  #     - name: Create universal binary
+  #       run: |
+  #         lipo -create \
+  #           .build/x86_64-apple-macosx/release/Openflow \
+  #           .build/arm64-apple-macosx/release/Openflow \
+  #           -output Openflow-universal

@@ -1,0 +1,163 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main, 'abhilashpanda04/**' ]
+  push:
+    branches: [ main, 'abhilashpanda04/**' ]
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: macos-13
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Needed for git describe version
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Cache Swift build
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: ${{ runner.os }}-swift-${{ hashFiles('Package.swift') }}
+          restore-keys: |
+            ${{ runner.os }}-swift-
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        with:
+          path: services/backend/.venv
+          key: ${{ runner.os }}-python-${{ hashFiles('services/backend/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-python-
+
+      - name: Install dependencies
+        run: |
+          echo "=== System Info ==="
+          sw_vers
+          xcodebuild -version
+          swift --version
+          python3 --version
+          echo ""
+          
+          echo "=== Installing backend dependencies ==="
+          cd services/backend
+          python3 -m venv .venv
+          .venv/bin/pip install --upgrade pip
+          .venv/bin/pip install -e .
+          cd ../..
+
+      - name: Build debug .app
+        run: |
+          echo "=== Building debug .app bundle ==="
+          make debug
+
+      - name: Verify build artifacts
+        run: |
+          echo "=== Verifying build ==="
+          
+          # Check .app bundle exists
+          if [ ! -d .build/arm64-apple-macosx/debug/Openflow.app ]; then
+            echo "ERROR: .app bundle not found"
+            exit 1
+          fi
+          
+          # Check binary exists
+          if [ ! -x .build/arm64-apple-macosx/debug/Openflow.app/Contents/MacOS/Openflow ]; then
+            echo "ERROR: Binary not found or not executable"
+            exit 1
+          fi
+          
+          # Check Info.plist exists
+          if [ ! -f .build/arm64-apple-macosx/debug/Openflow.app/Contents/Info.plist ]; then
+            echo "ERROR: Info.plist not found"
+            exit 1
+          fi
+          
+          # Verify code signature
+          echo "Verifying code signature..."
+          codesign --verify --deep --strict .build/arm64-apple-macosx/debug/Openflow.app
+          
+          # Check entitlements
+          echo "Checking entitlements..."
+          codesign -d --entitlements - .build/arm64-apple-macosx/debug/Openflow.app 2>&1 | grep -q "com.apple.security.device.microphone"
+          
+          echo "✓ All build artifacts verified"
+
+      - name: Check backend can be imported
+        run: |
+          echo "=== Testing backend imports ==="
+          cd services/backend
+          .venv/bin/python -c "import qwen_asr; print('✓ qwen_asr imports successfully')"
+          .venv/bin/python -c "from fastapi import FastAPI; print('✓ FastAPI imports successfully')"
+
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: openflow-debug-${{ github.sha }}
+          path: |
+            .build/arm64-apple-macosx/debug/Openflow.app
+          retention-days: 7
+
+  lint-swift:
+    name: Lint Swift Code
+    runs-on: macos-13
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check Swift formatting
+        run: |
+          # Check for common issues
+          echo "=== Checking Swift code ==="
+          
+          # Check for trailing whitespace
+          if grep -r '[[:space:]]$' Sources/OpenflowMac/*.swift; then
+            echo "WARNING: Found trailing whitespace"
+          fi
+          
+          # Check file permissions
+          find Sources/OpenflowMac -name "*.swift" -type f ! -perm 644 && exit 1 || true
+          
+          echo "✓ Swift code checks passed"
+
+  check-backend:
+    name: Check Backend Code
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install backend dependencies
+        run: |
+          cd services/backend
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Check Python syntax
+        run: |
+          cd services/backend
+          python -m py_compile app.py
+          python -m py_compile qwen_server.py
+          echo "✓ Python syntax valid"
+
+      - name: Verify imports
+        run: |
+          cd services/backend
+          python -c "import app; print('✓ app.py imports')"
+          python -c "import qwen_server; print('✓ qwen_server.py imports')"
