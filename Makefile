@@ -32,7 +32,7 @@ release: ## Build optimized release .app bundle
 
 dmg: release ## Create distribution DMG (includes backend)
 	@echo "$(BLUE)Creating release DMG...$(NC)"
-	@./packaging/create-dmg.sh
+	@./packaging/create_dmg.sh
 
 test-mic: debug ## Build and launch app to test microphone permissions
 	@echo "$(BLUE)Testing microphone permissions...$(NC)"
