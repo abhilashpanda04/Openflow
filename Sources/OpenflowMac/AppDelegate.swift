@@ -444,6 +444,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let toggleTitle = state == .recording ? "Stop Recording" : "Start Recording"
         let toggleItem = NSMenuItem(title: toggleTitle, action: #selector(toggleRecordingMenuAction), keyEquivalent: "")
+        toggleItem.image = NSImage(systemSymbolName: state == .recording ? "stop.circle.fill" : "mic.fill", accessibilityDescription: toggleTitle)
         toggleItem.target = self
         toggleItem.isEnabled = state != .transcribing
         menu.addItem(toggleItem)

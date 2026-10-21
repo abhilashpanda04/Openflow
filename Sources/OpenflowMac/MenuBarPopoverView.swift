@@ -349,8 +349,22 @@ public struct MenuBarPopoverView: View {
                                 .foregroundStyle(Color.white)
                         }
                     } else {
-                        OpenflowLogoView(size: 30, cornerRadius: 8)
-                            .shadow(color: Color(hex: "0284c7").opacity(0.35), radius: 6, x: 0, y: 1)
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [Color(hex: "0284c7"), Color(hex: "0369a1")],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .frame(width: 30, height: 30)
+                                .shadow(color: Color(hex: "0284c7").opacity(0.35), radius: 6, x: 0, y: 1)
+
+                            Image(systemName: "mic.fill")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(Color.white)
+                        }
                     }
 
                     VStack(alignment: .leading, spacing: 2) {
