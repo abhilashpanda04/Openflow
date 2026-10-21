@@ -849,6 +849,38 @@ public struct MenuBarPopoverView: View {
             }
             .buttonStyle(.plain)
 
+            // Speech Reader (Text-to-Speech)
+            Button {
+                ReaderPanelController.shared.show()
+            } label: {
+                HStack {
+                    HStack(spacing: 8) {
+                        Image(systemName: "book.fill")
+                            .font(.system(size: 12))
+                            .foregroundStyle(Color(hex: "38bdf8"))
+
+                        Text("Speech Reader (Read Aloud)")
+                            .font(.system(size: 12.5, weight: .medium))
+                            .foregroundStyle(PopoverTheme.textPrimary.opacity(0.90))
+                    }
+
+                    Spacer()
+
+                    Text("TTS")
+                        .font(.system(size: 9.5, weight: .bold))
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 1)
+                        .background(Color(hex: "0284c7").opacity(0.2))
+                        .foregroundStyle(Color(hex: "38bdf8"))
+                        .cornerRadius(3)
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+                .background(Color.clear)
+                .cornerRadius(6)
+            }
+            .buttonStyle(.plain)
+
             // Settings...
             Button {
                 state.onOpenSettings?()

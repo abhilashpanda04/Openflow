@@ -111,7 +111,7 @@ final class BackendSupervisorIntegrationTests: XCTestCase {
         if [ -n "$OPENFLOW_MODEL_NAME" ]; then
           echo "model:$OPENFLOW_MODEL_NAME"
         fi
-        sleep 1
+        /bin/sleep 1
         exit 0
         """
         try launcher.write(to: fakePython, atomically: true, encoding: .utf8)

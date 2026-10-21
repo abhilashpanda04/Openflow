@@ -70,6 +70,7 @@ enum MacTheme {
 enum SettingsTab: String, CaseIterable, Identifiable {
     case dictation = "Dictation"
     case engines = "Speech Engine"
+    case reader = "Reader"
     case stats = "Speech Stats"
     case history = "History"
     case permissions = "Permissions"
@@ -85,6 +86,7 @@ struct SettingsView: View {
     @State private var showingResetStatsAlert = false
     @ObservedObject private var themeManager = AppThemeManager.shared
     @ObservedObject private var downloadManager = ModelDownloadProgressManager.shared
+    @ObservedObject private var readerManager = ReaderManager.shared
 
     // Engine & Backend Settings
     @State private var backendBaseURL = UserDefaults.standard.string(forKey: UserSettingKey.backendBaseURL) ?? "http://127.0.0.1:8001"
@@ -167,6 +169,8 @@ struct SettingsView: View {
                             dictationTabView
                         case .engines:
                             enginesTabView
+                        case .reader:
+                            readerTabView
                         case .stats:
                             statsTabView
                         case .history:
@@ -2914,6 +2918,225 @@ struct SettingsView: View {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .stroke(MacTheme.border, lineWidth: 1)
         )
+    }
+
+    // MARK: - Tab: Reader (Text-to-Speech)
+    private var readerTabView: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Header card
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 8) {
+                    Image(systemName: "book.fill")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(Color(hex: "0284c7"))
+
+                    Text("Speech Reader (Text-to-Speech)")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(MacTheme.textPrimary)
+
+                    Spacer()
+
+                    Button {
+                        ReaderPanelController.shared.show()
+                    } label: {
+                        HStack(spacing: 5) {
+                            Image(systemName: "pip.enter")
+                                .font(.system(size: 11))
+                            Text("Open Floating Player")
+                                .font(.system(size: 11, weight: .semibold))
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(Color(hex: "0284c7"))
+                        .foregroundStyle(Color.white)
+                        .cornerRadius(6)
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                Text("Listen to books, long-form articles, and clipboard text using native Apple neural voices with sentence-by-sentence progression.")
+                    .font(.system(size: 11.5))
+                    .foregroundStyle(MacTheme.textMuted)
+            }
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(MacTheme.surface)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(MacTheme.border, lineWidth: 1)
+            )
+
+            // Voice & Speed Controls
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Voice & Playback Settings")
+                    .font(.system(size: 12.5, weight: .bold))
+                    .foregroundStyle(MacTheme.textPrimary)
+
+                // Voice Picker
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Narrator Voice")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(MacTheme.textMuted)
+
+                    Picker("", selection: Binding(
+                        get: { readerManager.currentVoice?.id ?? "" },
+                        set: { newId in
+                            if let v = readerManager.availableVoices.first(where: { $0.id == newId }) {
+                                readerManager.currentVoice = v
+                            }
+                        }
+                    )) {
+                        ForEach(readerManager.availableVoices.prefix(25)) { voice in
+                            Text(voice.displayName).tag(voice.id)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .labelsHidden()
+                }
+
+                // Speech Rate Slider
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Playback Speed")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(MacTheme.textMuted)
+
+                        Spacer()
+
+                        Text(String(format: "%.2fx", readerManager.playbackRate))
+                            .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                            .foregroundStyle(Color(hex: "0284c7"))
+                    }
+
+                    Slider(value: Binding(
+                        get: { readerManager.playbackRate },
+                        set: { readerManager.playbackRate = $0 }
+                    ), in: 0.5...2.0, step: 0.05)
+                }
+
+                // Test Voice Button & Read Clipboard
+                HStack(spacing: 10) {
+                    Button {
+                        readerManager.startReading(text: "Hello! This is Openflow reading with ultra-clear voice synthesis.")
+                    } label: {
+                        HStack(spacing: 5) {
+                            Image(systemName: "speaker.wave.2")
+                                .font(.system(size: 11))
+                            Text("Test Voice")
+                                .font(.system(size: 11, weight: .medium))
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(MacTheme.cardSecondary)
+                        .foregroundStyle(MacTheme.textPrimary)
+                        .cornerRadius(6)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .stroke(MacTheme.border, lineWidth: 1)
+                        )
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        readerManager.readClipboard()
+                        ReaderPanelController.shared.show()
+                    } label: {
+                        HStack(spacing: 5) {
+                            Image(systemName: "doc.on.clipboard")
+                                .font(.system(size: 11))
+                            Text("Read Clipboard Now")
+                                .font(.system(size: 11, weight: .medium))
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(MacTheme.cardSecondary)
+                        .foregroundStyle(MacTheme.textPrimary)
+                        .cornerRadius(6)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .stroke(MacTheme.border, lineWidth: 1)
+                        )
+                    }
+                    .buttonStyle(.plain)
+
+                    if readerManager.state == .playing || readerManager.state == .paused {
+                        Button {
+                            readerManager.stop()
+                        } label: {
+                            HStack(spacing: 5) {
+                                Image(systemName: "stop.fill")
+                                    .font(.system(size: 10))
+                                Text("Stop")
+                                    .font(.system(size: 11, weight: .medium))
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(Color.red.opacity(0.15))
+                            .foregroundStyle(Color.red)
+                            .cornerRadius(6)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(MacTheme.surface)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(MacTheme.border, lineWidth: 1)
+            )
+
+            // How to Read Books Card
+            VStack(alignment: .leading, spacing: 8) {
+                Text("How to Read Books & Articles")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(MacTheme.textPrimary)
+
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(alignment: .top, spacing: 8) {
+                        Text("1.")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(Color(hex: "0284c7"))
+                        Text("Copy any chapter or text from Apple Books, Kindle for Mac, Safari, or a PDF.")
+                            .font(.system(size: 11))
+                            .foregroundStyle(MacTheme.textMuted)
+                    }
+
+                    HStack(alignment: .top, spacing: 8) {
+                        Text("2.")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(Color(hex: "0284c7"))
+                        Text("Click 'Read Clipboard Now' or open the Floating Player from the Menubar.")
+                            .font(.system(size: 11))
+                            .foregroundStyle(MacTheme.textMuted)
+                    }
+
+                    HStack(alignment: .top, spacing: 8) {
+                        Text("3.")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(Color(hex: "0284c7"))
+                        Text("Openflow breaks down the book sentence-by-sentence, giving you complete playback controls and progress tracking.")
+                            .font(.system(size: 11))
+                            .foregroundStyle(MacTheme.textMuted)
+                    }
+                }
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(MacTheme.surface)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(MacTheme.border, lineWidth: 1)
+            )
+        }
     }
 
     // MARK: - Tab 5: About

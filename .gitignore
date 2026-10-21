@@ -4,4 +4,6 @@
 dist/
 *.key
 *private_key*
+agenticprep-clone/
+data_scraped/
 
