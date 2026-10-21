@@ -47,6 +47,13 @@ final class AdditionalCoverageTests: XCTestCase {
         XCTAssertTrue(engine110.engineName.contains("nvidia_parakeet-tdt-110m"))
     }
 
+    func testLocalSenseVoiceEngineInitialProperties() {
+        let engine = LocalSenseVoiceEngine(modelName: "qwen_qwen3-asr-0.6b")
+        XCTAssertFalse(engine.isReady)
+        XCTAssertTrue(engine.engineName.contains("SenseVoice CoreML"))
+        XCTAssertEqual(engine.statusDescription, "Not loaded")
+    }
+
     private func render(view: NSView) {
         let width = max(1, Int(view.bounds.width))
         let height = max(1, Int(view.bounds.height))

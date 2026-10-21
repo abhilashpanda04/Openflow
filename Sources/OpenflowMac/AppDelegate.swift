@@ -42,6 +42,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var localWhisperEngine: LocalWhisperEngine?
     private var localParakeetEngine: LocalParakeetEngine?
+    private var localSenseVoiceEngine: LocalSenseVoiceEngine?
     private var appleSpeechEngine: AppleSpeechEngine?
     private var remoteServerEngine: RemoteServerASREngine?
     private var customEngine: ASREngine?
@@ -50,12 +51,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let custom = customEngine { return custom }
         switch config.engineType {
         case .localCoreML:
-            if config.localWhisperModel.family == .parakeet {
+            switch config.localWhisperModel.family {
+            case .parakeet:
                 if let parakeet = localParakeetEngine { return parakeet }
                 let created = LocalParakeetEngine(modelName: config.localWhisperModel.rawValue)
                 localParakeetEngine = created
                 return created
-            } else {
+            case .qwen:
+                if let sense = localSenseVoiceEngine { return sense }
+                let created = LocalSenseVoiceEngine(modelName: config.localWhisperModel.rawValue)
+                localSenseVoiceEngine = created
+                return created
+            case .whisper, .all:
                 if let local = localWhisperEngine { return local }
                 let created = LocalWhisperEngine(modelName: config.localWhisperModel.rawValue)
                 localWhisperEngine = created
@@ -430,12 +437,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         remoteServerEngine = RemoteServerASREngine(client: asrClient)
         switch config.engineType {
         case .localCoreML:
-            if config.localWhisperModel.family == .parakeet {
+            switch config.localWhisperModel.family {
+            case .parakeet:
                 localParakeetEngine = LocalParakeetEngine(modelName: config.localWhisperModel.rawValue)
                 localWhisperEngine = nil
-            } else {
+                localSenseVoiceEngine = nil
+            case .qwen:
+                localSenseVoiceEngine = LocalSenseVoiceEngine(modelName: config.localWhisperModel.rawValue)
+                localWhisperEngine = nil
+                localParakeetEngine = nil
+            case .whisper, .all:
                 localWhisperEngine = LocalWhisperEngine(modelName: config.localWhisperModel.rawValue)
                 localParakeetEngine = nil
+                localSenseVoiceEngine = nil
             }
             stopHealthMonitor()
         case .appleSpeech:
@@ -477,7 +491,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let backendTitle: String
         switch config.engineType {
         case .localCoreML:
-            let engineLabel = config.localWhisperModel.family == .parakeet ? "Parakeet CoreML" : "WhisperKit CoreML"
+            let engineLabel: String
+            switch config.localWhisperModel.family {
+            case .parakeet: engineLabel = "Parakeet CoreML"
+            case .qwen: engineLabel = "SenseVoice CoreML"
+            case .whisper, .all: engineLabel = "WhisperKit CoreML"
+            }
             backendTitle = "Engine: Native \(engineLabel) (\(config.localWhisperModel.rawValue))"
         case .appleSpeech:
             backendTitle = "Engine: Apple Speech (macOS Built-in)"
@@ -1163,7 +1182,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         if config.engineType == .localCoreML {
             transitionBackendState(to: .warming)
-            let engineLabel = config.localWhisperModel.family == .parakeet ? "Parakeet CoreML" : "WhisperKit CoreML"
+            let engineLabel: String
+            switch config.localWhisperModel.family {
+            case .parakeet: engineLabel = "Parakeet CoreML"
+            case .qwen: engineLabel = "SenseVoice CoreML"
+            case .whisper, .all: engineLabel = "WhisperKit CoreML"
+            }
             setBackendNotice("Preparing \(engineLabel) (\(config.localWhisperModel.rawValue))...")
             rebuildMenu()
             Task { [weak self] in
