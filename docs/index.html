@@ -204,7 +204,7 @@
           </p>
           
           <!-- CTA Action Group -->
-          <div class="flex flex-col sm:flex-row items-center gap-space-md mb-space-lg w-full sm:w-auto">
+          <div class="flex flex-col sm:flex-row items-center gap-space-md mb-space-md w-full sm:w-auto">
             <a class="w-full sm:w-auto flex items-center justify-center gap-space-sm px-space-xl py-3.5 rounded-full bg-gradient-to-r from-primary-container via-secondary-container to-secondary text-surface-container-lowest font-headline-sm text-headline-sm shadow-xl hover:shadow-[0_0_36px_rgba(76,215,246,0.4)] hover:brightness-110 active:scale-95 transition-all" href="https://github.com/abhilashpanda04/Openflow/releases/latest/download/Openflow.dmg">
               <span class="material-symbols-outlined text-[22px]">laptop_mac</span>
               <span>Download for Mac (.DMG)</span>
@@ -213,6 +213,15 @@
               <span class="material-symbols-outlined text-[20px] text-primary">terminal</span>
               <span>View Source &amp; 115 Tests</span>
             </a>
+          </div>
+
+          <!-- Direct Terminal Curl Installer Badge -->
+          <div class="mb-space-lg flex items-center justify-center max-w-full px-2">
+            <div class="inline-flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 rounded-xl bg-surface-container-high/90 border border-outline-variant/40 shadow-lg text-left backdrop-blur-md overflow-x-auto max-w-full">
+              <span class="text-secondary material-symbols-outlined text-[16px] shrink-0">terminal</span>
+              <code class="font-label-mono-sm text-label-mono-sm text-on-surface whitespace-nowrap">curl -fsSL https://raw.githubusercontent.com/abhilashpanda04/Openflow/main/install.sh | bash</code>
+              <button onclick="navigator.clipboard.writeText('curl -fsSL https://raw.githubusercontent.com/abhilashpanda04/Openflow/main/install.sh | bash'); this.textContent='Copied!'; setTimeout(() => this.textContent='Copy', 2000);" class="ml-1 sm:ml-2 px-2.5 py-1 rounded-lg bg-surface-container-highest hover:bg-surface-bright text-secondary font-label-mono-sm text-[11px] shrink-0 transition-all">Copy</button>
+            </div>
           </div>
           
           <!-- Micro Metadata -->
@@ -680,14 +689,14 @@
             <div class="p-space-lg rounded-2xl bg-surface-container shadow-xl relative overflow-hidden flex flex-col justify-between">
               <div>
                 <div class="font-display-lg text-display-lg font-bold text-outline-variant/60 mb-space-sm">01</div>
-                <h3 class="font-headline-md text-headline-md text-on-surface font-semibold mb-space-xs">Download Openflow</h3>
+                <h3 class="font-headline-md text-headline-md text-on-surface font-semibold mb-space-xs">One-Line Terminal Install</h3>
                 <p class="font-body-md text-body-md text-on-surface-variant">
-                  Grab the latest signed <code class="px-1.5 py-0.5 rounded bg-surface-container-high text-secondary font-label-mono-sm">Openflow.dmg</code> directly from GitHub Releases with a single click.
+                  Run <code class="px-1.5 py-0.5 rounded bg-surface-container-high text-secondary font-label-mono-sm">curl -fsSL ... | bash</code> or download the signed <code class="px-1.5 py-0.5 rounded bg-surface-container-high text-secondary font-label-mono-sm">Openflow.dmg</code> directly from GitHub Releases.
                 </p>
               </div>
               <div class="mt-space-lg pt-space-md">
                 <span class="inline-flex items-center gap-1.5 text-secondary font-label-ui text-label-ui uppercase tracking-wide">
-                  <span>Universal Binary</span>
+                  <span>Direct or DMG</span>
                   <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
                 </span>
               </div>

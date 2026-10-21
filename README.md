@@ -148,15 +148,25 @@ While speaking, Openflow recognizes contextual voice commands and executes syste
 
 ## 📦 Quick Start
 
-### 1. Download the App
-Download the latest `Openflow.dmg` from [**GitHub Releases**](https://github.com/abhilashpanda04/Openflow/releases/latest).
+### ⚡ One-Line Direct Install (Terminal)
+Run this command in Terminal to automatically download, install into `/Applications`, configure Gatekeeper permissions, and launch Openflow:
 
-1. Open `Openflow.dmg`.
-2. Drag **Openflow.app** into your **Applications** folder.
-3. Launch Openflow from Applications or Spotlight.
-4. Grant **Microphone** and **Accessibility** permissions when prompted.
+```bash
+curl -fsSL https://raw.githubusercontent.com/abhilashpanda04/Openflow/main/install.sh | bash
+```
 
-### 2. Dictate Anywhere
+*(Or via GitHub Pages: `curl -fsSL https://abhilashpanda04.github.io/Openflow/install.sh | bash`)*
+
+---
+
+### 📥 Manual DMG Installation
+1. Download the latest `Openflow.dmg` from [**GitHub Releases**](https://github.com/abhilashpanda04/Openflow/releases/latest/download/Openflow.dmg).
+2. Open `Openflow.dmg`.
+3. Drag **Openflow.app** into your **Applications** folder.
+4. Launch Openflow from Applications or Spotlight.
+5. Grant **Microphone** and **Accessibility** permissions when prompted.
+
+### 🎙 Dictate Anywhere
 - Press <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>Space</kbd> (or your custom single-key hotkey like <kbd>Fn</kbd> or <kbd>Right Option</kbd>).
 - Speak naturally.
 - The transcribed, formatted text is automatically pasted into your active application.
