@@ -20,11 +20,18 @@
 
 <p align="center">
   <a href="#-quick-start">Quick Start</a> •
+  <a href="#-screenshots--interface">Screenshots</a> •
   <a href="#-key-features">Key Features</a> •
   <a href="#-asr-engines">ASR Engines</a> •
   <a href="#-voice-commands--shortcuts">Voice Commands</a> •
   <a href="#-developer-guide">Developer Guide</a> •
   <a href="#-privacy--security">Privacy</a>
+</p>
+
+---
+
+<p align="center">
+  <img src="screenshot/shotcandy-1873x2328@1x.png" alt="Openflow Menu Bar Companion" width="460" />
 </p>
 
 ---
@@ -94,6 +101,45 @@ Powered by **WhisperKit CoreML** and **Apple Speech**, Openflow runs completely 
 - **Customizable Overlay Placement:** Float the dictation HUD at the top or bottom of your screen.
 - **Dark & Light Mode:** Thoughtfully designed UI that seamlessly adapts to your preferred macOS appearance.
 - **Speech Analytics & History:** Monitor words dictated, estimated minutes saved, active RAM/CPU footprint, and past transcripts.
+
+---
+
+## 📸 Screenshots & Interface
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <strong>Productivity & Speed Analytics</strong><br/><br/>
+      <a href="screenshot/shotcandy-2351x1840@1x.png">
+        <img src="screenshot/shotcandy-2351x1840@1x.png" alt="Speech & Productivity Stats" width="100%" />
+      </a>
+      <p align="left"><em>Real-time metrics tracking words dictated, typing time saved, speaking pace (WPM), active workflow applications, and engine distribution.</em></p>
+    </td>
+    <td width="50%" align="center">
+      <strong>Dictation & Formatting Control</strong><br/><br/>
+      <a href="screenshot/shotcandy-2348x1842@1x.png">
+        <img src="screenshot/shotcandy-2348x1842@1x.png" alt="Dictation Settings & Silence Detection" width="100%" />
+      </a>
+      <p align="left"><em>Intelligent post-processing: spoken emoji, spoken punctuation, trailing space handling, sentence capitalization, and configurable VAD auto-stop silence thresholds.</em></p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <strong>Appearance & Shortcuts</strong><br/><br/>
+      <a href="screenshot/shotcandy-2343x1841@1x.png">
+        <img src="screenshot/shotcandy-2343x1841@1x.png" alt="General Settings & Shortcuts" width="100%" />
+      </a>
+      <p align="left"><em>Dual theme support (Light, Dark, System Auto), single-key activation presets (Right Option, F5, Fn/Globe), and direct-to-app or clipboard output routing.</em></p>
+    </td>
+    <td width="50%" align="center">
+      <strong>Menu Bar Diagnostics & Hero Controls</strong><br/><br/>
+      <a href="screenshot/shotcandy-1873x2328@1x.png">
+        <img src="screenshot/shotcandy-1873x2328@1x.png" alt="Openflow Menu Bar Interface" width="65%" />
+      </a>
+      <p align="left"><em>Compact menu bar popover with real-time engine diagnostics, microphone level indicators, instant recording toggle, and hardware footprint monitoring.</em></p>
+    </td>
+  </tr>
+</table>
 
 ---
 
