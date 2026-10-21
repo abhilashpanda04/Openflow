@@ -87,6 +87,7 @@ struct SettingsView: View {
     @ObservedObject private var themeManager = AppThemeManager.shared
     @ObservedObject private var downloadManager = ModelDownloadProgressManager.shared
     @ObservedObject private var readerManager = ReaderManager.shared
+    @ObservedObject private var kokoroEngine = KokoroTTSEngine.shared
 
     // Engine & Backend Settings
     @State private var backendBaseURL = UserDefaults.standard.string(forKey: UserSettingKey.backendBaseURL) ?? "http://127.0.0.1:8001"
@@ -2922,71 +2923,223 @@ struct SettingsView: View {
 
     // MARK: - Tab: Reader (Text-to-Speech)
     private var readerTabView: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Header card
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 8) {
-                    Image(systemName: "book.fill")
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(Color(hex: "0284c7"))
-
-                    Text("Speech Reader (Text-to-Speech)")
-                        .font(.system(size: 14, weight: .bold))
+        VStack(alignment: .leading, spacing: 18) {
+            // Section Title & Intro
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Speech Reader & Voice Narration")
+                        .font(.system(size: 22, weight: .semibold))
                         .foregroundStyle(MacTheme.textPrimary)
 
-                    Spacer()
-
-                    Button {
-                        ReaderPanelController.shared.show()
-                    } label: {
-                        HStack(spacing: 5) {
-                            Image(systemName: "pip.enter")
-                                .font(.system(size: 11))
-                            Text("Open Floating Player")
-                                .font(.system(size: 11, weight: .semibold))
-                        }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(Color(hex: "0284c7"))
-                        .foregroundStyle(Color.white)
-                        .cornerRadius(6)
-                    }
-                    .buttonStyle(.plain)
+                    Text("Listen to books, documents, and clipboard text using studio-grade Kokoro-82M AI or Apple neural voices.")
+                        .font(.system(size: 12))
+                        .foregroundStyle(MacTheme.textMuted)
                 }
 
-                Text("Listen to books, long-form articles, and clipboard text using studio-grade Kokoro-82M AI or Apple neural voices with sentence-by-sentence progression.")
-                    .font(.system(size: 11.5))
-                    .foregroundStyle(MacTheme.textMuted)
+                Spacer()
+
+                Button {
+                    ReaderPanelController.shared.show()
+                } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: "pip.enter")
+                            .font(.system(size: 11))
+                        Text("Open Floating Player")
+                            .font(.system(size: 11, weight: .semibold))
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(Color(hex: "0284c7"))
+                    .foregroundStyle(Color.white)
+                    .cornerRadius(8)
+                }
+                .buttonStyle(.plain)
             }
-            .padding(16)
+
+            // Compressed 2-Engine Horizontal Card Deck
+            HStack(spacing: 12) {
+                compressedReaderEngineCard(
+                    kind: .kokoro,
+                    title: "Kokoro-82M AI Studio",
+                    badge: "Recommended",
+                    badgeColor: Color(hex: "10b981"),
+                    gradient: [Color(hex: "6366f1"), Color(hex: "a855f7")],
+                    icon: "waveform.circle.fill",
+                    subtitle: "Apple Neural Engine (ANE)",
+                    tag: "100% Offline"
+                )
+
+                compressedReaderEngineCard(
+                    kind: .appleNative,
+                    title: "Apple Speech / Siri",
+                    badge: "macOS Native",
+                    badgeColor: Color(hex: "0284c7"),
+                    gradient: [Color(hex: "3b82f6"), Color(hex: "0284c7")],
+                    icon: "applelogo",
+                    subtitle: "Zero download required",
+                    tag: "Instant Launch"
+                )
+            }
+
+            // Engine Diagnostics & Privacy Pill Strip
+            HStack(spacing: 16) {
+                HStack(spacing: 6) {
+                    Circle().fill(Color.green).frame(width: 6, height: 6)
+                    Text("Engine Active:")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(MacTheme.textHeader)
+                    Text(readerManager.engineKind.rawValue)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(MacTheme.textPrimary)
+                }
+
+                Divider().frame(height: 12).background(MacTheme.divider)
+
+                HStack(spacing: 5) {
+                    Image(systemName: "cpu")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Color.cyan)
+                    Text(readerManager.engineKind == .kokoro ? "Apple Neural Engine • 82M Params" : "AVSpeechSynthesizer • Native")
+                        .font(.system(size: 11))
+                        .foregroundStyle(MacTheme.textHeader)
+                }
+
+                Divider().frame(height: 12).background(MacTheme.divider)
+
+                HStack(spacing: 5) {
+                    Image(systemName: "lock.shield.fill")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Color(hex: "34d399"))
+                    Text("100% On-Device • Zero Network")
+                        .font(.system(size: 11))
+                        .foregroundStyle(MacTheme.textHeader)
+                }
+
+                Spacer()
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
             .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(MacTheme.surface)
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(MacTheme.cardSecondary)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .stroke(MacTheme.border, lineWidth: 1)
             )
 
-            // Voice & Speed Controls
+            // Kokoro Model Card with Live Download Progress Button
+            if readerManager.engineKind == .kokoro {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 3) {
+                            HStack(spacing: 6) {
+                                Text("Kokoro-82M CoreML Model")
+                                    .font(.system(size: 13, weight: .bold))
+                                    .foregroundStyle(MacTheme.textPrimary)
+
+                                Text("150 MB")
+                                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(MacTheme.chipBg)
+                                    .foregroundStyle(Color(hex: "0284c7"))
+                                    .clipShape(Capsule())
+
+                                Text("15 Curated Voices")
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(MacTheme.chipBg)
+                                    .foregroundStyle(Color(hex: "10b981"))
+                                    .clipShape(Capsule())
+                            }
+
+                            Text(kokoroEngine.statusMessage.isEmpty ? "Optimized for Apple Silicon Neural Engine (M1/M2/M3/M4)" : kokoroEngine.statusMessage)
+                                .font(.system(size: 11))
+                                .foregroundStyle(MacTheme.textMuted)
+                        }
+
+                        Spacer()
+
+                        // Download / Status Action Button
+                        if kokoroEngine.isDownloading {
+                            HStack(spacing: 8) {
+                                ProgressView()
+                                    .scaleEffect(0.7)
+                                    .frame(width: 14, height: 14)
+                                Text("Downloading \(Int(kokoroEngine.downloadProgress * 100))%")
+                                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                    .foregroundStyle(Color(hex: "0284c7"))
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Color(hex: "0284c7").opacity(0.12))
+                            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .stroke(Color(hex: "0284c7").opacity(0.35), lineWidth: 1)
+                            )
+                        } else if kokoroEngine.isModelDownloaded {
+                            HStack(spacing: 5) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundStyle(Color(hex: "10b981"))
+                                Text("Ready (Downloaded)")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundStyle(Color(hex: "10b981"))
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Color(hex: "10b981").opacity(0.12))
+                            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .stroke(Color(hex: "10b981").opacity(0.30), lineWidth: 1)
+                            )
+                        } else {
+                            Button {
+                                kokoroEngine.downloadModel()
+                            } label: {
+                                HStack(spacing: 5) {
+                                    Image(systemName: "arrow.down.circle.fill")
+                                        .font(.system(size: 12))
+                                    Text("Download Model (150 MB)")
+                                        .font(.system(size: 11, weight: .semibold))
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Color(hex: "0284c7"))
+                                .foregroundStyle(Color.white)
+                                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+
+                    // Progress bar if downloading
+                    if kokoroEngine.isDownloading {
+                        ProgressView(value: kokoroEngine.downloadProgress)
+                            .progressViewStyle(.linear)
+                            .tint(Color(hex: "0284c7"))
+                    }
+                }
+                .padding(14)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(MacTheme.surface)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(MacTheme.border, lineWidth: 1)
+                )
+            }
+
+            // Voice & Playback Controls Card
             VStack(alignment: .leading, spacing: 14) {
                 Text("Voice & Playback Settings")
                     .font(.system(size: 12.5, weight: .bold))
                     .foregroundStyle(MacTheme.textPrimary)
-
-                // TTS Engine Selector
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Speech Synthesis Engine")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(MacTheme.textMuted)
-
-                    Picker("", selection: $readerManager.engineKind) {
-                        ForEach(TTSEngineKind.allCases) { kind in
-                            Text(kind.rawValue).tag(kind)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                }
 
                 // Voice Picker
                 VStack(alignment: .leading, spacing: 4) {
@@ -3069,13 +3222,34 @@ struct SettingsView: View {
                         HStack(spacing: 5) {
                             Image(systemName: "doc.on.clipboard")
                                 .font(.system(size: 11))
-                            Text("Read Clipboard Now")
+                            Text("Read Clipboard")
                                 .font(.system(size: 11, weight: .medium))
                         }
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
                         .background(MacTheme.cardSecondary)
                         .foregroundStyle(MacTheme.textPrimary)
+                        .cornerRadius(6)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .stroke(MacTheme.border, lineWidth: 1)
+                        )
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        readerManager.openFilePicker()
+                    } label: {
+                        HStack(spacing: 5) {
+                            Image(systemName: "doc.text.magnifyingglass")
+                                .font(.system(size: 11))
+                            Text("Open Book or File (.pdf, .txt, .md)...")
+                                .font(.system(size: 11, weight: .medium))
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(MacTheme.cardSecondary)
+                        .foregroundStyle(Color(hex: "0284c7"))
                         .cornerRadius(6)
                         .overlay(
                             RoundedRectangle(cornerRadius: 6)
@@ -3116,7 +3290,7 @@ struct SettingsView: View {
 
             // How to Read Books Card
             VStack(alignment: .leading, spacing: 8) {
-                Text("How to Read Books & Articles")
+                Text("How to Read Books & Documents")
                     .font(.system(size: 12, weight: .bold))
                     .foregroundStyle(MacTheme.textPrimary)
 
@@ -3125,7 +3299,7 @@ struct SettingsView: View {
                         Text("1.")
                             .font(.system(size: 11, weight: .bold))
                             .foregroundStyle(Color(hex: "0284c7"))
-                        Text("Copy any chapter or text from Apple Books, Kindle for Mac, Safari, or a PDF.")
+                        Text("Open any document (.pdf, .txt, .md, .rtf) using the button above, or copy text from Apple Books, Kindle, or Safari.")
                             .font(.system(size: 11))
                             .foregroundStyle(MacTheme.textMuted)
                     }
@@ -3134,7 +3308,7 @@ struct SettingsView: View {
                         Text("2.")
                             .font(.system(size: 11, weight: .bold))
                             .foregroundStyle(Color(hex: "0284c7"))
-                        Text("Click 'Read Clipboard Now' or open the Floating Player from the Menubar.")
+                        Text("Openflow begins voice synthesis and opens the floating mini-player HUD.")
                             .font(.system(size: 11))
                             .foregroundStyle(MacTheme.textMuted)
                     }
@@ -3143,7 +3317,7 @@ struct SettingsView: View {
                         Text("3.")
                             .font(.system(size: 11, weight: .bold))
                             .foregroundStyle(Color(hex: "0284c7"))
-                        Text("Openflow breaks down the book sentence-by-sentence, giving you complete playback controls and progress tracking.")
+                        Text("Follow along sentence-by-sentence with pause, rewind, forward, and playback speed adjustments.")
                             .font(.system(size: 11))
                             .foregroundStyle(MacTheme.textMuted)
                     }
@@ -3160,6 +3334,98 @@ struct SettingsView: View {
                     .stroke(MacTheme.border, lineWidth: 1)
             )
         }
+    }
+
+    private func compressedReaderEngineCard(
+        kind: TTSEngineKind,
+        title: String,
+        badge: String,
+        badgeColor: Color,
+        gradient: [Color],
+        icon: String,
+        subtitle: String,
+        tag: String
+    ) -> some View {
+        let isSelected = readerManager.engineKind == kind
+
+        return Button {
+            withAnimation(.easeInOut(duration: 0.15)) {
+                readerManager.engineKind = kind
+            }
+        } label: {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(alignment: .center) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            .fill(LinearGradient(colors: gradient, startPoint: .topLeading, endPoint: .bottomTrailing))
+                            .frame(width: 26, height: 26)
+
+                        Image(systemName: icon)
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(Color.white)
+                    }
+
+                    Spacer()
+
+                    Text(badge)
+                        .font(.system(size: 9.5, weight: .bold))
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 2)
+                        .background(badgeColor.opacity(0.15))
+                        .foregroundStyle(badgeColor)
+                        .clipShape(Capsule())
+                        .overlay(
+                            Capsule().stroke(badgeColor.opacity(0.30), lineWidth: 1)
+                        )
+
+                    ZStack {
+                        Circle()
+                            .stroke(isSelected ? MacTheme.accent : (MacTheme.isDark ? Color.white.opacity(0.20) : Color.black.opacity(0.20)), lineWidth: isSelected ? 2 : 1)
+                            .frame(width: 16, height: 16)
+
+                        if isSelected {
+                            Circle()
+                                .fill(MacTheme.accent)
+                                .frame(width: 16, height: 16)
+
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 8, weight: .bold))
+                                .foregroundStyle(Color.white)
+                        }
+                    }
+                }
+
+                Text(title)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(MacTheme.textPrimary)
+                    .lineLimit(1)
+
+                HStack(spacing: 4) {
+                    Text(subtitle)
+                        .font(.system(size: 10.5))
+                        .foregroundStyle(isSelected ? (MacTheme.isDark ? Color.white.opacity(0.85) : MacTheme.accent) : MacTheme.textMuted)
+                        .lineLimit(1)
+
+                    Spacer(minLength: 0)
+
+                    Text(tag)
+                        .font(.system(size: 9.5, weight: .medium, design: .monospaced))
+                        .foregroundStyle(isSelected ? (MacTheme.isDark ? Color(hex: "93c5fd") : MacTheme.accent) : MacTheme.textSecondary)
+                }
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(isSelected ? MacTheme.accent.opacity(MacTheme.isDark ? 0.10 : 0.08) : MacTheme.surface)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(isSelected ? MacTheme.accent : MacTheme.border, lineWidth: isSelected ? 1.5 : 1)
+            )
+            .shadow(color: isSelected ? MacTheme.accent.opacity(0.20) : Color.clear, radius: 8, x: 0, y: 2)
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Tab 5: About

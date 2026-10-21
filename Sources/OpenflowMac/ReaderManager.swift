@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import AppKit
+import UniformTypeIdentifiers
 
 public enum ReaderPlaybackState: String, Equatable {
     case idle
@@ -42,6 +43,7 @@ public final class ReaderManager: ObservableObject {
 
     @Published public var state: ReaderPlaybackState = .idle
     @Published public var isSynthesizing: Bool = false
+    @Published public var documentTitle: String? = nil
     @Published public var sentences: [TextSentence] = []
     @Published public var currentSentenceIndex: Int = 0
     @Published public var currentWordRange: NSRange? = nil
@@ -99,7 +101,39 @@ public final class ReaderManager: ObservableObject {
         playSentence(index: targetIndex)
     }
 
+    public func readFile(at url: URL) {
+        do {
+            let extracted = try FileTextExtractor.extractText(from: url)
+            self.documentTitle = extracted.title
+            startReading(text: extracted.text)
+            ReaderPanelController.shared.show()
+        } catch {
+            print("Failed to read file: \(error.localizedDescription)")
+        }
+    }
+
+    public func openFilePicker() {
+        let openPanel = NSOpenPanel()
+        openPanel.title = "Select a Book or Document to Read"
+        openPanel.prompt = "Read Aloud"
+        openPanel.canChooseFiles = true
+        openPanel.canChooseDirectories = false
+        openPanel.allowsMultipleSelection = false
+        openPanel.allowedContentTypes = [
+            .pdf,
+            .plainText,
+            .rtf,
+            UTType(filenameExtension: "md") ?? .plainText,
+            UTType(filenameExtension: "markdown") ?? .plainText
+        ]
+
+        if openPanel.runModal() == .OK, let selectedURL = openPanel.url {
+            readFile(at: selectedURL)
+        }
+    }
+
     public func readClipboard() {
+        self.documentTitle = "Clipboard"
         if let clipboardText = NSPasteboard.general.string(forType: .string) {
             startReading(text: clipboardText)
         }

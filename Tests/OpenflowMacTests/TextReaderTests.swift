@@ -231,4 +231,35 @@ final class TextReaderTests: XCTestCase {
         XCTAssertEqual(manager.engineKind, .appleNative)
         XCTAssertNotNil(manager.currentVoice)
     }
+
+    func testFileTextExtractorPlainText() throws {
+        let tempFile = FileManager.default.temporaryDirectory.appendingPathComponent("test_book.txt")
+        let content = "Chapter 1: The Beginning.\n\nOnce upon a time in a peaceful valley."
+        try content.write(to: tempFile, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: tempFile) }
+
+        let extracted = try FileTextExtractor.extractText(from: tempFile)
+        XCTAssertEqual(extracted.title, "test_book")
+        XCTAssertTrue(extracted.text.contains("Chapter 1: The Beginning."))
+        XCTAssertTrue(extracted.text.contains("Once upon a time"))
+    }
+
+    func testFileTextExtractorMarkdown() throws {
+        let tempFile = FileManager.default.temporaryDirectory.appendingPathComponent("guide.md")
+        let content = "# Openflow Reader Guide\n\nEnjoy reading long articles."
+        try content.write(to: tempFile, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: tempFile) }
+
+        let extracted = try FileTextExtractor.extractText(from: tempFile)
+        XCTAssertEqual(extracted.title, "guide")
+        XCTAssertTrue(extracted.text.contains("Openflow Reader Guide"))
+    }
+
+    func testFileTextExtractorUnsupportedFormat() {
+        let tempFile = FileManager.default.temporaryDirectory.appendingPathComponent("audio.mp3")
+        try? "dummy".write(to: tempFile, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: tempFile) }
+
+        XCTAssertThrowsError(try FileTextExtractor.extractText(from: tempFile))
+    }
 }

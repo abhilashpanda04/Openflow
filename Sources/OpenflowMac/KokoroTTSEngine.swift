@@ -1,8 +1,9 @@
 import Foundation
 import AVFoundation
+import Combine
 import FluidAudio
 
-public final class KokoroTTSEngine: NSObject, TTSEngineProtocol, AVAudioPlayerDelegate, @unchecked Sendable {
+public final class KokoroTTSEngine: NSObject, TTSEngineProtocol, AVAudioPlayerDelegate, ObservableObject, @unchecked Sendable {
     public static let shared = KokoroTTSEngine()
 
     private var manager: KokoroAneManager?
@@ -12,11 +13,23 @@ public final class KokoroTTSEngine: NSObject, TTSEngineProtocol, AVAudioPlayerDe
     private var onWordCallback: ((NSRange) -> Void)?
     private var wordTimer: Timer?
 
+    @Published public var isModelDownloaded: Bool = false
+    @Published public var isDownloading: Bool = false
+    @Published public var downloadProgress: Double = 0.0
+    @Published public var statusMessage: String = ""
+
     public var playbackRate: Float = 1.0 // 0.5 to 2.0
     public var pitchMultiplier: Float = 1.0
     public var volume: Float = 1.0
 
     public var currentVoice: TTSVoice?
+
+    public static var isModelLocallyCached: Bool {
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        let anePath = home.appendingPathComponent(".cache/fluidaudio/Models/kokoro-82m-coreml/ANE/af_heart.bin").path
+        let g2pPath = home.appendingPathComponent(".cache/fluidaudio/Models/kokoro/G2PDecoder.mlmodelc").path
+        return FileManager.default.fileExists(atPath: anePath) && FileManager.default.fileExists(atPath: g2pPath)
+    }
 
     public static let curatedKokoroVoices: [TTSVoice] = [
         TTSVoice(id: "kokoro:af_heart", name: "Heart (Narrator)", language: "en-US", quality: .premium, gender: .female),
@@ -39,6 +52,39 @@ public final class KokoroTTSEngine: NSObject, TTSEngineProtocol, AVAudioPlayerDe
     public override init() {
         super.init()
         self.currentVoice = Self.curatedKokoroVoices.first
+        self.isModelDownloaded = Self.isModelLocallyCached
+        if isModelDownloaded {
+            self.statusMessage = "Ready on Apple Neural Engine"
+        }
+    }
+
+    public func downloadModel() {
+        guard !isDownloading else { return }
+        isDownloading = true
+        downloadProgress = 0.15
+        statusMessage = "Starting download from Hugging Face..."
+
+        Task { [weak self] in
+            guard let self = self else { return }
+            do {
+                await MainActor.run {
+                    self.downloadProgress = 0.45
+                    self.statusMessage = "Downloading Neural Engine weights (150 MB)..."
+                }
+                _ = try await self.ensureInitialized()
+                await MainActor.run {
+                    self.isDownloading = false
+                    self.downloadProgress = 1.0
+                    self.isModelDownloaded = true
+                    self.statusMessage = "Kokoro model ready on Apple Neural Engine"
+                }
+            } catch {
+                await MainActor.run {
+                    self.isDownloading = false
+                    self.statusMessage = "Download failed: \(error.localizedDescription)"
+                }
+            }
+        }
     }
 
     public var availableVoices: [TTSVoice] {

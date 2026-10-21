@@ -56,9 +56,10 @@ public struct ReaderMiniPlayerView: View {
                 // Progress & Sentence Info
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 6) {
-                        Text(manager.state == .playing ? "Reading Aloud" : (manager.state == .paused ? "Paused" : "Book Reader"))
+                        Text(manager.documentTitle ?? (manager.state == .playing ? "Reading Aloud" : (manager.state == .paused ? "Paused" : "Book Reader")))
                             .font(.system(size: 12, weight: .bold))
                             .foregroundStyle(Color.primary)
+                            .lineLimit(1)
 
                         Text(manager.engineKind == .kokoro ? "Kokoro AI" : "Apple")
                             .font(.system(size: 8.5, weight: .bold))
@@ -202,7 +203,20 @@ public struct ReaderMiniPlayerView: View {
                     HStack(spacing: 3) {
                         Image(systemName: "doc.on.clipboard")
                             .font(.system(size: 9))
-                        Text("Read Clipboard")
+                        Text("Clipboard")
+                            .font(.system(size: 10))
+                    }
+                    .foregroundStyle(Color(hex: "38bdf8"))
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    manager.openFilePicker()
+                } label: {
+                    HStack(spacing: 3) {
+                        Image(systemName: "folder")
+                            .font(.system(size: 9))
+                        Text("Open File...")
                             .font(.system(size: 10))
                     }
                     .foregroundStyle(Color(hex: "38bdf8"))
