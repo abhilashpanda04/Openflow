@@ -9,6 +9,7 @@
 </p>
 
 <p align="center">
+  <a href="https://abhilashpanda04.github.io/Openflow/"><img alt="Website" src="https://img.shields.io/badge/Website-abhilashpanda04.github.io%2FOpenflow-38bdf8?logo=safari&logoColor=white"></a>
   <a href="https://github.com/abhilashpanda04/Openflow/releases/latest"><img alt="Latest Release" src="https://img.shields.io/github/v/release/abhilashpanda04/Openflow?color=3b82f6&label=Release"></a>
   <a href="https://github.com/abhilashpanda04/Openflow/actions/workflows/ci.yml"><img alt="CI Status" src="https://github.com/abhilashpanda04/Openflow/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Platform" src="https://img.shields.io/badge/Platform-macOS%2014.0%2B-000000?logo=apple&logoColor=white">
@@ -19,6 +20,7 @@
 </p>
 
 <p align="center">
+  <a href="https://abhilashpanda04.github.io/Openflow/">🌐 <strong>Live Website</strong></a> •
   <a href="#-quick-start">Quick Start</a> •
   <a href="#-screenshots--interface">Screenshots</a> •
   <a href="#-key-features">Key Features</a> •
