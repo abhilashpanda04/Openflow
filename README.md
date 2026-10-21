@@ -31,7 +31,7 @@
 ---
 
 <p align="center">
-  <img src="screenshot/shotcandy-1873x2328@1x.png" alt="Openflow Menu Bar Companion" width="460" />
+  <img src="screenshot/menubar-popover.png" alt="Openflow Menu Bar Companion" width="460" />
 </p>
 
 ---
@@ -82,15 +82,15 @@ Powered by **WhisperKit CoreML** and **Apple Speech**, Openflow runs completely 
   <tr>
     <td width="50%" align="center">
       <strong>Productivity & Speed Analytics</strong><br/><br/>
-      <a href="screenshot/shotcandy-2351x1840@1x.png">
-        <img src="screenshot/shotcandy-2351x1840@1x.png" alt="Speech & Productivity Stats" width="100%" />
+      <a href="screenshot/productivity-stats.png">
+        <img src="screenshot/productivity-stats.png" alt="Speech & Productivity Stats" width="100%" />
       </a>
       <p align="left"><em>Real-time metrics tracking words dictated, typing time saved, speaking pace (WPM), active workflow applications, and engine distribution.</em></p>
     </td>
     <td width="50%" align="center">
       <strong>Dictation & Formatting Control</strong><br/><br/>
-      <a href="screenshot/shotcandy-2348x1842@1x.png">
-        <img src="screenshot/shotcandy-2348x1842@1x.png" alt="Dictation Settings & Silence Detection" width="100%" />
+      <a href="screenshot/dictation-settings.png">
+        <img src="screenshot/dictation-settings.png" alt="Dictation Settings & Silence Detection" width="100%" />
       </a>
       <p align="left"><em>Intelligent post-processing: spoken emoji, spoken punctuation, trailing space handling, sentence capitalization, and configurable VAD auto-stop silence thresholds.</em></p>
     </td>
@@ -98,15 +98,15 @@ Powered by **WhisperKit CoreML** and **Apple Speech**, Openflow runs completely 
   <tr>
     <td width="50%" align="center">
       <strong>Appearance & Shortcuts</strong><br/><br/>
-      <a href="screenshot/shotcandy-2343x1841@1x.png">
-        <img src="screenshot/shotcandy-2343x1841@1x.png" alt="General Settings & Shortcuts" width="100%" />
+      <a href="screenshot/general-settings.png">
+        <img src="screenshot/general-settings.png" alt="General Settings & Shortcuts" width="100%" />
       </a>
       <p align="left"><em>Dual theme support (Light, Dark, System Auto), single-key activation presets (Right Option, F5, Fn/Globe), and direct-to-app or clipboard output routing.</em></p>
     </td>
     <td width="50%" align="center">
       <strong>Menu Bar Diagnostics & Hero Controls</strong><br/><br/>
-      <a href="screenshot/shotcandy-1873x2328@1x.png">
-        <img src="screenshot/shotcandy-1873x2328@1x.png" alt="Openflow Menu Bar Interface" width="65%" />
+      <a href="screenshot/menubar-popover.png">
+        <img src="screenshot/menubar-popover.png" alt="Openflow Menu Bar Interface" width="65%" />
       </a>
       <p align="left"><em>Compact menu bar popover with real-time engine diagnostics, microphone level indicators, instant recording toggle, and hardware footprint monitoring.</em></p>
     </td>
