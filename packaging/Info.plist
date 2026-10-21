@@ -32,5 +32,15 @@
     <string>Openflow uses Apple Speech Recognition to convert your spoken dictation into text.</string>
     <key>NSAppleEventsUsageDescription</key>
     <string>Openflow needs Apple Events access to paste transcripts into the active app.</string>
+    <key>SUFeedURL</key>
+    <string>https://raw.githubusercontent.com/abhilashpanda04/Openflow/main/appcast.xml</string>
+    <key>SUPublicEDKey</key>
+    <string>EeVlDfc9y/7kmSCcApoimXwy+e8ejz3myU+ORzhFYl0=</string>
+    <key>SUEnableAutomaticChecks</key>
+    <true/>
+    <key>SUScheduledCheckInterval</key>
+    <integer>86400</integer>
+    <key>SUAllowsAutomaticUpdates</key>
+    <true/>
 </dict>
 </plist>

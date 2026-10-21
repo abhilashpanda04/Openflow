@@ -2968,6 +2968,53 @@ struct SettingsView: View {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .stroke(MacTheme.border, lineWidth: 1)
             )
+
+            // Software Updates Card
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Software Updates")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(MacTheme.textPrimary)
+
+                        Text("Version 0.1.0 • Automatic updates enabled")
+                            .font(.system(size: 11))
+                            .foregroundStyle(MacTheme.textMuted)
+                    }
+
+                    Spacer()
+
+                    Button {
+                        UpdateManager.shared.checkForUpdates()
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "arrow.triangle.2.circlepath")
+                                .font(.system(size: 11))
+                            Text("Check for Updates...")
+                                .font(.system(size: 11, weight: .medium))
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(MacTheme.cardSecondary)
+                        .foregroundStyle(MacTheme.textPrimary)
+                        .cornerRadius(6)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .stroke(MacTheme.border, lineWidth: 1)
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(MacTheme.surface)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(MacTheme.border, lineWidth: 1)
+            )
         }
     }
 

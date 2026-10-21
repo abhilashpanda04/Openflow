@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>Openflow Updates</title>
+    <link>https://raw.githubusercontent.com/abhilashpanda04/Openflow/main/appcast.xml</link>
+    <description>Most recent updates for Openflow.</description>
+    <language>en</language>
+    <item>
+      <title>Version 0.1.0</title>
+      <pubDate>Wed, 21 Oct 2026 12:00:00 +0000</pubDate>
+      <sparkle:version>0.1.0</sparkle:version>
+      <sparkle:shortVersionString>0.1.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <description>
+        <![CDATA[
+          <h2>Openflow 0.1.0</h2>
+          <ul>
+            <li>Ultra-fast local speech recognition for macOS.</li>
+            <li>WhisperKit integration with native Apple Silicon Neural Engine acceleration.</li>
+            <li>Menubar popover with real-time audio visualizer.</li>
+            <li>Sparkle 2 automatic updates support.</li>
+          </ul>
+        ]]>
+      </description>
+      <enclosure
+        url="https://github.com/abhilashpanda04/Openflow/releases/download/v0.1.0/Openflow.dmg"
+        sparkle:edSignature="d8eCIZlwzskifgawVGxbZx3U9xhwQuVa94ok+zkCoTBfXwn/fkzpfHtey6jbSbMrkq/v/KHQXaVXUD4IIKN/DQ=="
+        length="12369172"
+        type="application/octet-stream" />
+    </item>
+  </channel>
+</rss>

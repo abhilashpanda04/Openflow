@@ -110,6 +110,14 @@ fi
 cp "$ICON_PATH" "$APP_BUNDLE/Contents/Resources/Openflow.icns"
 echo "  ✓ Icon copied"
 
+# Copy Sparkle Framework
+mkdir -p "$APP_BUNDLE/Contents/Frameworks"
+SPARKLE_FRAMEWORK="$(find "$ROOT_DIR/.build" -name "Sparkle.framework" -type d | head -n 1)"
+if [ -n "$SPARKLE_FRAMEWORK" ] && [ -d "$SPARKLE_FRAMEWORK" ]; then
+    cp -R "$SPARKLE_FRAMEWORK" "$APP_BUNDLE/Contents/Frameworks/"
+    echo "  ✓ Sparkle.framework copied"
+fi
+
 echo -e "${GREEN}✓ All files copied into bundle${NC}"
 echo ""
 
@@ -122,8 +130,17 @@ if [ "$SIGN" = "yes" ]; then
     else
         echo "  Using identity: $SIGN_IDENTITY"
     fi
+
+    # Sign frameworks first
+    if [ -d "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework" ]; then
+        codesign --force \
+            --sign "$SIGN_IDENTITY" \
+            --timestamp \
+            "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
+        echo "  ✓ Sparkle.framework signed"
+    fi
     
-    # Sign the binary first
+    # Sign the binary
     codesign --force \
         --entitlements "$ENTITLEMENTS" \
         --sign "$SIGN_IDENTITY" \

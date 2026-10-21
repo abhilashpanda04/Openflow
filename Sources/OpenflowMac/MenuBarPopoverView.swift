@@ -878,6 +878,30 @@ public struct MenuBarPopoverView: View {
             }
             .buttonStyle(.plain)
 
+            // Check for Updates...
+            Button {
+                UpdateManager.shared.checkForUpdates()
+            } label: {
+                HStack {
+                    HStack(spacing: 8) {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .font(.system(size: 12))
+                            .foregroundStyle(PopoverTheme.textMuted)
+
+                        Text("Check for Updates...")
+                            .font(.system(size: 12.5, weight: .medium))
+                            .foregroundStyle(PopoverTheme.textPrimary.opacity(0.90))
+                    }
+
+                    Spacer()
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+                .background(Color.clear)
+                .cornerRadius(6)
+            }
+            .buttonStyle(.plain)
+
             // Quit Openflow
             Button {
                 state.onQuit?()
