@@ -9,10 +9,36 @@ public enum ReaderPlaybackState: String, Equatable {
     case stopped
 }
 
+public enum TTSEngineKind: String, CaseIterable, Identifiable, Codable {
+    case kokoro = "Kokoro-82M AI Studio"
+    case appleNative = "Apple Neural / Siri"
+
+    public var id: String { rawValue }
+}
+
 public final class ReaderManager: ObservableObject {
     public static let shared = ReaderManager()
 
-    public let engine: TTSEngineProtocol
+    private var nativeEngine: TTSEngineProtocol
+    private var kokoroEngine: TTSEngineProtocol
+
+    @Published public var engineKind: TTSEngineKind = .kokoro {
+        didSet {
+            let oldRate = playbackRate
+            stop()
+            engine.playbackRate = oldRate
+            self.currentVoice = engine.currentVoice
+        }
+    }
+
+    public var engine: TTSEngineProtocol {
+        switch engineKind {
+        case .kokoro:
+            return kokoroEngine
+        case .appleNative:
+            return nativeEngine
+        }
+    }
 
     @Published public var state: ReaderPlaybackState = .idle
     @Published public var sentences: [TextSentence] = []
@@ -30,10 +56,16 @@ public final class ReaderManager: ObservableObject {
     }
     @Published public var fullText: String = ""
 
-    public init(engine: TTSEngineProtocol = NativeTTSEngine()) {
-        self.engine = engine
-        self.currentVoice = engine.currentVoice
-        self.playbackRate = engine.playbackRate
+    public init(engine: TTSEngineProtocol? = nil) {
+        if let custom = engine {
+            self.nativeEngine = custom
+            self.kokoroEngine = custom
+        } else {
+            self.nativeEngine = NativeTTSEngine()
+            self.kokoroEngine = KokoroTTSEngine.shared
+        }
+        self.currentVoice = self.engine.currentVoice
+        self.playbackRate = self.engine.playbackRate
     }
 
     public var currentSentence: TextSentence? {

@@ -2954,7 +2954,7 @@ struct SettingsView: View {
                     .buttonStyle(.plain)
                 }
 
-                Text("Listen to books, long-form articles, and clipboard text using native Apple neural voices with sentence-by-sentence progression.")
+                Text("Listen to books, long-form articles, and clipboard text using studio-grade Kokoro-82M AI or Apple neural voices with sentence-by-sentence progression.")
                     .font(.system(size: 11.5))
                     .foregroundStyle(MacTheme.textMuted)
             }
@@ -2974,6 +2974,20 @@ struct SettingsView: View {
                     .font(.system(size: 12.5, weight: .bold))
                     .foregroundStyle(MacTheme.textPrimary)
 
+                // TTS Engine Selector
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Speech Synthesis Engine")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(MacTheme.textMuted)
+
+                    Picker("", selection: $readerManager.engineKind) {
+                        ForEach(TTSEngineKind.allCases) { kind in
+                            Text(kind.rawValue).tag(kind)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+
                 // Voice Picker
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Narrator Voice")
@@ -2988,7 +3002,7 @@ struct SettingsView: View {
                             }
                         }
                     )) {
-                        ForEach(readerManager.availableVoices.prefix(25)) { voice in
+                        ForEach(readerManager.availableVoices) { voice in
                             Text(voice.displayName).tag(voice.id)
                         }
                     }

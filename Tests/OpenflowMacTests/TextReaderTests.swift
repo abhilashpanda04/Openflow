@@ -211,4 +211,24 @@ final class TextReaderTests: XCTestCase {
         let v2 = TTSVoice(id: "2", name: "Default", language: "en-US", quality: .standard, gender: .male)
         XCTAssertEqual(v2.displayName, "Default [en-US]")
     }
+
+    func testKokoroCuratedVoices() {
+        let voices = KokoroTTSEngine.curatedKokoroVoices
+        XCTAssertFalse(voices.isEmpty)
+        XCTAssertTrue(voices.contains { $0.id == "kokoro:af_heart" })
+        XCTAssertTrue(voices.contains { $0.id == "kokoro:am_adam" })
+        XCTAssertTrue(voices.contains { $0.id == "kokoro:bf_emma" })
+        XCTAssertTrue(voices.contains { $0.id == "kokoro:bm_george" })
+    }
+
+    func testEngineKindSwitching() {
+        let manager = ReaderManager()
+        XCTAssertEqual(manager.engineKind, .kokoro)
+        XCTAssertNotNil(manager.currentVoice)
+        XCTAssertTrue(manager.currentVoice?.id.contains("af_heart") == true)
+
+        manager.engineKind = .appleNative
+        XCTAssertEqual(manager.engineKind, .appleNative)
+        XCTAssertNotNil(manager.currentVoice)
+    }
 }

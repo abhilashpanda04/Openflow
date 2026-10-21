@@ -60,6 +60,14 @@ public struct ReaderMiniPlayerView: View {
                             .font(.system(size: 12, weight: .bold))
                             .foregroundStyle(Color.primary)
 
+                        Text(manager.engineKind == .kokoro ? "Kokoro AI" : "Apple")
+                            .font(.system(size: 8.5, weight: .bold))
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 1)
+                            .background(Color(hex: "0284c7").opacity(0.18))
+                            .foregroundStyle(Color(hex: "38bdf8"))
+                            .clipShape(RoundedRectangle(cornerRadius: 3))
+
                         if !manager.sentences.isEmpty {
                             Text("•")
                                 .font(.system(size: 10))
