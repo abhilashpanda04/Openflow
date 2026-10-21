@@ -37,8 +37,79 @@
       main > :last-child { margin-bottom: 0 !important; }
     }
     ::-webkit-scrollbar { display: none; }
+
+    /* Light Theme (Default Root) */
+    :root {
+      --bg-background: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-surface-dim: #f1f5f9;
+      --bg-surface-bright: #ffffff;
+      --bg-surface-variant: #f1f5f9;
+      --bg-surface-container-lowest: #ffffff;
+      --bg-surface-container-low: #f8fafc;
+      --bg-surface-container: #ffffff;
+      --bg-surface-container-high: #f1f5f9;
+      --bg-surface-container-highest: #e2e8f0;
+      --text-on-surface: #0f172a;
+      --text-on-surface-variant: #475569;
+      --text-outline: #64748b;
+      --text-outline-variant: #cbd5e1;
+      --color-primary: #4338ca;
+      --color-primary-container: #4f46e5;
+      --color-secondary: #0284c7;
+      --color-secondary-container: #0284c7;
+      --color-tertiary: #db2777;
+      --color-tertiary-container: #e11d48;
+      --text-on-primary: #ffffff;
+      --orbs-opacity: 0.35;
+    }
+
+    /* Dark Theme */
+    html.dark {
+      --bg-background: #0f131c;
+      --bg-surface: #0f131c;
+      --bg-surface-dim: #0f131c;
+      --bg-surface-bright: #353943;
+      --bg-surface-variant: #31353f;
+      --bg-surface-container-lowest: #0a0e17;
+      --bg-surface-container-low: #181b25;
+      --bg-surface-container: #1c1f29;
+      --bg-surface-container-high: #262a34;
+      --bg-surface-container-highest: #31353f;
+      --text-on-surface: #dfe2ef;
+      --text-on-surface-variant: #c7c4d7;
+      --text-outline: #908fa0;
+      --text-outline-variant: #464554;
+      --color-primary: #c0c1ff;
+      --color-primary-container: #8083ff;
+      --color-secondary: #4cd7f6;
+      --color-secondary-container: #03b5d3;
+      --color-tertiary: #ffb2b7;
+      --color-tertiary-container: #ff516a;
+      --text-on-primary: #1000a9;
+      --orbs-opacity: 1;
+    }
   </style>
   
+  <script>
+    // Immediate Theme Initialization
+    (function() {
+      const storedTheme = localStorage.getItem('openflow-theme');
+      if (storedTheme === 'light') {
+        document.documentElement.classList.remove('dark');
+      } else if (storedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (prefersDark) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }
+    })();
+  </script>
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script id="tailwind-config">
     tailwind.config = {
@@ -46,53 +117,53 @@
       theme: {
         extend: {
           "colors": {
-            "surface-container-highest": "#31353f",
+            "surface-container-highest": "var(--bg-surface-container-highest)",
             "on-tertiary-fixed": "#40000d",
-            "on-primary-container": "#0d0096",
-            "tertiary": "#ffb2b7",
+            "on-primary-container": "var(--text-on-primary)",
+            "tertiary": "var(--color-tertiary)",
             "on-secondary-fixed": "#001f26",
-            "outline-variant": "#464554",
+            "outline-variant": "var(--text-outline-variant)",
             "on-primary-fixed-variant": "#2f2ebe",
-            "surface-dim": "#0f131c",
+            "surface-dim": "var(--bg-surface-dim)",
             "on-tertiary": "#67001b",
-            "outline": "#908fa0",
+            "outline": "var(--text-outline)",
             "tertiary-fixed": "#ffdadb",
-            "secondary-container": "#03b5d3",
+            "secondary-container": "var(--color-secondary-container)",
             "inverse-primary": "#494bd6",
-            "surface": "#0f131c",
-            "surface-variant": "#31353f",
+            "surface": "var(--bg-surface)",
+            "surface-variant": "var(--bg-surface-variant)",
             "tertiary-fixed-dim": "#ffb2b7",
             "inverse-on-surface": "#2c303a",
-            "surface-bright": "#353943",
+            "surface-bright": "var(--bg-surface-bright)",
             "on-primary-fixed": "#07006c",
             "on-secondary": "#003640",
             "on-tertiary-fixed-variant": "#92002a",
-            "tertiary-container": "#ff516a",
+            "tertiary-container": "var(--color-tertiary-container)",
             "error": "#ffb4ab",
             "surface-tint": "#c0c1ff",
-            "secondary": "#4cd7f6",
+            "secondary": "var(--color-secondary)",
             "secondary-fixed-dim": "#4cd7f6",
             "primary-fixed": "#e1e0ff",
             "primary-fixed-dim": "#c0c1ff",
             "on-error-container": "#ffdad6",
             "on-tertiary-container": "#5b0017",
-            "primary": "#c0c1ff",
+            "primary": "var(--color-primary)",
             "on-secondary-fixed-variant": "#004e5c",
-            "surface-container-high": "#262a34",
-            "background": "#0f131c",
-            "surface-container": "#1c1f29",
+            "surface-container-high": "var(--bg-surface-container-high)",
+            "background": "var(--bg-background)",
+            "surface-container": "var(--bg-surface-container)",
             "on-error": "#690005",
-            "primary-container": "#8083ff",
+            "primary-container": "var(--color-primary-container)",
             "secondary-fixed": "#acedff",
             "inverse-surface": "#dfe2ef",
-            "surface-container-lowest": "#0a0e17",
-            "surface-container-low": "#181b25",
-            "on-surface-variant": "#c7c4d7",
-            "on-background": "#dfe2ef",
-            "on-surface": "#dfe2ef",
+            "surface-container-lowest": "var(--bg-surface-container-lowest)",
+            "surface-container-low": "var(--bg-surface-container-low)",
+            "on-surface-variant": "var(--text-on-surface-variant)",
+            "on-background": "var(--text-on-surface)",
+            "on-surface": "var(--text-on-surface)",
             "error-container": "#93000a",
             "on-secondary-container": "#00424e",
-            "on-primary": "#1000a9"
+            "on-primary": "var(--text-on-primary)"
           },
           "borderRadius": {
             "DEFAULT": "0.25rem",
@@ -162,6 +233,10 @@
       </nav>
       
       <div class="flex items-center gap-space-md shrink-0">
+        <!-- Theme Switcher Button -->
+        <button id="theme-toggle-btn" onclick="toggleTheme()" class="w-10 h-10 rounded-full bg-surface-container/60 hover:bg-surface-container-high text-on-surface flex items-center justify-center transition-all border border-outline-variant/40 shadow-sm" title="Toggle Light / Dark Mode">
+          <span class="material-symbols-outlined text-[20px]" id="theme-icon">light_mode</span>
+        </button>
         <a class="hidden sm:flex items-center gap-space-xs px-space-md py-2.5 rounded-full bg-surface-container/60 hover:bg-surface-container-high text-on-surface font-label-ui text-label-ui tracking-wide transition-all border border-outline-variant/40" href="https://github.com/abhilashpanda04/Openflow" target="_blank" rel="noopener noreferrer">
           <span class="material-symbols-outlined text-[18px] text-on-surface-variant">terminal</span>
           <span>GitHub</span>
@@ -548,9 +623,25 @@
               <div class="rounded-xl overflow-hidden shadow-2xl border border-outline-variant/30">
                 <img src="screenshot/general-settings.png" alt="Openflow General Preferences & Keybindings" class="w-full h-auto object-cover">
               </div>
-              <p class="font-body-sm text-body-sm text-outline text-center pt-2">
-                Select between Obsidian Dark, Crisp White, or System Auto. Configure single-key triggers like Right Option, Fn/Globe, or F5.
-              </p>
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 px-1">
+                <p class="font-body-sm text-body-sm text-outline text-center sm:text-left">
+                  Select between Obsidian Dark, Crisp White, or System Auto. Configure single-key triggers like Right Option, Fn/Globe, or F5.
+                </p>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <button onclick="setTheme('dark')" class="px-3 py-1 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-mono-sm text-label-mono-sm transition-all border border-outline-variant/30 flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full bg-secondary"></span>
+                    <span>Dark</span>
+                  </button>
+                  <button onclick="setTheme('light')" class="px-3 py-1 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-mono-sm text-label-mono-sm transition-all border border-outline-variant/30 flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                    <span>Light</span>
+                  </button>
+                  <button onclick="setTheme('system')" class="px-3 py-1 rounded-full bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-mono-sm text-label-mono-sm transition-all border border-outline-variant/30 flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full bg-primary"></span>
+                    <span>Auto</span>
+                  </button>
+                </div>
+              </div>
             </div>
             
             <!-- Tab Panel 4: Menu Bar Companion (Screenshot) -->
@@ -964,7 +1055,54 @@
         }
       }
       setTimeout(type, 1000);
+
+      // Initialize Theme Icon based on current HTML class
+      const isDark = document.documentElement.classList.contains('dark');
+      updateThemeIcon(isDark ? 'dark' : 'light');
     });
+
+    // Theme Management Functions
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.contains('dark');
+      if (isDark) {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('openflow-theme', 'light');
+        updateThemeIcon('light');
+      } else {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('openflow-theme', 'dark');
+        updateThemeIcon('dark');
+      }
+    }
+
+    function setTheme(theme) {
+      if (theme === 'light') {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('openflow-theme', 'light');
+        updateThemeIcon('light');
+      } else if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('openflow-theme', 'dark');
+        updateThemeIcon('dark');
+      } else {
+        localStorage.removeItem('openflow-theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (prefersDark) {
+          document.documentElement.classList.add('dark');
+          updateThemeIcon('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+          updateThemeIcon('light');
+        }
+      }
+    }
+
+    function updateThemeIcon(theme) {
+      const icon = document.getElementById('theme-icon');
+      if (icon) {
+        icon.textContent = theme === 'dark' ? 'light_mode' : 'dark_mode';
+      }
+    }
   </script>
 </body>
 </html>
