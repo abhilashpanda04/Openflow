@@ -69,9 +69,9 @@ enum MacTheme {
 // MARK: - Settings Tab Enum
 enum SettingsTab: String, CaseIterable, Identifiable {
     case dictation = "Dictation"
-    case engines = "Speech Engine"
+    case engines = "Engine"
     case reader = "Reader"
-    case stats = "Speech Stats"
+    case stats = "Stats"
     case history = "History"
     case permissions = "Permissions"
     case general = "General"
@@ -194,7 +194,7 @@ struct SettingsView: View {
                 windowFooterActions
             }
         }
-        .frame(minWidth: 700, idealWidth: 740, minHeight: 490, idealHeight: 560)
+        .frame(minWidth: 800, idealWidth: 860, minHeight: 520, idealHeight: 620)
         .preferredColorScheme(themeManager.colorScheme)
         .onDisappear {
             stopHotkeyCapture()
@@ -237,7 +237,9 @@ struct SettingsView: View {
                     } label: {
                         Text(tab.rawValue)
                             .font(.system(size: 11.5, weight: selectedTab == tab ? .semibold : .medium))
-                            .padding(.horizontal, 10)
+                            .lineLimit(1)
+                            .fixedSize(horizontal: true, vertical: false)
+                            .padding(.horizontal, 9)
                             .padding(.vertical, 5)
                             .foregroundStyle(selectedTab == tab ? MacTheme.tabSelectedText : MacTheme.tabInactiveText)
                             .background(
