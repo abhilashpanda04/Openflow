@@ -41,19 +41,19 @@
     /* Light Theme (Default Root) */
     :root {
       --bg-background: #f8fafc;
-      --bg-surface: #ffffff;
-      --bg-surface-dim: #f1f5f9;
+      --bg-surface: rgba(255, 255, 255, 0.75);
+      --bg-surface-dim: rgba(241, 245, 249, 0.80);
       --bg-surface-bright: #ffffff;
-      --bg-surface-variant: #f1f5f9;
-      --bg-surface-container-lowest: #ffffff;
-      --bg-surface-container-low: #f8fafc;
-      --bg-surface-container: #ffffff;
-      --bg-surface-container-high: #f1f5f9;
-      --bg-surface-container-highest: #e2e8f0;
+      --bg-surface-variant: rgba(241, 245, 249, 0.75);
+      --bg-surface-container-lowest: rgba(255, 255, 255, 0.85);
+      --bg-surface-container-low: rgba(248, 250, 252, 0.70);
+      --bg-surface-container: rgba(255, 255, 255, 0.65);
+      --bg-surface-container-high: rgba(241, 245, 249, 0.75);
+      --bg-surface-container-highest: rgba(226, 232, 240, 0.85);
       --text-on-surface: #0f172a;
       --text-on-surface-variant: #475569;
       --text-outline: #64748b;
-      --text-outline-variant: #cbd5e1;
+      --text-outline-variant: rgba(203, 213, 225, 0.7);
       --color-primary: #4338ca;
       --color-primary-container: #4f46e5;
       --color-secondary: #0284c7;
@@ -61,25 +61,29 @@
       --color-tertiary: #db2777;
       --color-tertiary-container: #e11d48;
       --text-on-primary: #ffffff;
-      --orbs-opacity: 0.35;
+      --glass-border: rgba(255, 255, 255, 0.85);
+      --glass-border-hover: rgba(79, 70, 229, 0.45);
+      --glass-shadow: 0 16px 40px -12px rgba(15, 23, 42, 0.08), inset 0 1px 2px 0 rgba(255, 255, 255, 0.95);
+      --glass-shadow-hover: 0 20px 48px -10px rgba(15, 23, 42, 0.14), inset 0 1px 2px 0 rgba(255, 255, 255, 1);
+      --orbs-opacity: 0.65;
     }
 
     /* Dark Theme */
     html.dark {
-      --bg-background: #0f131c;
-      --bg-surface: #0f131c;
+      --bg-background: #0b0f19;
+      --bg-surface: rgba(15, 19, 28, 0.72);
       --bg-surface-dim: #0f131c;
       --bg-surface-bright: #353943;
-      --bg-surface-variant: #31353f;
-      --bg-surface-container-lowest: #0a0e17;
-      --bg-surface-container-low: #181b25;
-      --bg-surface-container: #1c1f29;
-      --bg-surface-container-high: #262a34;
-      --bg-surface-container-highest: #31353f;
+      --bg-surface-variant: rgba(49, 53, 63, 0.5);
+      --bg-surface-container-lowest: rgba(10, 14, 23, 0.78);
+      --bg-surface-container-low: rgba(24, 27, 37, 0.65);
+      --bg-surface-container: rgba(28, 31, 41, 0.55);
+      --bg-surface-container-high: rgba(38, 42, 52, 0.65);
+      --bg-surface-container-highest: rgba(49, 53, 63, 0.75);
       --text-on-surface: #dfe2ef;
       --text-on-surface-variant: #c7c4d7;
       --text-outline: #908fa0;
-      --text-outline-variant: #464554;
+      --text-outline-variant: rgba(70, 69, 84, 0.6);
       --color-primary: #c0c1ff;
       --color-primary-container: #8083ff;
       --color-secondary: #4cd7f6;
@@ -87,7 +91,41 @@
       --color-tertiary: #ffb2b7;
       --color-tertiary-container: #ff516a;
       --text-on-primary: #1000a9;
-      --orbs-opacity: 1;
+      --glass-border: rgba(255, 255, 255, 0.09);
+      --glass-border-hover: rgba(76, 215, 246, 0.35);
+      --glass-shadow: 0 20px 50px -15px rgba(0, 0, 0, 0.65), inset 0 1px 1px 0 rgba(255, 255, 255, 0.12);
+      --glass-shadow-hover: 0 24px 60px -12px rgba(0, 0, 0, 0.8), inset 0 1px 1px 0 rgba(255, 255, 255, 0.22);
+      --orbs-opacity: 0.95;
+    }
+
+    body {
+      background-color: var(--bg-background);
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.16) 0%, transparent 45%),
+        radial-gradient(circle at 12% 28%, rgba(2, 132, 199, 0.14) 0%, transparent 40%),
+        radial-gradient(circle at 88% 55%, rgba(219, 39, 119, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 45% 85%, rgba(14, 165, 233, 0.14) 0%, transparent 45%);
+      background-attachment: fixed;
+    }
+
+    /* Frosted Glass Utilities */
+    .frosted-glass {
+      backdrop-filter: blur(24px) saturate(190%);
+      -webkit-backdrop-filter: blur(24px) saturate(190%);
+      border: 1px solid var(--glass-border) !important;
+      box-shadow: var(--glass-shadow);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .frosted-glass:hover {
+      border-color: var(--glass-border-hover) !important;
+      box-shadow: var(--glass-shadow-hover);
+    }
+
+    .frosted-glass-subtle {
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      border: 1px solid var(--glass-border) !important;
     }
   </style>
   
@@ -214,7 +252,7 @@
 <body class="bg-background font-body-md text-on-background selection:bg-primary-container selection:text-on-primary-container min-h-screen flex flex-col">
 
   <!-- Header -->
-  <header class="fixed top-0 left-0 right-0 z-50 bg-surface/85 backdrop-blur-2xl shadow-[0_1px_8px_rgba(0,0,0,0.4)]">
+  <header class="fixed top-0 left-0 right-0 z-50 bg-surface/80 frosted-glass">
     <div class="h-20 max-w-7xl mx-auto px-6 lg:px-12 flex items-center justify-between gap-6">
       <div class="flex items-center gap-space-md shrink-0">
         <a class="flex items-center gap-space-sm group" href="#">
@@ -250,7 +288,7 @@
   </header>
 
   <!-- Main Content -->
-  <main class="w-full pt-20 bg-background flex-1">
+  <main class="w-full pt-20 bg-transparent flex-1">
     <div class="flex flex-col w-full">
       <!-- Top Subtle Background Atmosphere Layer -->
       <div class="relative w-full overflow-hidden">
@@ -262,7 +300,7 @@
         <!-- 1. HERO SECTION -->
         <section class="relative pt-12 pb-20 px-6 lg:px-12 max-w-7xl mx-auto flex flex-col items-center text-center">
           <!-- Eyebrow Badge -->
-          <div class="inline-flex items-center gap-space-xs px-space-md py-1.5 rounded-full bg-surface-container-high/70 shadow-md backdrop-blur-xl mb-space-lg">
+          <div class="inline-flex items-center gap-space-xs px-space-md py-1.5 rounded-full bg-surface-container-high/80 frosted-glass mb-space-lg">
             <span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
             <span class="font-label-ui text-label-ui text-secondary uppercase tracking-widest">Apple Silicon Native · 100% On-Device Neural Dictation</span>
           </div>
@@ -292,7 +330,7 @@
 
           <!-- Direct Terminal Curl Installer Badge -->
           <div class="mb-space-lg flex items-center justify-center max-w-full px-2">
-            <div class="inline-flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 rounded-xl bg-surface-container-high/90 border border-outline-variant/40 shadow-lg text-left backdrop-blur-md overflow-x-auto max-w-full">
+            <div class="inline-flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 rounded-xl bg-surface-container-high/80 frosted-glass text-left overflow-x-auto max-w-full">
               <span class="text-secondary material-symbols-outlined text-[16px] shrink-0">terminal</span>
               <code class="font-label-mono-sm text-label-mono-sm text-on-surface whitespace-nowrap">curl -fsSL https://raw.githubusercontent.com/abhilashpanda04/Openflow/main/install.sh | bash</code>
               <button onclick="navigator.clipboard.writeText('curl -fsSL https://raw.githubusercontent.com/abhilashpanda04/Openflow/main/install.sh | bash'); this.textContent='Copied!'; setTimeout(() => this.textContent='Copy', 2000);" class="ml-1 sm:ml-2 px-2.5 py-1 rounded-lg bg-surface-container-highest hover:bg-surface-bright text-secondary font-label-mono-sm text-[11px] shrink-0 transition-all">Copy</button>
@@ -318,7 +356,7 @@
           
           <!-- Interactive Hero Mockup Card with Screenshot -->
           <div class="w-full max-w-5xl mt-space-xl relative">
-            <div class="relative rounded-2xl bg-surface-container-lowest shadow-2xl overflow-hidden p-space-sm lg:p-space-md">
+            <div class="relative rounded-2xl bg-surface-container-lowest/80 frosted-glass overflow-hidden p-space-sm lg:p-space-md">
               <!-- Window Chrome -->
               <div class="flex items-center justify-between pb-space-sm px-space-xs">
                 <div class="flex items-center gap-2">
@@ -339,12 +377,12 @@
               <!-- Split Workspace Preview -->
               <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-md pt-space-xs text-left items-center">
                 <!-- Left Console: Actual Running App Screenshot -->
-                <div class="lg:col-span-5 rounded-xl bg-surface-container-low p-space-sm flex flex-col items-center justify-center overflow-hidden">
+                <div class="lg:col-span-5 rounded-xl bg-surface-container-low/70 frosted-glass-subtle p-space-sm flex flex-col items-center justify-center overflow-hidden">
                   <img src="screenshot/menubar-popover.png" alt="Openflow Menu Bar Interface" class="w-full max-w-[340px] rounded-xl shadow-2xl border border-outline-variant/30 hover:scale-[1.02] transition-transform duration-300">
                 </div>
                 
                 <!-- Right Interactive Speech Stream & Spectrum Canvas -->
-                <div class="lg:col-span-7 rounded-xl bg-surface-container p-space-md flex flex-col justify-between h-full">
+                <div class="lg:col-span-7 rounded-xl bg-surface-container/70 frosted-glass-subtle p-space-md flex flex-col justify-between h-full">
                   <div>
                     <div class="flex items-center justify-between mb-space-sm">
                       <div class="flex items-center gap-2">
@@ -355,7 +393,7 @@
                     </div>
                     
                     <!-- Speech Output Glass Box -->
-                    <div class="p-space-md rounded-xl bg-surface-container-low min-h-[140px] flex flex-col justify-between">
+                    <div class="p-space-md rounded-xl bg-surface-container-low/80 frosted-glass-subtle min-h-[140px] flex flex-col justify-between">
                       <p class="font-body-lg text-body-lg text-on-surface leading-relaxed">
                         <span id="hero-type-text">Refactor the entire authentication handler into an async CoreML pipeline. Use native Swift concurrency and ensure we catch all network timeouts—</span>
                         <span class="inline-block w-2 h-5 bg-secondary ml-1 animate-pulse align-middle"></span>
@@ -409,25 +447,25 @@
       <section class="w-full py-12 px-6 lg:px-12 bg-surface-container-low/60">
         <div class="max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-space-md">
           <!-- Metric 1 -->
-          <div class="p-space-lg rounded-2xl bg-surface-container/70 shadow-lg flex flex-col items-center text-center">
+          <div class="p-space-lg rounded-2xl bg-surface-container/75 frosted-glass flex flex-col items-center text-center">
             <div class="font-display-lg text-display-lg font-bold text-secondary mb-1">300 WPM</div>
             <div class="font-headline-sm text-headline-sm text-on-surface mb-0.5">Natural Speaking</div>
             <div class="font-body-sm text-body-sm text-on-surface-variant">Natural Speaking Throughput</div>
           </div>
           <!-- Metric 2 -->
-          <div class="p-space-lg rounded-2xl bg-surface-container/70 shadow-lg flex flex-col items-center text-center">
+          <div class="p-space-lg rounded-2xl bg-surface-container/75 frosted-glass flex flex-col items-center text-center">
             <div class="font-display-lg text-display-lg font-bold text-primary mb-1">100%</div>
             <div class="font-headline-sm text-headline-sm text-on-surface mb-0.5">On-Device &amp; Private</div>
             <div class="font-body-sm text-body-sm text-on-surface-variant">Zero Cloud Telemetry</div>
           </div>
           <!-- Metric 3 -->
-          <div class="p-space-lg rounded-2xl bg-surface-container/70 shadow-lg flex flex-col items-center text-center">
+          <div class="p-space-lg rounded-2xl bg-surface-container/75 frosted-glass flex flex-col items-center text-center">
             <div class="font-display-lg text-display-lg font-bold text-tertiary mb-1">&lt; 15ms</div>
             <div class="font-headline-sm text-headline-sm text-on-surface mb-0.5">Ultra Low Audio Latency</div>
             <div class="font-body-sm text-body-sm text-on-surface-variant">via Apple Neural Engine</div>
           </div>
           <!-- Metric 4 -->
-          <div class="p-space-lg rounded-2xl bg-surface-container/70 shadow-lg flex flex-col items-center text-center">
+          <div class="p-space-lg rounded-2xl bg-surface-container/75 frosted-glass flex flex-col items-center text-center">
             <div class="font-display-lg text-display-lg font-bold text-secondary-container mb-1">115</div>
             <div class="font-headline-sm text-headline-sm text-on-surface mb-0.5">Automated Unit Tests</div>
             <div class="font-body-sm text-body-sm text-on-surface-variant">Passing Continuous Integration</div>
@@ -450,7 +488,7 @@
         <!-- Bento Grid (6 Features) -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-space-lg">
           <!-- Card 1 -->
-          <div class="rounded-2xl bg-surface-container p-space-lg shadow-xl flex flex-col justify-between group hover:bg-surface-container-high transition-all">
+          <div class="rounded-2xl bg-surface-container/70 frosted-glass p-space-lg flex flex-col justify-between group hover:bg-surface-container-high/80 transition-all">
             <div>
               <div class="w-12 h-12 rounded-xl bg-primary-container/20 flex items-center justify-center mb-space-md text-primary">
                 <span class="material-symbols-outlined text-[26px]">memory</span>
@@ -467,7 +505,7 @@
           </div>
           
           <!-- Card 2 -->
-          <div class="rounded-2xl bg-surface-container p-space-lg shadow-xl flex flex-col justify-between group hover:bg-surface-container-high transition-all">
+          <div class="rounded-2xl bg-surface-container/70 frosted-glass p-space-lg flex flex-col justify-between group hover:bg-surface-container-high/80 transition-all">
             <div>
               <div class="w-12 h-12 rounded-xl bg-secondary-container/20 flex items-center justify-center mb-space-md text-secondary">
                 <span class="material-symbols-outlined text-[26px]">undo</span>
@@ -484,7 +522,7 @@
           </div>
           
           <!-- Card 3 -->
-          <div class="rounded-2xl bg-surface-container p-space-lg shadow-xl flex flex-col justify-between group hover:bg-surface-container-high transition-all">
+          <div class="rounded-2xl bg-surface-container/70 frosted-glass p-space-lg flex flex-col justify-between group hover:bg-surface-container-high/80 transition-all">
             <div>
               <div class="w-12 h-12 rounded-xl bg-tertiary-container/20 flex items-center justify-center mb-space-md text-tertiary">
                 <span class="material-symbols-outlined text-[26px]">neurology</span>
@@ -501,7 +539,7 @@
           </div>
           
           <!-- Card 4 -->
-          <div class="rounded-2xl bg-surface-container p-space-lg shadow-xl flex flex-col justify-between group hover:bg-surface-container-high transition-all">
+          <div class="rounded-2xl bg-surface-container/70 frosted-glass p-space-lg flex flex-col justify-between group hover:bg-surface-container-high/80 transition-all">
             <div>
               <div class="w-12 h-12 rounded-xl bg-secondary-container/20 flex items-center justify-center mb-space-md text-secondary">
                 <span class="material-symbols-outlined text-[26px]">hearing</span>
@@ -518,7 +556,7 @@
           </div>
           
           <!-- Card 5 -->
-          <div class="rounded-2xl bg-surface-container p-space-lg shadow-xl flex flex-col justify-between group hover:bg-surface-container-high transition-all">
+          <div class="rounded-2xl bg-surface-container/70 frosted-glass p-space-lg flex flex-col justify-between group hover:bg-surface-container-high/80 transition-all">
             <div>
               <div class="w-12 h-12 rounded-xl bg-primary-container/20 flex items-center justify-center mb-space-md text-primary">
                 <span class="material-symbols-outlined text-[26px]">notifications_active</span>
@@ -535,7 +573,7 @@
           </div>
           
           <!-- Card 6 -->
-          <div class="rounded-2xl bg-surface-container p-space-lg shadow-xl flex flex-col justify-between group hover:bg-surface-container-high transition-all">
+          <div class="rounded-2xl bg-surface-container/70 frosted-glass p-space-lg flex flex-col justify-between group hover:bg-surface-container-high/80 transition-all">
             <div>
               <div class="w-12 h-12 rounded-xl bg-tertiary-container/20 flex items-center justify-center mb-space-md text-tertiary">
                 <span class="material-symbols-outlined text-[26px]">keyboard</span>
@@ -565,7 +603,7 @@
           </p>
           
           <!-- Segmented Control Pills -->
-          <div class="flex flex-wrap items-center justify-center gap-2 p-1.5 rounded-full bg-surface-container-high shadow-inner mb-12 max-w-3xl">
+          <div class="flex flex-wrap items-center justify-center gap-2 p-1.5 rounded-full bg-surface-container-high/80 frosted-glass mb-12 max-w-3xl">
             <button class="px-space-md py-2 rounded-full font-label-ui text-label-ui text-on-primary bg-primary-container shadow-md transition-all" id="tab-btn-stats" onclick="switchAppTab('stats')">
               Productivity &amp; Speed Stats
             </button>
@@ -581,7 +619,7 @@
           </div>
           
           <!-- App Walkthrough Presentation Window with Real Screenshots -->
-          <div class="w-full max-w-5xl rounded-2xl bg-surface shadow-2xl p-space-sm sm:p-space-lg text-left">
+          <div class="w-full max-w-5xl rounded-2xl bg-surface/80 frosted-glass p-space-sm sm:p-space-lg text-left">
             <!-- Native macOS Sequoia Titlebar -->
             <div class="flex items-center justify-between pb-space-md mb-space-md border-b border-outline-variant/30">
               <div class="flex items-center gap-2">
@@ -670,7 +708,7 @@
         </div>
         
         <!-- Comparison Table Container -->
-        <div class="overflow-x-auto rounded-2xl bg-surface-container shadow-2xl">
+        <div class="overflow-x-auto rounded-2xl bg-surface-container/80 frosted-glass">
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-surface-container-high/80">
@@ -777,7 +815,7 @@
           
           <div class="grid grid-cols-1 md:grid-cols-3 gap-space-lg">
             <!-- Step 1 -->
-            <div class="p-space-lg rounded-2xl bg-surface-container shadow-xl relative overflow-hidden flex flex-col justify-between">
+            <div class="p-space-lg rounded-2xl bg-surface-container/80 frosted-glass relative overflow-hidden flex flex-col justify-between">
               <div>
                 <div class="font-display-lg text-display-lg font-bold text-outline-variant/60 mb-space-sm">01</div>
                 <h3 class="font-headline-md text-headline-md text-on-surface font-semibold mb-space-xs">One-Line Terminal Install</h3>
@@ -794,7 +832,7 @@
             </div>
             
             <!-- Step 2 -->
-            <div class="p-space-lg rounded-2xl bg-surface-container shadow-xl relative overflow-hidden flex flex-col justify-between">
+            <div class="p-space-lg rounded-2xl bg-surface-container/80 frosted-glass relative overflow-hidden flex flex-col justify-between">
               <div>
                 <div class="font-display-lg text-display-lg font-bold text-outline-variant/60 mb-space-sm">02</div>
                 <h3 class="font-headline-md text-headline-md text-on-surface font-semibold mb-space-xs">Drag to Applications</h3>
@@ -811,7 +849,7 @@
             </div>
             
             <!-- Step 3 -->
-            <div class="p-space-lg rounded-2xl bg-surface-container shadow-xl relative overflow-hidden flex flex-col justify-between">
+            <div class="p-space-lg rounded-2xl bg-surface-container/80 frosted-glass relative overflow-hidden flex flex-col justify-between">
               <div>
                 <div class="font-display-lg text-display-lg font-bold text-outline-variant/60 mb-space-sm">03</div>
                 <h3 class="font-headline-md text-headline-md text-on-surface font-semibold mb-space-xs">Hold Key &amp; Dictate</h3>
@@ -840,7 +878,7 @@
         </div>
         
         <div class="space-y-space-md">
-          <div class="rounded-xl bg-surface-container p-space-lg shadow-lg">
+          <div class="rounded-xl bg-surface-container/80 frosted-glass p-space-lg">
             <details class="group cursor-pointer" open="">
               <summary class="flex items-center justify-between font-headline-sm text-headline-sm text-on-surface list-none font-semibold">
                 <span>Does my voice audio leave my computer?</span>
@@ -852,7 +890,7 @@
             </details>
           </div>
           
-          <div class="rounded-xl bg-surface-container p-space-lg shadow-lg">
+          <div class="rounded-xl bg-surface-container/80 frosted-glass p-space-lg">
             <details class="group cursor-pointer">
               <summary class="flex items-center justify-between font-headline-sm text-headline-sm text-on-surface list-none font-semibold">
                 <span>Which Mac models are supported?</span>
@@ -864,7 +902,7 @@
             </details>
           </div>
           
-          <div class="rounded-xl bg-surface-container p-space-lg shadow-lg">
+          <div class="rounded-xl bg-surface-container/80 frosted-glass p-space-lg">
             <details class="group cursor-pointer">
               <summary class="flex items-center justify-between font-headline-sm text-headline-sm text-on-surface list-none font-semibold">
                 <span>Can I customize the global shortcut?</span>
@@ -876,7 +914,7 @@
             </details>
           </div>
           
-          <div class="rounded-xl bg-surface-container p-space-lg shadow-lg">
+          <div class="rounded-xl bg-surface-container/80 frosted-glass p-space-lg">
             <details class="group cursor-pointer">
               <summary class="flex items-center justify-between font-headline-sm text-headline-sm text-on-surface list-none font-semibold">
                 <span>What voice commands are supported?</span>
@@ -888,7 +926,7 @@
             </details>
           </div>
           
-          <div class="rounded-xl bg-surface-container p-space-lg shadow-lg">
+          <div class="rounded-xl bg-surface-container/80 frosted-glass p-space-lg">
             <details class="group cursor-pointer">
               <summary class="flex items-center justify-between font-headline-sm text-headline-sm text-on-surface list-none font-semibold">
                 <span>Is Openflow really free and open-source?</span>
@@ -904,7 +942,7 @@
 
       <!-- 8. FINAL CONVERSION CTA CARD -->
       <section class="py-20 px-6 lg:px-12 w-full max-w-7xl mx-auto mb-16">
-        <div class="relative rounded-3xl bg-gradient-to-b from-surface-container-high via-surface-container to-surface-container-lowest p-space-xl lg:p-16 text-center shadow-2xl overflow-hidden">
+        <div class="relative rounded-3xl bg-surface-container-high/70 frosted-glass p-space-xl lg:p-16 text-center overflow-hidden">
           <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-[540px] h-[300px] bg-secondary-container/20 blur-3xl pointer-events-none rounded-full"></div>
           <div class="relative z-10 max-w-2xl mx-auto">
             <h2 class="font-headline-lg text-headline-lg lg:text-[44px] lg:leading-[52px] font-bold text-on-surface mb-space-sm">
@@ -930,7 +968,7 @@
   </main>
 
   <!-- Footer -->
-  <footer class="w-full bg-surface-container-lowest mt-auto shadow-[0_-1px_12px_rgba(0,0,0,0.5)]">
+  <footer class="w-full bg-surface-container-lowest/80 frosted-glass mt-auto border-t-0">
     <div class="max-w-7xl mx-auto px-6 lg:px-12 py-space-xl">
       <div class="grid grid-cols-1 md:grid-cols-12 gap-space-xl mb-space-xl">
         <div class="md:col-span-5 space-y-space-md">
