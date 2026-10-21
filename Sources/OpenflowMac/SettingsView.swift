@@ -209,7 +209,7 @@ struct SettingsView: View {
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(MacTheme.textPrimary)
 
-                Text("v2.4")
+                Text("v0.1.0")
                     .font(.system(size: 9.5, weight: .bold))
                     .padding(.horizontal, 5)
                     .padding(.vertical, 1.5)

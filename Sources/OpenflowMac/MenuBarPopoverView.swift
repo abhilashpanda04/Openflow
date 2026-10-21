@@ -165,16 +165,13 @@ public struct MenuBarPopoverView: View {
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(PopoverTheme.textPrimary)
 
-                    Text("v2.4 Pro")
-                        .font(.system(size: 10, weight: .bold))
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(PopoverTheme.emerald.opacity(0.18))
-                        .foregroundStyle(Color(hex: "10b981"))
+                    Text("v0.1.0")
+                        .font(.system(size: 9.5, weight: .bold))
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 1.5)
+                        .background(PopoverTheme.chipBg)
+                        .foregroundStyle(PopoverTheme.textMuted)
                         .clipShape(Capsule())
-                        .overlay(
-                            Capsule().stroke(PopoverTheme.emerald.opacity(0.30), lineWidth: 1)
-                        )
                 }
 
                 Text("Real-time On-Device Neural Speech")
