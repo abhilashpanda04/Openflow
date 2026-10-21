@@ -17,11 +17,40 @@ public enum TTSEngineKind: String, CaseIterable, Identifiable, Codable {
     public var id: String { rawValue }
 }
 
+public enum ReadingSegmentationMode: String, CaseIterable, Identifiable, Codable {
+    case sentence = "Sentence Mode"
+    case paragraph = "Paragraph Mode"
+
+    public var id: String { rawValue }
+
+    public var description: String {
+        switch self {
+        case .sentence:
+            return "Reads one sentence at a time with granular navigation (⏮ / ⏭). Pre-buffers the next sentence in the background for zero audio gaps."
+        case .paragraph:
+            return "Reads entire paragraphs together in smooth, continuous cadence without pauses between sentences (audiobook style)."
+        }
+    }
+}
+
 public final class ReaderManager: ObservableObject {
     public static let shared = ReaderManager()
 
     private var nativeEngine: TTSEngineProtocol
     private var kokoroEngine: TTSEngineProtocol
+
+    @Published public var segmentationMode: ReadingSegmentationMode = {
+        if let raw = UserDefaults.standard.string(forKey: "readingSegmentationMode"),
+           let mode = ReadingSegmentationMode(rawValue: raw) {
+            return mode
+        }
+        return .sentence
+    }() {
+        didSet {
+            UserDefaults.standard.set(segmentationMode.rawValue, forKey: "readingSegmentationMode")
+            rechunkCurrentText()
+        }
+    }
 
     @Published public var engineKind: TTSEngineKind = .kokoro {
         didSet {
@@ -85,6 +114,18 @@ public final class ReaderManager: ObservableObject {
         engine.availableVoices
     }
 
+    public func rechunkCurrentText() {
+        guard !fullText.isEmpty else { return }
+        let currentPos = currentSentenceIndex
+        switch segmentationMode {
+        case .sentence:
+            self.sentences = TextChunker.splitIntoSentences(fullText)
+        case .paragraph:
+            self.sentences = TextChunker.splitIntoParagraphs(fullText)
+        }
+        self.currentSentenceIndex = min(currentPos, max(0, sentences.count - 1))
+    }
+
     // MARK: - Actions
 
     public func startReading(text: String, startIndex: Int = 0) {
@@ -94,7 +135,12 @@ public final class ReaderManager: ObservableObject {
         stop()
 
         self.fullText = text
-        self.sentences = TextChunker.splitIntoSentences(text)
+        switch segmentationMode {
+        case .sentence:
+            self.sentences = TextChunker.splitIntoSentences(text)
+        case .paragraph:
+            self.sentences = TextChunker.splitIntoParagraphs(text)
+        }
         guard !sentences.isEmpty else { return }
 
         let targetIndex = min(max(startIndex, 0), sentences.count - 1)
@@ -151,6 +197,13 @@ public final class ReaderManager: ObservableObject {
         currentWordRange = nil
 
         let sentence = sentences[index]
+
+        // Pre-buffer next sentence or paragraph in background for 0ms transition
+        if index + 1 < sentences.count {
+            let nextText = sentences[index + 1].text
+            engine.prebuffer(text: nextText)
+        }
+
         engine.speak(sentence: sentence.text, onWord: { [weak self] range in
             guard let self = self, self.state == .playing else { return }
             self.isSynthesizing = false

@@ -12,6 +12,7 @@ public final class KokoroTTSEngine: NSObject, TTSEngineProtocol, AVAudioPlayerDe
     private var onCompletionCallback: (() -> Void)?
     private var onWordCallback: ((NSRange) -> Void)?
     private var wordTimer: Timer?
+    private var prebufferedAudio: (key: String, data: Data)?
 
     @Published public var isModelDownloaded: Bool = false
     @Published public var isDownloading: Bool = false
@@ -121,6 +122,25 @@ public final class KokoroTTSEngine: NSObject, TTSEngineProtocol, AVAudioPlayerDe
 
         let rawVoice = rawVoiceName(from: currentVoice?.id ?? "af_heart")
         let speed = min(max(playbackRate, 0.5), 2.0)
+        let cacheKey = "\(sentence.trimmingCharacters(in: .whitespacesAndNewlines))_\(rawVoice)_\(speed)"
+
+        // Instant play if pre-buffered in background
+        if let cached = prebufferedAudio, cached.key == cacheKey {
+            prebufferedAudio = nil
+            do {
+                let player = try AVAudioPlayer(data: cached.data)
+                player.delegate = self
+                player.volume = self.volume
+                player.prepareToPlay()
+                let started = player.play()
+                print(">>> Kokoro instant play from prebuffer: \(started), duration: \(player.duration)")
+                self.audioPlayer = player
+                self.startWordProgressSimulation(sentence: sentence, duration: player.duration)
+                return
+            } catch {
+                print(">>> Kokoro prebuffer playback error: \(error), falling back to synthesis")
+            }
+        }
 
         Task { [weak self] in
             guard let self = self else { return }
@@ -151,6 +171,34 @@ public final class KokoroTTSEngine: NSObject, TTSEngineProtocol, AVAudioPlayerDe
                 await MainActor.run {
                     onCompletion()
                 }
+            }
+        }
+    }
+
+    public func prebuffer(text: String) {
+        guard isModelDownloaded else { return }
+        let clean = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !clean.isEmpty else { return }
+
+        let rawVoice = rawVoiceName(from: currentVoice?.id ?? "af_heart")
+        let speed = min(max(playbackRate, 0.5), 2.0)
+        let cacheKey = "\(clean)_\(rawVoice)_\(speed)"
+
+        if prebufferedAudio?.key == cacheKey {
+            return
+        }
+
+        Task { [weak self] in
+            guard let self = self else { return }
+            do {
+                let mgr = try await self.ensureInitialized()
+                let wavData = try await mgr.synthesize(text: clean, voice: rawVoice, speed: speed)
+                await MainActor.run {
+                    self.prebufferedAudio = (key: cacheKey, data: wavData)
+                    print(">>> Prebuffered next chunk (\(wavData.count) bytes)")
+                }
+            } catch {
+                // Background pre-buffering errors are non-critical
             }
         }
     }
@@ -208,6 +256,7 @@ public final class KokoroTTSEngine: NSObject, TTSEngineProtocol, AVAudioPlayerDe
     public func offload() {
         stop()
         manager = nil
+        prebufferedAudio = nil
         isInitializing = false
     }
 

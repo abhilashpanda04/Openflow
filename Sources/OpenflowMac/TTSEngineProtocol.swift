@@ -57,7 +57,12 @@ public protocol TTSEngineProtocol: AnyObject {
         onWord: @escaping (NSRange) -> Void,
         onCompletion: @escaping () -> Void
     )
+    func prebuffer(text: String)
     func pause()
     func resume()
     func stop()
+}
+
+extension TTSEngineProtocol {
+    public func prebuffer(text: String) {}
 }

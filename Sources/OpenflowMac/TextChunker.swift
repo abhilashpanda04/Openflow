@@ -44,4 +44,51 @@ public struct TextChunker {
 
         return sentences
     }
+
+    /// Splits long text into structured paragraphs for continuous audiobook-style reading.
+    public static func splitIntoParagraphs(_ text: String) -> [TextSentence] {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return [] }
+
+        var paragraphs: [TextSentence] = []
+        var index = 0
+
+        // Regex that matches paragraphs separated by double or single newlines
+        let pattern = #"(?:[^\r\n]+(?:\r?\n(?![ \t]*\r?\n)[^\r\n]+)*)"#
+
+        if let regex = try? NSRegularExpression(pattern: pattern, options: []) {
+            let nsText = text as NSString
+            let matches = regex.matches(in: text, options: [], range: NSRange(location: 0, length: nsText.length))
+            for match in matches {
+                let raw = nsText.substring(with: match.range)
+                let clean = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !clean.isEmpty {
+                    // Normalize internal single newlines to spaces for natural speech prosody
+                    let normalized = clean.components(separatedBy: .newlines)
+                        .map { $0.trimmingCharacters(in: .whitespaces) }
+                        .filter { !$0.isEmpty }
+                        .joined(separator: " ")
+
+                    // If paragraph is extraordinarily long (> 1200 chars), split at sentence boundaries to protect token context
+                    if normalized.count > 1200 {
+                        let subSentences = splitIntoSentences(normalized)
+                        for sub in subSentences {
+                            paragraphs.append(TextSentence(id: index, text: sub.text, range: match.range))
+                            index += 1
+                        }
+                    } else {
+                        paragraphs.append(TextSentence(id: index, text: normalized, range: match.range))
+                        index += 1
+                    }
+                }
+            }
+        }
+
+        if paragraphs.isEmpty && !trimmed.isEmpty {
+            let nsRange = NSRange(location: 0, length: (text as NSString).length)
+            paragraphs.append(TextSentence(id: 0, text: trimmed, range: nsRange))
+        }
+
+        return paragraphs
+    }
 }

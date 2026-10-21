@@ -262,4 +262,38 @@ final class TextReaderTests: XCTestCase {
 
         XCTAssertThrowsError(try FileTextExtractor.extractText(from: tempFile))
     }
+
+    func testParagraphChunking() {
+        let text = """
+        Paragraph 1 begins here. It has multiple sentences in it.
+
+        Paragraph 2 is separated by a blank line. It also has content.
+        """
+        let paragraphs = TextChunker.splitIntoParagraphs(text)
+        XCTAssertEqual(paragraphs.count, 2)
+        XCTAssertTrue(paragraphs[0].text.contains("Paragraph 1 begins here."))
+        XCTAssertTrue(paragraphs[0].text.contains("It has multiple sentences"))
+        XCTAssertTrue(paragraphs[1].text.contains("Paragraph 2 is separated"))
+    }
+
+    func testSegmentationModeToggle() {
+        let mock = MockTTSEngine()
+        let manager = ReaderManager(engine: mock)
+        manager.segmentationMode = .paragraph
+        XCTAssertEqual(manager.segmentationMode, .paragraph)
+
+        let sample = "Sentence one. Sentence two.\n\nParagraph two sentence."
+        manager.startReading(text: sample)
+        XCTAssertEqual(manager.sentences.count, 2)
+
+        manager.segmentationMode = .sentence
+        XCTAssertEqual(manager.segmentationMode, .sentence)
+        XCTAssertEqual(manager.sentences.count, 3)
+    }
+
+    func testPrebufferingProtocolDefault() {
+        let mock = MockTTSEngine()
+        mock.prebuffer(text: "Hello world")
+        XCTAssertEqual(mock.speakCount, 0)
+    }
 }

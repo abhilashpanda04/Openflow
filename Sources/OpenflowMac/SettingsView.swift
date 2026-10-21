@@ -3242,6 +3242,32 @@ struct SettingsView: View {
                     .font(.system(size: 12.5, weight: .bold))
                     .foregroundStyle(MacTheme.textPrimary)
 
+                // Reading Segmentation Mode Toggle (Sentence vs Paragraph)
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text("Reading Flow & Segmentation")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(MacTheme.textMuted)
+
+                        Spacer()
+
+                        Text(readerManager.segmentationMode == .paragraph ? "Audiobook Continuous Flow" : "Sentence Study Mode")
+                            .font(.system(size: 10.5, weight: .semibold))
+                            .foregroundStyle(Color(hex: "0284c7"))
+                    }
+
+                    Picker("", selection: $readerManager.segmentationMode) {
+                        ForEach(ReadingSegmentationMode.allCases) { mode in
+                            Text(mode.rawValue).tag(mode)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
+                    Text(readerManager.segmentationMode.description)
+                        .font(.system(size: 10))
+                        .foregroundStyle(MacTheme.textMuted)
+                }
+
                 // Voice Picker
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Narrator Voice")
