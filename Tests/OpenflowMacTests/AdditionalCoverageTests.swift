@@ -4,7 +4,13 @@ import XCTest
 
 final class AdditionalCoverageTests: XCTestCase {
     func testRecordingWaveViewDrawsAcrossModesAndAnimationTicks() {
+        XCTAssertEqual(RecordingWaveView.barCount, 36)
+        XCTAssertEqual(RecordingWaveView.barColors.count, 36)
+
         let view = RecordingWaveView(frame: NSRect(x: 0, y: 0, width: 260, height: 40))
+        XCTAssertTrue(view.isFlipped)
+        view.audioLevel = 0.8
+        XCTAssertEqual(view.audioLevel, 0.8)
 
         view.mode = .recording
         render(view: view)
@@ -17,6 +23,9 @@ final class AdditionalCoverageTests: XCTestCase {
         RunLoop.main.run(until: Date().addingTimeInterval(0.12))
         view.isAnimating = false
         render(view: view)
+
+        let controller = TranscriptPanelController()
+        controller.updateAudioLevel(0.75)
 
         XCTAssertTrue(true)
     }

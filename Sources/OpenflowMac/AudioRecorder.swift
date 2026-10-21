@@ -41,6 +41,7 @@ final class AudioRecorder: NSObject {
                     ]
 
                     let recorder = try AVAudioRecorder(url: url, settings: settings)
+                    recorder.isMeteringEnabled = true
                     recorder.prepareToRecord()
                     recorder.record()
 
@@ -55,9 +56,25 @@ final class AudioRecorder: NSObject {
         }
     }
 
+    func currentAudioLevel() -> Float {
+        guard let recorder = recorder, recorder.isRecording else { return 0 }
+        recorder.updateMeters()
+        let power = recorder.averagePower(forChannel: 0)
+        let clamped = max(-50.0, min(0.0, power))
+        return Float((clamped + 50.0) / 50.0)
+    }
+
+    func currentAudioPowerDb() -> Float {
+        guard let recorder = recorder, recorder.isRecording else { return -160.0 }
+        recorder.updateMeters()
+        return recorder.averagePower(forChannel: 0)
+    }
+
     func stop() -> URL? {
+        guard let url = currentFileURL else { return nil }
         recorder?.stop()
         recorder = nil
-        return currentFileURL
+        currentFileURL = nil
+        return url
     }
 }

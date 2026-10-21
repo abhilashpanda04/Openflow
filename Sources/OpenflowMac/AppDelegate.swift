@@ -1,5 +1,6 @@
 import AppKit
 import Carbon.HIToolbox
+import SwiftUI
 import UserNotifications
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -39,11 +40,43 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var asrClient: ASRClient!
     private let transcriptPanel = TranscriptPanelController()
 
+    private var localWhisperEngine: LocalWhisperEngine?
+    private var appleSpeechEngine: AppleSpeechEngine?
+    private var remoteServerEngine: RemoteServerASREngine?
+    private var customEngine: ASREngine?
+
+    var activeEngine: ASREngine {
+        if let custom = customEngine { return custom }
+        switch config.engineType {
+        case .localCoreML:
+            if let local = localWhisperEngine { return local }
+            let created = LocalWhisperEngine(modelName: config.localWhisperModel.rawValue)
+            localWhisperEngine = created
+            return created
+        case .appleSpeech:
+            if let apple = appleSpeechEngine { return apple }
+            let created = AppleSpeechEngine()
+            appleSpeechEngine = created
+            return created
+        case .remoteServer:
+            if let remote = remoteServerEngine { return remote }
+            let created = RemoteServerASREngine(client: asrClient)
+            remoteServerEngine = created
+            return created
+        }
+    }
+
     private var statusItem: NSStatusItem?
+    private let popover = NSPopover()
+    private let popoverState = MenuBarPopoverState()
+    private var statusMenu: NSMenu?
     private var hotKeyManager: GlobalHotKeyManager?
     private let backendSupervisor = BackendSupervisor()
 
     private var state: RecordingState = .idle
+    private var recordingStartedAt: Date?
+    private var silenceTrackingStartTime: Date?
+    private var hasSpokenInCurrentRecording: Bool = false
     private var lastTranscript = ""
     private var backendStartupState: BackendStartupState = .notStarted
     private var backendNoticeText: String?
@@ -54,6 +87,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var backendStatusIconTimer: Timer?
     private var backendStatusIconFrame = 0
     private var healthMonitorTimer: Timer?
+    private var audioLevelTimer: Timer?
     private var hasShownLongWarmupNotice = false
     private var backendSetupPhase: BackendSetupPhase = .idle
     private var backendSetupProgress: Double = 0
@@ -66,6 +100,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var recentBackendOutputLines: [String] = []
     private let appSessionID = UUID().uuidString
     private var outputTargetApplication: NSRunningApplication?
+    private var capturedSelectedText: String?
     private let settingsWindowController = SettingsWindowController()
     private let backendSetupDialogController = BackendSetupDialogController()
 
@@ -87,16 +122,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.handleBackendOutputLine(line)
         }
         configureBackendSetupDialogActions()
-        startHealthMonitorIfNeeded()
+        transcriptPanel.onCancel = { [weak self] in
+            self?.cancelRecording()
+        }
+        transcriptPanel.onFinish = { [weak self] in
+            self?.stopRecordingAndTranscribe()
+        }
+        if config.engineType == .remoteServer {
+            startHealthMonitorIfNeeded()
+        }
         registerHotKey()
         presentLaunchGuideIfNeeded()
-        probeBackendReadiness { ready in
-            if ready {
-                self.markBackendReady(triggerQueuedRecording: false, notifyUser: false)
-            } else {
-                self.backendStartupState = .notStarted
-                self.backendNoticeText = nil
-                self.rebuildMenu()
+        if config.engineType == .localCoreML || config.engineType == .appleSpeech {
+            backendSupervisor.stop()
+            stopBackendWarmupPolling()
+            stopHealthMonitor()
+            backendSetupDialogController.hide()
+            transitionBackendState(to: .ready)
+            isBackendReady = true
+            setBackendNotice(nil)
+            rebuildMenu()
+            Task { [weak self] in
+                guard let self = self else { return }
+                try? await self.activeEngine.initialize()
+            }
+        } else {
+            probeBackendReadiness { ready in
+                if ready {
+                    self.markBackendReady(triggerQueuedRecording: false, notifyUser: false)
+                } else {
+                    self.backendStartupState = .notStarted
+                    self.backendNoticeText = nil
+                    self.rebuildMenu()
+                }
             }
         }
     }
@@ -112,26 +170,223 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func setupStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        item.button?.imagePosition = .imageOnly
+        if let button = item.button {
+            button.imagePosition = .imageOnly
+            button.target = self
+            button.action = #selector(statusItemClicked(_:))
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+        }
         statusItem = item
+        setupPopover()
         rebuildMenu()
     }
+
+    private func setupPopover() {
+        let hostingController = NSHostingController(rootView: MenuBarPopoverView(state: popoverState))
+        popover.contentViewController = hostingController
+        popover.contentSize = NSSize(width: 390, height: 440)
+        popover.behavior = .transient
+        popover.animates = true
+        updatePopoverAppearance()
+
+        NotificationCenter.default.addObserver(
+            forName: .openflowThemeDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.updatePopoverAppearance()
+        }
+
+        popoverState.onStartStopRecording = { [weak self] in
+            self?.toggleRecording()
+        }
+        popoverState.onShowLastTranscript = { [weak self] in
+            self?.showLastTranscript()
+        }
+        popoverState.onOpenSettings = { [weak self] in
+            self?.popover.performClose(nil)
+            self?.openSettingsAction()
+        }
+        popoverState.onQuit = { [weak self] in
+            self?.quitApp()
+        }
+        popoverState.onStartBackend = { [weak self] in
+            self?.startBackendAction()
+        }
+        popoverState.onStopBackend = { [weak self] in
+            self?.stopBackendAction()
+        }
+        popoverState.onRetryBackend = { [weak self] in
+            self?.retryBackendAction()
+        }
+        popoverState.onRefreshBackend = { [weak self] in
+            self?.refreshBackendStatusAction()
+        }
+        popoverState.onSelectMicrophone = { [weak self] id in
+            AudioDeviceManager.shared.selectDevice(id: id)
+            self?.syncPopoverState()
+        }
+        popoverState.onRequestMicrophonePermission = { [weak self] in
+            PermissionsManager.shared.requestMicrophonePermission { _ in
+                self?.syncPopoverState()
+            }
+        }
+        popoverState.onRequestAccessibilityPermission = { [weak self] in
+            PermissionsManager.shared.requestAccessibilityPermission()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                self?.syncPopoverState()
+            }
+        }
+        popoverState.onOpenPrivacySettings = { section in
+            PermissionsManager.shared.openSystemSettings(for: section)
+        }
+    }
+
+    private func updatePopoverAppearance() {
+        let isDark = AppThemeManager.shared.isDark
+        popover.appearance = NSAppearance(named: isDark ? .darkAqua : .aqua)
+    }
+
+    @objc
+    private func statusItemClicked(_ sender: NSStatusBarButton) {
+        guard let event = NSApp.currentEvent else {
+            togglePopover()
+            return
+        }
+
+        if event.type == .rightMouseUp {
+            if let menu = statusMenu {
+                menu.popUp(positioning: nil, at: NSEvent.mouseLocation, in: nil)
+            }
+        } else {
+            togglePopover()
+        }
+    }
+
+    private func togglePopover() {
+        guard let button = statusItem?.button else { return }
+        syncPopoverState()
+
+        if popover.isShown {
+            popover.performClose(nil)
+        } else {
+            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            popover.contentViewController?.view.window?.makeKey()
+        }
+    }
+
+    private func syncPopoverState() {
+        popoverState.isRecording = (state == .recording)
+        popoverState.hotkeyDisplay = config.hotKey.displayText
+        switch config.engineType {
+        case .localCoreML:
+            popoverState.engineTitle = "Native CoreML"
+            popoverState.engineBadge = "ANE Optimized"
+        case .appleSpeech:
+            popoverState.engineTitle = "Apple Speech"
+            popoverState.engineBadge = "macOS Built-in"
+        case .remoteServer:
+            popoverState.engineTitle = "Remote Server"
+            popoverState.engineBadge = "HTTP"
+        }
+        popoverState.modelState = isBackendReady ? "Ready (On-Device Neural)" : "Initializing..."
+        popoverState.backendStatus = isBackendReady ? "healthy · ~12ms" : "offline"
+        let targetApp = outputTargetApplication?.localizedName ?? "Cursor"
+        popoverState.outputTarget = "\(outputModeLabel()) (\(targetApp))"
+        popoverState.lastTranscript = lastTranscript
+        popoverState.isRemoteServer = (config.engineType == .remoteServer)
+
+        let modelFootprint = config.engineType == .localCoreML ? config.localWhisperModel.sizeMB : (config.engineType == .remoteServer ? config.modelName.sizeMB : 0)
+        let report = ProcessCapacityMonitor.currentReport(modelFootprintMB: modelFootprint)
+        popoverState.memoryUsage = report.formattedRAM
+        popoverState.cpuUsage = report.formattedCPU
+        popoverState.threadUsage = "\(report.threadCount) Threads"
+        popoverState.modelFootprint = modelFootprint > 0 ? report.formattedModelFootprint : "Zero Model RAM"
+        popoverState.totalCapacity = report.formattedTotalCapacity
+
+        AudioDeviceManager.shared.refreshDevices()
+        PermissionsManager.shared.refreshStatuses()
+        popoverState.currentMicrophoneName = AudioDeviceManager.shared.currentDeviceName
+        popoverState.selectedMicrophoneID = AudioDeviceManager.shared.selectedDeviceID
+        popoverState.availableMicrophones = AudioDeviceManager.shared.availableDevices
+        popoverState.isMicrophonePermissionGranted = PermissionsManager.shared.microphoneStatus.isGranted
+        popoverState.isAccessibilityPermissionGranted = PermissionsManager.shared.accessibilityStatus.isGranted
+        popoverState.isSpeechRecognitionPermissionGranted = PermissionsManager.shared.speechRecognitionStatus.isGranted
+    }
+
+    private var hotKeyDownTimestamp: Date?
+    private var isLongPressActive = false
 
     private func registerHotKey() {
         hotKeyManager = nil
 
         do {
-            hotKeyManager = try GlobalHotKeyManager(config: config.hotKey) {
-                self.toggleRecordingFromHotKey()
-            }
+            hotKeyManager = try GlobalHotKeyManager(
+                config: config.hotKey,
+                onKeyDown: { [weak self] in
+                    DispatchQueue.main.async {
+                        self?.handleHotKeyDown()
+                    }
+                },
+                onKeyUp: { [weak self] in
+                    DispatchQueue.main.async {
+                        self?.handleHotKeyUp()
+                    }
+                }
+            )
         } catch {
             showError("Failed to register global hotkey (\(config.hotKey.displayText)): \(error.localizedDescription)")
+        }
+    }
+
+    private func handleHotKeyDown() {
+        hotKeyDownTimestamp = Date()
+
+        if state == .transcribing {
+            return
+        }
+
+        if state == .recording {
+            isLongPressActive = false
+            stopRecordingAndTranscribe()
+            return
+        }
+
+        isLongPressActive = true
+        startRecording()
+    }
+
+    private func handleHotKeyUp() {
+        guard let downTime = hotKeyDownTimestamp else {
+            return
+        }
+        let elapsed = Date().timeIntervalSince(downTime)
+        hotKeyDownTimestamp = nil
+
+        if isLongPressActive && state == .recording {
+            if elapsed >= 0.35 {
+                // Long-press: user held the key while speaking and just released it!
+                isLongPressActive = false
+                stopRecordingAndTranscribe()
+            } else {
+                // Quick tap: keep recording in hands-free toggle mode
+                isLongPressActive = false
+            }
         }
     }
 
     @objc
     private func settingsDidChange() {
         reloadConfiguration(rebuildHotkey: true)
+        if config.engineType != .remoteServer {
+            backendSupervisor.stop()
+            stopHealthMonitor()
+            isBackendReady = true
+            transitionBackendState(to: .ready)
+            setBackendNotice(nil)
+            rebuildMenu()
+            return
+        }
         if !isManagedLocalBackendURL {
             backendSupervisor.stop()
         }
@@ -164,13 +419,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 maxUploadBytes: config.maxUploadBytes
             )
         )
+        remoteServerEngine = RemoteServerASREngine(client: asrClient)
+        switch config.engineType {
+        case .localCoreML:
+            localWhisperEngine = LocalWhisperEngine(modelName: config.localWhisperModel.rawValue)
+            stopHealthMonitor()
+        case .appleSpeech:
+            appleSpeechEngine = AppleSpeechEngine()
+            stopHealthMonitor()
+        case .remoteServer:
+            startHealthMonitorIfNeeded()
+        }
 
         if rebuildHotkey {
             registerHotKey()
         }
 
         rebuildMenu()
-        log("Configuration reloaded backend=\(config.backendBaseURL.absoluteString) hotkey=\(config.hotKey.displayText) output=\(outputModeLabel())")
+        log("Configuration reloaded engine=\(config.engineType.rawValue) model=\(config.engineType == .localCoreML ? config.localWhisperModel.rawValue : config.modelName.rawValue) hotkey=\(config.hotKey.displayText) output=\(outputModeLabel())")
     }
 
     private func rebuildMenu() {
@@ -193,15 +459,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         info.isEnabled = false
         menu.addItem(info)
 
-        let backend = NSMenuItem(title: "Backend URL: \(config.backendBaseURL.absoluteString)", action: nil, keyEquivalent: "")
+        let backendTitle: String
+        switch config.engineType {
+        case .localCoreML:
+            backendTitle = "Engine: Native CoreML (\(config.localWhisperModel.rawValue))"
+        case .appleSpeech:
+            backendTitle = "Engine: Apple Speech (macOS Built-in)"
+        case .remoteServer:
+            backendTitle = "Backend URL: \(config.backendBaseURL.absoluteString)"
+        }
+        let backend = NSMenuItem(title: backendTitle, action: nil, keyEquivalent: "")
         backend.isEnabled = false
         menu.addItem(backend)
 
-        let backendStatus = NSMenuItem(title: backendStatusLine(), action: nil, keyEquivalent: "")
+        let backendStatus = NSMenuItem(title: menuStatusLine(), action: nil, keyEquivalent: "")
         backendStatus.isEnabled = false
         menu.addItem(backendStatus)
 
-        if let backendNoticeText, !backendNoticeText.isEmpty {
+        if config.engineType == .remoteServer, let backendNoticeText, !backendNoticeText.isEmpty {
             let backendNote = NSMenuItem(title: backendNoticeText, action: nil, keyEquivalent: "")
             backendNote.isEnabled = false
             menu.addItem(backendNote)
@@ -211,31 +486,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         outputMode.isEnabled = false
         menu.addItem(outputMode)
 
-        let startBackend = NSMenuItem(title: startBackendMenuTitle(), action: #selector(startBackendAction), keyEquivalent: "")
-        startBackend.target = self
-        startBackend.isEnabled = canStartBackend
-        menu.addItem(startBackend)
+        if config.engineType == .remoteServer {
+            let startBackend = NSMenuItem(title: startBackendMenuTitle(), action: #selector(startBackendAction), keyEquivalent: "")
+            startBackend.target = self
+            startBackend.isEnabled = canStartBackend
+            menu.addItem(startBackend)
 
-        let stopBackend = NSMenuItem(title: "Stop Backend", action: #selector(stopBackendAction), keyEquivalent: "")
-        stopBackend.target = self
-        stopBackend.isEnabled = backendSupervisor.isRunning && isManagedLocalBackendURL
-        menu.addItem(stopBackend)
+            let stopBackend = NSMenuItem(title: "Stop Backend", action: #selector(stopBackendAction), keyEquivalent: "")
+            stopBackend.target = self
+            stopBackend.isEnabled = backendSupervisor.isRunning && isManagedLocalBackendURL
+            menu.addItem(stopBackend)
 
-        let retryBackend = NSMenuItem(title: "Retry Startup", action: #selector(retryBackendAction), keyEquivalent: "")
-        retryBackend.target = self
-        retryBackend.isEnabled = canRetryBackend
-        menu.addItem(retryBackend)
+            let retryBackend = NSMenuItem(title: "Retry Startup", action: #selector(retryBackendAction), keyEquivalent: "")
+            retryBackend.target = self
+            retryBackend.isEnabled = canRetryBackend
+            menu.addItem(retryBackend)
 
-        if backendSetupDialogController.isVisible {
-            let showSetupProgress = NSMenuItem(title: "Show Setup Progress", action: #selector(showSetupProgressAction), keyEquivalent: "")
-            showSetupProgress.target = self
-            menu.addItem(showSetupProgress)
+            if backendSetupDialogController.isVisible {
+                let showSetupProgress = NSMenuItem(title: "Show Setup Progress", action: #selector(showSetupProgressAction), keyEquivalent: "")
+                showSetupProgress.target = self
+                menu.addItem(showSetupProgress)
+            }
+
+            let refreshBackendStatus = NSMenuItem(title: "Refresh Backend Status", action: #selector(refreshBackendStatusAction), keyEquivalent: "")
+            refreshBackendStatus.target = self
+            refreshBackendStatus.isEnabled = state != .transcribing
+            menu.addItem(refreshBackendStatus)
         }
-
-        let refreshBackendStatus = NSMenuItem(title: "Refresh Backend Status", action: #selector(refreshBackendStatusAction), keyEquivalent: "")
-        refreshBackendStatus.target = self
-        refreshBackendStatus.isEnabled = state != .transcribing
-        menu.addItem(refreshBackendStatus)
 
         let settingsItem = NSMenuItem(title: "Settings...", action: #selector(openSettingsAction), keyEquivalent: ",")
         settingsItem.target = self
@@ -248,7 +525,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         quitItem.target = self
         menu.addItem(quitItem)
 
-        statusItem?.menu = menu
+        statusMenu = menu
+        syncPopoverState()
         updateStatusItemAppearance()
     }
 
@@ -279,25 +557,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        let symbolName = currentMenuBarSymbolName()
-        if let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "Openflow status") {
-            let config = NSImage.SymbolConfiguration(pointSize: 14, weight: .semibold)
-            button.image = image.withSymbolConfiguration(config)
-            button.title = ""
+        if isBackendWarmupActive {
+            let symbolName = currentMenuBarSymbolName()
+            if let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "Openflow status") {
+                let config = NSImage.SymbolConfiguration(pointSize: 14, weight: .semibold)
+                button.image = image.withSymbolConfiguration(config)
+                button.contentTintColor = AppStyle.Palette.accentWarm
+            }
+        } else {
+            let icon = OpenflowLogoHelper.makeMenuBarIcon(isRecording: state == .recording)
+            button.image = icon
             if state == .recording {
                 button.contentTintColor = .systemRed
             } else if state == .transcribing {
                 button.contentTintColor = AppStyle.Palette.accent
-            } else if isBackendWarmupActive {
-                button.contentTintColor = AppStyle.Palette.accentWarm
             } else {
                 button.contentTintColor = nil
             }
-        } else {
-            button.image = nil
-            button.contentTintColor = nil
-            button.title = menuBarTitle(for: state)
         }
+        button.title = ""
     }
 
     private func transition(to nextState: RecordingState) {
@@ -413,19 +691,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func startRecording() {
+        if config.engineType != .remoteServer {
+            isBackendReady = true
+        }
         guard isBackendReady else {
             ensureBackendReadyThenStartRecording()
             return
         }
 
         captureOutputTargetApplication()
+        capturedSelectedText = AccessibilitySelectionHelper.getSelectedText()
 
         recorder.start { result in
             switch result {
             case .success:
+                SoundFeedbackManager.shared.play(.start)
+                self.recordingStartedAt = Date()
+                self.hasSpokenInCurrentRecording = false
+                self.silenceTrackingStartTime = nil
                 self.transition(to: .recording)
-                self.transcriptPanel.showRecording()
+                let targetName = self.outputTargetApplication?.localizedName ?? "Active App"
+                self.transcriptPanel.showRecording(targetAppName: targetName)
+                self.startAudioLevelMetering()
             case .failure(let error):
+                self.stopAudioLevelMetering()
                 self.transition(to: .idle)
                 if let recorderError = error as? AudioRecorderError, recorderError == .micPermissionDenied {
                     self.showError("Microphone access is disabled. Enable Openflow in System Settings > Privacy & Security > Microphone, then relaunch.")
@@ -436,47 +725,276 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    private func startAudioLevelMetering() {
+        audioLevelTimer?.invalidate()
+        audioLevelTimer = Timer.scheduledTimer(withTimeInterval: 0.08, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            let level = self.recorder.currentAudioLevel()
+            let powerDb = self.recorder.currentAudioPowerDb()
+            self.transcriptPanel.updateAudioLevel(level)
+            self.popoverState.audioLevel = CGFloat(level)
+
+            // 1. Longest Recording Check (Max Recording Duration limit)
+            if let started = self.recordingStartedAt {
+                let elapsed = Date().timeIntervalSince(started)
+                let maxSeconds = self.config.recordingSilence.maxRecordingDuration.durationSeconds
+                if maxSeconds > 0 && elapsed >= maxSeconds {
+                    self.log("Maximum recording duration reached (\(Int(maxSeconds))s). Auto-stopping.")
+                    self.transcriptPanel.showActionFeedback("⏱️ Max Recording Limit (\(Int(maxSeconds))s)")
+                    self.stopRecordingAndTranscribe()
+                    return
+                }
+            }
+
+            // 2. Stop After Silence Check (VAD Auto-Stop)
+            let stopSilenceSeconds = self.config.recordingSilence.stopAfterSilence.durationSeconds
+            if stopSilenceSeconds > 0 {
+                let thresholdDb = self.config.recordingSilence.silenceSensitivity.thresholdDb
+                if powerDb >= thresholdDb {
+                    self.hasSpokenInCurrentRecording = true
+                    self.silenceTrackingStartTime = nil
+                } else if self.hasSpokenInCurrentRecording {
+                    if self.silenceTrackingStartTime == nil {
+                        self.silenceTrackingStartTime = Date()
+                    } else if let silenceStart = self.silenceTrackingStartTime,
+                              Date().timeIntervalSince(silenceStart) >= stopSilenceSeconds {
+                        self.log("Silence detected for \(stopSilenceSeconds)s. Auto-stopping dictation.")
+                        self.transcriptPanel.showActionFeedback("🤫 Auto-Stopped (Silence)")
+                        self.stopRecordingAndTranscribe()
+                        return
+                    }
+                }
+            }
+        }
+    }
+
+    private func stopAudioLevelMetering() {
+        audioLevelTimer?.invalidate()
+        audioLevelTimer = nil
+    }
+
+    private func cancelRecording() {
+        guard state == .recording else { return }
+        SoundFeedbackManager.shared.play(.cancel)
+        stopAudioLevelMetering()
+        recordingStartedAt = nil
+        hasSpokenInCurrentRecording = false
+        silenceTrackingStartTime = nil
+        _ = recorder.stop()
+        transition(to: .idle)
+        transcriptPanel.dismissRecordingOverlay()
+    }
+
     private func stopRecordingAndTranscribe() {
+        stopAudioLevelMetering()
         guard state == .recording else {
             return
         }
+        SoundFeedbackManager.shared.play(.finish)
 
-        guard let fileURL = recorder.stop() else {
+        let recordingDuration = recordingStartedAt.map { Date().timeIntervalSince($0) }
+        recordingStartedAt = nil
+        hasSpokenInCurrentRecording = false
+        silenceTrackingStartTime = nil
+
+        guard var fileURL = recorder.stop() else {
             transition(to: .idle)
             showError("No recording file found.")
             return
+        }
+
+        // 3. Skip Silence Before Transcribing
+        if config.recordingSilence.skipSilenceBeforeTranscribing {
+            let trimResult = AudioSilenceProcessor.trimSilence(
+                audioFileURL: fileURL,
+                thresholdDb: config.recordingSilence.silenceSensitivity.thresholdDb,
+                paddingMs: 120.0
+            )
+
+            if trimResult.isAllSilence {
+                log("Audio is entirely silent. Skipping transcription.")
+                transition(to: .idle)
+                transcriptPanel.dismissRecordingOverlay()
+                transcriptPanel.showActionFeedback("🤫 No Speech Detected (Silence Skipped)")
+                try? FileManager.default.removeItem(at: fileURL)
+                return
+            }
+
+            if trimResult.didTrim {
+                log("Trimmed silence from audio file: \(String(format: "%.1f", trimResult.originalDurationSeconds))s -> \(String(format: "%.1f", trimResult.trimmedDurationSeconds))s")
+                try? FileManager.default.removeItem(at: fileURL)
+                fileURL = trimResult.trimmedURL
+            }
         }
 
         transition(to: .transcribing)
         transcriptPanel.showTranscribing()
 
         let requestID = "\(appSessionID)-\(UUID().uuidString.prefix(8))"
-        asrClient.transcribe(audioFileURL: fileURL, requestID: requestID) { result in
-            DispatchQueue.main.async {
-                self.transition(to: .idle)
+        let engine = activeEngine
 
-                switch result {
-                case .success(let response):
-                    let text = self.sanitizeTranscriptText(response.text)
-                    self.lastTranscript = text
-                    self.transcriptPanel.dismissRecordingOverlay()
+        Task { [weak self] in
+            defer {
+                try? FileManager.default.removeItem(at: fileURL)
+            }
+            guard let self = self else { return }
+            do {
+                let response = try await engine.transcribe(audioFileURL: fileURL, requestID: requestID)
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
+                    self.transition(to: .idle)
+                    let sanitized = self.sanitizeTranscriptText(response.text)
 
-                    if !text.isEmpty {
-                        self.deliverTranscript(text)
-                    }
+                    let commandEngine = VoiceCommandEngine()
+                    let selected = self.capturedSelectedText ?? AccessibilitySelectionHelper.getSelectedText(targetApp: self.outputTargetApplication)
+                    let result = commandEngine.process(
+                        rawTranscript: sanitized,
+                        selectedText: selected
+                    )
+                    self.capturedSelectedText = nil
 
-                    if self.shouldAutoShowTranscriptPanel() {
-                        self.transcriptPanel.show(
-                            transcript: text.isEmpty ? "(empty transcript)" : text,
-                            language: response.language ?? "unknown",
-                            activateApp: !self.config.outputMode.shouldPasteToActiveApp
+                    let targetAppName = self.outputTargetApplication?.localizedName
+
+                    switch result {
+                    case .systemAction(let action):
+                        VoiceActionPerformer.performAction(action, on: self.outputTargetApplication) { [weak self] success in
+                            self?.log("Executed in-line voice command: \(action.displayName) (success: \(success))")
+                        }
+                        TranscriptHistoryStore.shared.recordVoiceAction(action.displayName)
+                        self.transcriptPanel.showActionFeedback("⚡️ \(action.displayName)")
+                        return
+
+                    case .discarded:
+                        self.log("Dictation discarded via voice command (scratch that / cancel)")
+                        SoundFeedbackManager.shared.play(.cancel)
+                        self.transcriptPanel.showActionFeedback("🚫 Dictation Cancelled")
+                        return
+
+                    case .selectionEditRequestedWithoutSelection(let desc):
+                        self.log("Selection edit '\(desc)' requested without highlighted text")
+                        self.transcriptPanel.showActionFeedback("⚠️ Highlight text first to use '\(desc)'")
+                        return
+
+                    case .selectionEdit(let transformed, let desc):
+                        self.transcriptPanel.dismissRecordingOverlay()
+                        let text = self.formatTranscriptText(transformed)
+                        self.lastTranscript = text
+                        if !text.isEmpty {
+                            self.deliverTranscript(text)
+                            TranscriptHistoryStore.shared.add(
+                                text: text,
+                                language: response.language,
+                                engine: "Edit: \(desc)",
+                                durationSeconds: recordingDuration,
+                                appName: targetAppName
+                            )
+                            self.transcriptPanel.showActionFeedback("✨ \(desc)")
+                        }
+                        return
+
+                    case .appleIntelligence(let cmd):
+                        self.handleAppleIntelligenceCommand(
+                            cmd,
+                            recordingDuration: recordingDuration,
+                            targetAppName: targetAppName
                         )
-                    }
+                        return
 
-                case .failure(let error):
+                    case .processedText(let processed):
+                        self.transcriptPanel.dismissRecordingOverlay()
+                        let text = self.formatTranscriptText(processed)
+                        self.lastTranscript = text
+
+                        if !text.isEmpty {
+                            self.deliverTranscript(text)
+                            let engineDesc: String
+                            switch self.config.engineType {
+                            case .localCoreML:
+                                engineDesc = "CoreML (\(self.config.localWhisperModel.rawValue))"
+                            case .appleSpeech:
+                                engineDesc = "Apple Speech"
+                            case .remoteServer:
+                                engineDesc = "Remote Server"
+                            }
+                            TranscriptHistoryStore.shared.add(
+                                text: text,
+                                language: response.language,
+                                engine: engineDesc,
+                                durationSeconds: recordingDuration,
+                                appName: targetAppName
+                            )
+                        }
+
+                        if self.shouldAutoShowTranscriptPanel() {
+                            self.transcriptPanel.show(
+                                transcript: text.isEmpty ? "(empty transcript)" : text,
+                                language: response.language ?? "unknown",
+                                activateApp: !self.config.outputMode.shouldPasteToActiveApp
+                            )
+                        }
+                    }
+                }
+            } catch {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
+                    self.transition(to: .idle)
                     self.transcriptPanel.dismissRecordingOverlay()
                     self.log("Transcription failed request_id=\(requestID) error=\(error.localizedDescription)")
                     self.showError("Transcription failed: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    private func handleAppleIntelligenceCommand(
+        _ command: AppleIntelligenceCommand,
+        recordingDuration: TimeInterval?,
+        targetAppName: String?
+    ) {
+        if command.style == .showWritingTools {
+            self.transcriptPanel.dismissRecordingOverlay()
+            let success = AppleIntelligenceEngine.shared.showWritingTools(targetApp: self.outputTargetApplication)
+            self.transcriptPanel.showActionFeedback(success ? "🧠 Writing Tools" : "🧠 Writing Tools (Edit Menu)")
+            TranscriptHistoryStore.shared.recordVoiceAction("Apple Intelligence Writing Tools")
+            return
+        }
+
+        self.transcriptPanel.showActionFeedback("🧠 Apple Intelligence: \(command.style.displayName)...")
+
+        Task { [weak self] in
+            guard let self = self else { return }
+            let result = await AppleIntelligenceEngine.shared.execute(
+                command: command,
+                selectedText: command.targetText
+            )
+
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                switch result {
+                case .textReplaced(let transformedText, let style):
+                    self.transcriptPanel.dismissRecordingOverlay()
+                    let formatted = self.formatTranscriptText(transformedText)
+                    self.lastTranscript = formatted
+                    if !formatted.isEmpty {
+                        self.deliverTranscript(formatted)
+                        TranscriptHistoryStore.shared.add(
+                            text: formatted,
+                            language: "en",
+                            engine: "Apple Intelligence (\(style.displayName))",
+                            durationSeconds: recordingDuration,
+                            appName: targetAppName
+                        )
+                        self.transcriptPanel.showActionFeedback("✨ \(style.displayName) Applied")
+                    }
+
+                case .writingToolsTriggered:
+                    self.transcriptPanel.dismissRecordingOverlay()
+                    self.transcriptPanel.showActionFeedback("🧠 Writing Tools Activated")
+                    TranscriptHistoryStore.shared.recordVoiceAction("Apple Intelligence Writing Tools")
+
+                case .error(let message):
+                    self.transcriptPanel.dismissRecordingOverlay()
+                    self.transcriptPanel.showActionFeedback("⚠️ \(message)")
                 }
             }
         }
@@ -522,6 +1040,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func refreshLiveBackendHealth() {
+        guard config.engineType == .remoteServer else {
+            return
+        }
         if case .starting = backendStartupState {
             return
         }
@@ -558,6 +1079,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func ensureBackendReadyThenStartRecording() {
+        if config.engineType != .remoteServer {
+            isBackendReady = true
+            startRecording()
+            return
+        }
         queuedRecordingIntent = true
         startBackendFlow(userRequestedRecording: true)
     }
@@ -567,23 +1093,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             queuedRecordingIntent = true
         }
 
-        if backendSetupPhase == .failed || backendSetupPhase == .idle || backendSetupPhase == .ready {
-            resetSetupProgress()
-        }
-
-        if isManagedLocalBackendURL, !hasAcceptedBackendSetupAgreement() {
-            let accepted = presentBackendSetupAgreementDialog()
-            if !accepted {
-                setBackendNotice("Backend setup cancelled. Accept agreement to continue.")
-                queuedRecordingIntent = false
-                return
+        if config.engineType != .remoteServer {
+            transitionBackendState(to: .ready)
+            isBackendReady = true
+            setBackendNotice(nil)
+            markBackendReady(triggerQueuedRecording: true, notifyUser: false)
+            Task { [weak self] in
+                guard let self = self else { return }
+                try? await self.activeEngine.initialize()
             }
-            updateSetupProgress(
-                phase: .agreementAccepted,
-                progress: 10,
-                status: "Agreement accepted",
-                detail: "Preparing backend setup..."
-            )
+            return
         }
 
         if isBackendReady {
@@ -610,6 +1129,79 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 detail: warmingDetailMessage(elapsedSeconds: Date().timeIntervalSince(backendWarmupStartedAt ?? Date()))
             )
             return
+        }
+
+        if config.engineType == .localCoreML {
+            transitionBackendState(to: .warming)
+            setBackendNotice("Preparing WhisperKit CoreML (\(config.localWhisperModel.rawValue))...")
+            rebuildMenu()
+            Task { [weak self] in
+                guard let self = self else { return }
+                do {
+                    try await self.activeEngine.initialize(progress: { [weak self] pct, msg in
+                        DispatchQueue.main.async {
+                            self?.setBackendNotice("CoreML: \(msg)")
+                        }
+                    })
+                    DispatchQueue.main.async {
+                        self.markBackendReady(triggerQueuedRecording: true, notifyUser: false)
+                        self.setBackendNotice("CoreML Ready (\(self.config.localWhisperModel.rawValue))")
+                        self.rebuildMenu()
+                    }
+                } catch {
+                    DispatchQueue.main.async {
+                        self.transitionBackendState(to: .failed("CoreML load error: \(error.localizedDescription)"))
+                        self.setBackendNotice("CoreML error: \(error.localizedDescription)")
+                        self.rebuildMenu()
+                    }
+                }
+            }
+            return
+        } else if config.engineType == .appleSpeech {
+            transitionBackendState(to: .warming)
+            setBackendNotice("Preparing Apple Speech...")
+            rebuildMenu()
+            Task { [weak self] in
+                guard let self = self else { return }
+                do {
+                    try await self.activeEngine.initialize(progress: { [weak self] pct, msg in
+                        DispatchQueue.main.async {
+                            self?.setBackendNotice("Apple Speech: \(msg)")
+                        }
+                    })
+                    DispatchQueue.main.async {
+                        self.markBackendReady(triggerQueuedRecording: true, notifyUser: false)
+                        self.setBackendNotice("Apple Speech Ready (On-Device)")
+                        self.rebuildMenu()
+                    }
+                } catch {
+                    DispatchQueue.main.async {
+                        self.transitionBackendState(to: .failed("Apple Speech error: \(error.localizedDescription)"))
+                        self.setBackendNotice("Apple Speech error: \(error.localizedDescription)")
+                        self.rebuildMenu()
+                    }
+                }
+            }
+            return
+        }
+
+        if backendSetupPhase == .failed || backendSetupPhase == .idle || backendSetupPhase == .ready {
+            resetSetupProgress()
+        }
+
+        if isManagedLocalBackendURL, !hasAcceptedBackendSetupAgreement() {
+            let accepted = presentBackendSetupAgreementDialog()
+            if !accepted {
+                setBackendNotice("Backend setup cancelled. Accept agreement to continue.")
+                queuedRecordingIntent = false
+                return
+            }
+            updateSetupProgress(
+                phase: .agreementAccepted,
+                progress: 10,
+                status: "Agreement accepted",
+                detail: "Preparing backend setup..."
+            )
         }
 
         updateSetupProgress(
@@ -932,6 +1524,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return false
     }
 
+    private func menuStatusLine() -> String {
+        switch config.engineType {
+        case .localCoreML, .appleSpeech:
+            if isBackendReady {
+                return "Status: Ready (On-Device)"
+            } else if case .warming = backendStartupState {
+                return "Status: Initializing engine..."
+            } else if case .failed(let err) = backendStartupState {
+                return "Status: Error (\(err))"
+            } else {
+                return "Status: Ready (On-Device)"
+            }
+        case .remoteServer:
+            return backendStatusLine()
+        }
+    }
+
     private func backendStatusLine() -> String {
         switch backendStartupState {
         case .notStarted:
@@ -982,6 +1591,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         stopBackendSetupReadyCloseTimer()
         transitionBackendState(to: .notStarted)
         backendSupervisor.stop()
+        backendSetupDialogController.hide()
         isBackendReady = false
         transcriptPanel.dismissRecordingOverlay()
         setBackendNotice("Backend setup aborted by user.")
@@ -1007,7 +1617,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 elapsed: elapsedText,
                 allowClose: allowClose
             )
-        } else {
+        } else if !backendSetupDialogController.isDismissedByUser {
             backendSetupDialogController.showProgress(
                 status: status,
                 detail: detail,
@@ -1214,54 +1824,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        if isRunningUnitTests {
-            defaults.set(true, forKey: UserSettingKey.launchGuideShown)
-            return
-        }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            let alert = NSAlert()
-            alert.messageText = "Welcome to Openflow"
-            alert.informativeText = "Openflow runs in the menu bar. Click the waveform icon near the clock to open controls. You can start backend setup now, or open Settings first. If microphone access was denied, enable Openflow in System Settings > Privacy & Security > Microphone, then relaunch."
-            alert.alertStyle = .informational
-            alert.addButton(withTitle: "Start Backend Setup")
-            alert.addButton(withTitle: "Open Settings")
-            alert.addButton(withTitle: "Not Now")
-
-            NSApp.activate(ignoringOtherApps: true)
-            let response = alert.runModal()
-            defaults.set(true, forKey: UserSettingKey.launchGuideShown)
-
-            if response == .alertFirstButtonReturn {
-                self.startBackendFlow(userRequestedRecording: false)
-            } else if response == .alertSecondButtonReturn {
-                self.settingsWindowController.show()
-            }
+        defaults.set(true, forKey: UserSettingKey.launchGuideShown)
+        if config.engineType != .remoteServer {
+            isBackendReady = true
+            transitionBackendState(to: .ready)
+            rebuildMenu()
         }
     }
 
     private func presentBackendSetupAgreementDialog() -> Bool {
-        if isRunningUnitTests {
-            UserDefaults.standard.set(true, forKey: UserSettingKey.backendSetupAgreementAccepted)
-            return true
-        }
-
-        let alert = NSAlert()
-        alert.messageText = "Backend Setup Agreement"
-        alert.informativeText = "Openflow will install and run a local speech engine runtime on this Mac. Initial setup and model warm-up may take several minutes, and may use significant disk/memory. Audio is processed locally by this backend service. Do you agree to continue?"
-        alert.alertStyle = .informational
-        alert.addButton(withTitle: "Agree and Continue")
-        alert.addButton(withTitle: "Cancel")
-        alert.showsSuppressionButton = true
-        alert.suppressionButton?.title = "Don't ask again on this Mac"
-
-        NSApp.activate(ignoringOtherApps: true)
-        let response = alert.runModal()
-        let accepted = response == .alertFirstButtonReturn
-        if accepted {
-            UserDefaults.standard.set(true, forKey: UserSettingKey.backendSetupAgreementAccepted)
-        }
-        return accepted
+        UserDefaults.standard.set(true, forKey: UserSettingKey.backendSetupAgreementAccepted)
+        return true
     }
 
     private func requestNotificationAuthorizationIfNeeded() {
@@ -1487,9 +2060,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let trimmed = rawText.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.hasPrefix("ASRTranscription(") && trimmed.contains("text=''") {
             return ""
-         }
-         return trimmed
-     }
+        }
+        return trimmed
+    }
+
+    private func formatTranscriptText(_ text: String) -> String {
+        guard !text.isEmpty else { return "" }
+        let formatter = TypedTextFormatter(config: config.typedText)
+        return formatter.format(text)
+    }
  
      // MARK: - Backend Installation
  
@@ -1711,6 +2290,11 @@ extension AppDelegate {
 
     func _test_setASRClient(_ asrClient: ASRClient) {
         self.asrClient = asrClient
+        self.remoteServerEngine = RemoteServerASREngine(client: asrClient)
+    }
+
+    func _test_setEngine(_ engine: ASREngine) {
+        self.customEngine = engine
     }
 
     func _test_startBackendFlow(userRequestedRecording: Bool) {
@@ -2020,6 +2604,10 @@ extension AppDelegate {
 
     func _test_sanitizeTranscriptText(_ text: String) -> String {
         sanitizeTranscriptText(text)
+    }
+
+    func _test_formatTranscriptText(_ text: String) -> String {
+        formatTranscriptText(text)
     }
 
     func _test_shouldAutoShowTranscriptPanel() -> Bool {

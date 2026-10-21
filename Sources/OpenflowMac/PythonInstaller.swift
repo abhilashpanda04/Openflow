@@ -1,5 +1,6 @@
 import Foundation
 
+@available(*, deprecated, message: "Use native CoreML (WhisperKit) instead of local Python environment installation")
 enum PythonInstallerError: LocalizedError {
     case pythonNotFound
     case pythonVersionTooOld(String)
@@ -36,6 +37,7 @@ enum PythonInstallerError: LocalizedError {
     }
 }
 
+@available(*, deprecated, message: "Use native CoreML (WhisperKit) instead of local Python environment installation")
 final class PythonInstaller {
     typealias ProgressCallback = (Double, String) -> Void
 

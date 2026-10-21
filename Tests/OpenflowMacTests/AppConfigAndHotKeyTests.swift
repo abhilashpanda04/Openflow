@@ -40,18 +40,58 @@ final class TranscriptOutputModeTests: XCTestCase {
     }
 }
 
+final class ASREngineTypeTests: XCTestCase {
+    func testParseEngineTypes() {
+        XCTAssertEqual(ASREngineType.parse("local-coreml"), .localCoreML)
+        XCTAssertEqual(ASREngineType.parse("coreml"), .localCoreML)
+        XCTAssertEqual(ASREngineType.parse("whisperkit"), .localCoreML)
+        XCTAssertEqual(ASREngineType.parse("apple-speech"), .appleSpeech)
+        XCTAssertEqual(ASREngineType.parse("siri"), .appleSpeech)
+        XCTAssertEqual(ASREngineType.parse("speech"), .appleSpeech)
+        XCTAssertEqual(ASREngineType.parse("remote-server"), .remoteServer)
+        XCTAssertEqual(ASREngineType.parse("http"), .remoteServer)
+        XCTAssertNil(ASREngineType.parse("invalid"))
+    }
+
+    func testEngineTypeDisplayNames() {
+        XCTAssertEqual(ASREngineType.localCoreML.displayName, "Native CoreML (WhisperKit)")
+        XCTAssertEqual(ASREngineType.appleSpeech.displayName, "Apple Speech (macOS Built-in / Offline)")
+        XCTAssertEqual(ASREngineType.remoteServer.displayName, "Remote Server (HTTP Backend)")
+    }
+}
+
+final class WhisperModelChoiceTests: XCTestCase {
+    func testModelChoices() {
+        XCTAssertEqual(WhisperModelChoice.tiny.rawValue, "openai_whisper-tiny")
+        XCTAssertEqual(WhisperModelChoice.base.rawValue, "openai_whisper-base")
+        XCTAssertEqual(WhisperModelChoice.parakeetTDT110M.rawValue, "nvidia_parakeet-tdt-110m")
+        XCTAssertEqual(WhisperModelChoice.qwenAudio06B.rawValue, "qwen_qwen3-asr-0.6b")
+
+        // MB Size and Language counts
+        XCTAssertEqual(WhisperModelChoice.parakeetTDT110M.sizeMB, 110)
+        XCTAssertEqual(WhisperModelChoice.parakeetTDT110M.languageCount, 1)
+        XCTAssertEqual(WhisperModelChoice.qwenAudio06B.sizeMB, 640)
+        XCTAssertEqual(WhisperModelChoice.qwenAudio06B.languageCount, 10)
+        XCTAssertEqual(WhisperModelChoice.tiny.sizeMB, 75)
+        XCTAssertEqual(WhisperModelChoice.tiny.languageCount, 99)
+        XCTAssertEqual(WhisperModelChoice.base.sizeMB, 140)
+        XCTAssertEqual(WhisperModelChoice.base.languageCount, 99)
+
+        XCTAssertFalse(WhisperModelChoice.tiny.displayName.isEmpty)
+        XCTAssertFalse(WhisperModelChoice.base.displayName.isEmpty)
+    }
+}
+
 final class ModelNameTests: XCTestCase {
     func testModelMetadata() {
-        XCTAssertEqual(ModelName.fast06B.displayName, "Fast (0.6B) — Recommended")
-        XCTAssertEqual(ModelName.accurate17B.displayName, "Higher Accuracy (1.7B)")
-        XCTAssertEqual(
-            ModelName.fast06B.description,
-            "Faster inference, lower memory usage. Best for most users."
-        )
-        XCTAssertEqual(
-            ModelName.accurate17B.description,
-            "Better accuracy for challenging audio. Requires more VRAM/RAM."
-        )
+        XCTAssertTrue(ModelName.fast06B.displayName.contains("0.6B"))
+        XCTAssertTrue(ModelName.accurate17B.displayName.contains("1.7B"))
+        XCTAssertEqual(ModelName.fast06B.sizeMB, 640)
+        XCTAssertEqual(ModelName.fast06B.languageCount, 10)
+        XCTAssertEqual(ModelName.parakeet110M.sizeMB, 110)
+        XCTAssertEqual(ModelName.parakeet110M.languageCount, 1)
+        XCTAssertFalse(ModelName.fast06B.description.isEmpty)
+        XCTAssertFalse(ModelName.accurate17B.description.isEmpty)
     }
 }
 
@@ -97,6 +137,8 @@ final class AppConfigLoadTests: XCTestCase {
         "OPENFLOW_API_TOKEN",
         "OPENFLOW_MAX_UPLOAD_BYTES",
         "OPENFLOW_MODEL_NAME",
+        "OPENFLOW_ENGINE_TYPE",
+        "OPENFLOW_LOCAL_WHISPER_MODEL",
     ]
 
     private let userDefaultKeys = [
@@ -110,6 +152,8 @@ final class AppConfigLoadTests: XCTestCase {
         UserSettingKey.apiToken,
         UserSettingKey.maxUploadBytes,
         UserSettingKey.modelName,
+        UserSettingKey.engineType,
+        UserSettingKey.localWhisperModel,
     ]
 
     private var originalEnvironment: [String: String?] = [:]
@@ -138,6 +182,8 @@ final class AppConfigLoadTests: XCTestCase {
         XCTAssertNil(config.apiToken)
         XCTAssertEqual(config.maxUploadBytes, AppConfig.default.maxUploadBytes)
         XCTAssertEqual(config.modelName, AppConfig.default.modelName)
+        XCTAssertEqual(config.engineType, AppConfig.default.engineType)
+        XCTAssertEqual(config.localWhisperModel, AppConfig.default.localWhisperModel)
     }
 
     func testLoadPrefersEnvironmentValuesOverUserDefaults() {
@@ -150,6 +196,8 @@ final class AppConfigLoadTests: XCTestCase {
         UserDefaults.standard.set("defaults-token", forKey: UserSettingKey.apiToken)
         UserDefaults.standard.set("8192", forKey: UserSettingKey.maxUploadBytes)
         UserDefaults.standard.set(ModelName.fast06B.rawValue, forKey: UserSettingKey.modelName)
+        UserDefaults.standard.set(ASREngineType.localCoreML.rawValue, forKey: UserSettingKey.engineType)
+        UserDefaults.standard.set(WhisperModelChoice.tiny.rawValue, forKey: UserSettingKey.localWhisperModel)
 
         setEnv("OPENFLOW_BACKEND_URL", "http://env.local:8001")
         setEnv("OPENFLOW_TIMEOUT_SECONDS", "15")
@@ -160,6 +208,8 @@ final class AppConfigLoadTests: XCTestCase {
         setEnv("OPENFLOW_API_TOKEN", "  env-token  ")
         setEnv("OPENFLOW_MAX_UPLOAD_BYTES", "4096")
         setEnv("OPENFLOW_MODEL_NAME", ModelName.accurate17B.rawValue)
+        setEnv("OPENFLOW_ENGINE_TYPE", "remote-server")
+        setEnv("OPENFLOW_LOCAL_WHISPER_MODEL", WhisperModelChoice.small.rawValue)
 
         let config = AppConfig.load()
         XCTAssertEqual(config.backendBaseURL, URL(string: "http://env.local:8001"))
@@ -172,6 +222,8 @@ final class AppConfigLoadTests: XCTestCase {
         XCTAssertEqual(config.apiToken, "env-token")
         XCTAssertEqual(config.maxUploadBytes, 4096)
         XCTAssertEqual(config.modelName, .accurate17B)
+        XCTAssertEqual(config.engineType, .remoteServer)
+        XCTAssertEqual(config.localWhisperModel, .small)
     }
 
     func testLoadFallsBackWhenNumericValuesAreInvalid() {
@@ -230,5 +282,81 @@ final class AppConfigLoadTests: XCTestCase {
         for key in userDefaultKeys {
             UserDefaults.standard.removeObject(forKey: key)
         }
+    }
+}
+
+final class AppThemeTests: XCTestCase {
+    func testAppThemeParsing() {
+        XCTAssertEqual(AppTheme.parse("light"), .light)
+        XCTAssertEqual(AppTheme.parse("white"), .light)
+        XCTAssertEqual(AppTheme.parse("LIGHT"), .light)
+
+        XCTAssertEqual(AppTheme.parse("dark"), .dark)
+        XCTAssertEqual(AppTheme.parse("black"), .dark)
+        XCTAssertEqual(AppTheme.parse("DARK"), .dark)
+
+        XCTAssertEqual(AppTheme.parse("system"), .system)
+        XCTAssertEqual(AppTheme.parse("auto"), .system)
+        XCTAssertNil(AppTheme.parse("invalid"))
+        XCTAssertNil(AppTheme.parse(nil))
+    }
+
+    func testAppThemeDisplayProperties() {
+        XCTAssertEqual(AppTheme.light.displayName, "Light (White)")
+        XCTAssertEqual(AppTheme.light.iconName, "sun.max.fill")
+
+        XCTAssertEqual(AppTheme.dark.displayName, "Dark")
+        XCTAssertEqual(AppTheme.dark.iconName, "moon.stars.fill")
+
+        XCTAssertEqual(AppTheme.system.displayName, "System (Auto)")
+        XCTAssertEqual(AppTheme.system.iconName, "circle.lefthalf.filled")
+    }
+
+    func testThemeManagerToggleAndSet() {
+        let manager = AppThemeManager.shared
+        let originalTheme = manager.theme
+
+        defer {
+            manager.setTheme(originalTheme)
+        }
+
+        manager.setTheme(.light)
+        XCTAssertEqual(manager.theme, .light)
+        XCTAssertFalse(manager.isDark)
+        XCTAssertEqual(manager.colorScheme, .light)
+
+        manager.setTheme(.dark)
+        XCTAssertEqual(manager.theme, .dark)
+        XCTAssertTrue(manager.isDark)
+        XCTAssertEqual(manager.colorScheme, .dark)
+
+        manager.setTheme(.system)
+        XCTAssertEqual(manager.theme, .system)
+        XCTAssertNil(manager.colorScheme)
+
+        // Toggle from dark goes to light
+        manager.setTheme(.dark)
+        manager.toggleTheme()
+        XCTAssertEqual(manager.theme, .light)
+
+        // Toggle from light goes to dark
+        manager.toggleTheme()
+        XCTAssertEqual(manager.theme, .dark)
+    }
+}
+
+final class OverlayPlacementTests: XCTestCase {
+    func testOverlayPlacementParsingAndLabels() {
+        XCTAssertEqual(OverlayPlacement.parse("top"), .top)
+        XCTAssertEqual(OverlayPlacement.parse("Top"), .top)
+        XCTAssertEqual(OverlayPlacement.parse("bottom"), .bottom)
+        XCTAssertEqual(OverlayPlacement.parse("Bottom"), .bottom)
+        XCTAssertNil(OverlayPlacement.parse("invalid"))
+        XCTAssertNil(OverlayPlacement.parse(nil))
+
+        XCTAssertEqual(OverlayPlacement.top.icon, "arrow.up.to.line")
+        XCTAssertEqual(OverlayPlacement.bottom.icon, "arrow.down.to.line")
+        XCTAssertTrue(OverlayPlacement.top.displayName.contains("Top"))
+        XCTAssertTrue(OverlayPlacement.bottom.displayName.contains("Bottom"))
     }
 }

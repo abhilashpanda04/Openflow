@@ -1,5 +1,6 @@
 import Foundation
 
+@available(*, deprecated, message: "Use native CoreML (WhisperKit) instead of local Python environment installation")
 enum BackendInstallerError: LocalizedError {
     case pythonNotAvailable
     case venvCreationFailed(String)
@@ -26,6 +27,7 @@ enum BackendInstallerError: LocalizedError {
     }
 }
 
+@available(*, deprecated, message: "Use native CoreML (WhisperKit) instead of local Python environment installation")
 final class BackendInstaller {
     typealias ProgressCallback = (Double, String) -> Void
 

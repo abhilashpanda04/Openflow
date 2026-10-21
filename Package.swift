@@ -4,14 +4,20 @@ import PackageDescription
 let package = Package(
     name: "Openflow",
     platforms: [
-        .macOS(.v13),
+        .macOS(.v14),
     ],
     products: [
         .executable(name: "Openflow", targets: ["OpenflowMac"]),
     ],
+    dependencies: [
+        .package(url: "https://github.com/argmaxinc/WhisperKit.git", from: "1.0.0"),
+    ],
     targets: [
         .executableTarget(
             name: "OpenflowMac",
+            dependencies: [
+                .product(name: "WhisperKit", package: "WhisperKit"),
+            ],
             path: "Sources/OpenflowMac"
         ),
         .testTarget(

@@ -47,3 +47,59 @@ enum AppStyle {
         static let monoFont = Font.system(size: 12, weight: .medium, design: .monospaced)
     }
 }
+
+// MARK: - App Theme Manager
+
+extension Notification.Name {
+    public static let openflowThemeDidChange = Notification.Name("openflow.theme_did_change")
+}
+
+public final class AppThemeManager: ObservableObject {
+    public static let shared = AppThemeManager()
+
+    @Published public var theme: AppTheme {
+        didSet {
+            UserDefaults.standard.set(theme.rawValue, forKey: UserSettingKey.appTheme)
+            NotificationCenter.default.post(name: .openflowThemeDidChange, object: theme)
+        }
+    }
+
+    public init() {
+        let saved = UserDefaults.standard.string(forKey: UserSettingKey.appTheme)
+        self.theme = AppTheme.parse(saved) ?? .dark
+    }
+
+    public var colorScheme: ColorScheme? {
+        switch theme {
+        case .system: return nil
+        case .light: return .light
+        case .dark: return .dark
+        }
+    }
+
+    public var isDark: Bool {
+        switch theme {
+        case .system:
+            if #available(macOS 10.14, *) {
+                return NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            }
+            return true
+        case .light:
+            return false
+        case .dark:
+            return true
+        }
+    }
+
+    public func setTheme(_ newTheme: AppTheme) {
+        theme = newTheme
+    }
+
+    public func toggleTheme() {
+        if isDark {
+            setTheme(.light)
+        } else {
+            setTheme(.dark)
+        }
+    }
+}

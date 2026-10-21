@@ -54,7 +54,7 @@ final class BackendSupervisorIntegrationTests: XCTestCase {
         var outputLines: [String] = []
         supervisor.onOutputLine = { line in
             outputLines.append(line)
-            if line.contains("backend-ready") {
+            if line.contains(ModelName.accurate17B.rawValue) {
                 outputExpectation.fulfill()
             }
         }

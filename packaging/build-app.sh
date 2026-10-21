@@ -15,7 +15,6 @@ SIGN="${2:-yes}"            # yes or no
 
 APP_NAME="Openflow"
 BUILD_DIR="$ROOT_DIR/.build/arm64-apple-macosx/$BUILD_CONFIG"
-BINARY_PATH="$BUILD_DIR/$APP_NAME"
 APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
 INFO_PLIST="$PACKAGING_DIR/Info.plist"
 ENTITLEMENTS="$PACKAGING_DIR/entitlements.plist"
@@ -59,8 +58,18 @@ echo ""
 echo -e "${YELLOW}[1/5] Building Swift binary...${NC}"
 swift build -c "$BUILD_CONFIG"
 
-if [ ! -x "$BINARY_PATH" ]; then
-    echo -e "${RED}Error: Build failed, binary not found at $BINARY_PATH${NC}"
+SWIFT_BIN_DIR="$(swift build --show-bin-path -c "$BUILD_CONFIG" 2>/dev/null || true)"
+BINARY_PATH=""
+if [ -n "$SWIFT_BIN_DIR" ] && [ -x "$SWIFT_BIN_DIR/$APP_NAME" ]; then
+    BINARY_PATH="$SWIFT_BIN_DIR/$APP_NAME"
+elif [ -x "$BUILD_DIR/$APP_NAME" ]; then
+    BINARY_PATH="$BUILD_DIR/$APP_NAME"
+else
+    BINARY_PATH="$(find "$ROOT_DIR/.build" -type f -name "$APP_NAME" -perm +111 2>/dev/null | grep -i "$BUILD_CONFIG" | head -n 1)"
+fi
+
+if [ -z "$BINARY_PATH" ] || [ ! -x "$BINARY_PATH" ]; then
+    echo -e "${RED}Error: Build failed, binary not found${NC}"
     exit 1
 fi
 
@@ -140,6 +149,11 @@ if [ "$SIGN" = "yes" ]; then
     fi
 else
     echo -e "${YELLOW}[4/5] Skipping code signing (as requested)${NC}"
+fi
+
+if [ -n "$SWIFT_BIN_DIR" ] && [ "$SWIFT_BIN_DIR" != "$BUILD_DIR" ]; then
+    mkdir -p "$SWIFT_BIN_DIR"
+    ln -sfn "$APP_BUNDLE" "$SWIFT_BIN_DIR/$APP_NAME.app" 2>/dev/null || true
 fi
 echo ""
 

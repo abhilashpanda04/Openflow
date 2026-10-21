@@ -1,6 +1,6 @@
 import AppKit
 
-final class BackendSetupDialogController {
+final class BackendSetupDialogController: NSObject, NSWindowDelegate {
     private var window: NSWindow?
     private var statusLabel: NSTextField?
     private var detailLabel: NSTextField?
@@ -20,11 +20,14 @@ final class BackendSetupDialogController {
     var onStartRecording: (() -> Void)?
     var onAbort: (() -> Void)?
 
+    private(set) var isDismissedByUser: Bool = false
+
     var isVisible: Bool {
         window?.isVisible == true
     }
 
     func showProgress(status: String, detail: String, percent: Double, elapsed: String, allowClose: Bool) {
+        isDismissedByUser = false
         ensureWindow()
         statusLabel?.stringValue = status
         detailLabel?.stringValue = detail
@@ -97,7 +100,13 @@ final class BackendSetupDialogController {
     }
 
     func hide() {
+        isDismissedByUser = true
         window?.orderOut(nil)
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        isDismissedByUser = true
+        onAbort?()
     }
 
     private func ensureWindow() {
@@ -113,6 +122,7 @@ final class BackendSetupDialogController {
         )
         dialog.title = "Setting Up Speech Engine"
         dialog.isReleasedWhenClosed = false
+        dialog.delegate = self
         dialog.center()
 
         let content = NSView(frame: dialog.contentView?.bounds ?? .zero)

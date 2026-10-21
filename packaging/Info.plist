@@ -28,6 +28,8 @@
     <true/>
     <key>NSMicrophoneUsageDescription</key>
     <string>Openflow needs microphone access to record audio for transcription.</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>Openflow uses Apple Speech Recognition to convert your spoken dictation into text.</string>
     <key>NSAppleEventsUsageDescription</key>
     <string>Openflow needs Apple Events access to paste transcripts into the active app.</string>
 </dict>
