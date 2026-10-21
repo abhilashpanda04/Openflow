@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <meta content="web_standard" name="shell-type"/>
   <title>Openflow · Supercharged On-Device Voice Dictation for macOS</title>
   
   <meta name="description" content="Transform your voice into formatted text inside any Mac application at 300+ WPM. Powered entirely on-device by WhisperKit CoreML and Apple Neural Engine. 100% private and open source.">
@@ -22,513 +23,939 @@
   <meta property="twitter:image" content="screenshot/productivity-stats.png">
 
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500&amp;family=Plus+Jakarta+Sans:wght@600;700&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+  
+  <style>
+    @layer base {
+      html, body { margin: 0; padding: 0; }
+      body { overscroll-behavior: none; }
+      main > :first-child { margin-top: 0 !important; }
+      main > :last-child { margin-bottom: 0 !important; }
+    }
+    ::-webkit-scrollbar { display: none; }
+  </style>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "surface-container-highest": "#31353f",
+            "on-tertiary-fixed": "#40000d",
+            "on-primary-container": "#0d0096",
+            "tertiary": "#ffb2b7",
+            "on-secondary-fixed": "#001f26",
+            "outline-variant": "#464554",
+            "on-primary-fixed-variant": "#2f2ebe",
+            "surface-dim": "#0f131c",
+            "on-tertiary": "#67001b",
+            "outline": "#908fa0",
+            "tertiary-fixed": "#ffdadb",
+            "secondary-container": "#03b5d3",
+            "inverse-primary": "#494bd6",
+            "surface": "#0f131c",
+            "surface-variant": "#31353f",
+            "tertiary-fixed-dim": "#ffb2b7",
+            "inverse-on-surface": "#2c303a",
+            "surface-bright": "#353943",
+            "on-primary-fixed": "#07006c",
+            "on-secondary": "#003640",
+            "on-tertiary-fixed-variant": "#92002a",
+            "tertiary-container": "#ff516a",
+            "error": "#ffb4ab",
+            "surface-tint": "#c0c1ff",
+            "secondary": "#4cd7f6",
+            "secondary-fixed-dim": "#4cd7f6",
+            "primary-fixed": "#e1e0ff",
+            "primary-fixed-dim": "#c0c1ff",
+            "on-error-container": "#ffdad6",
+            "on-tertiary-container": "#5b0017",
+            "primary": "#c0c1ff",
+            "on-secondary-fixed-variant": "#004e5c",
+            "surface-container-high": "#262a34",
+            "background": "#0f131c",
+            "surface-container": "#1c1f29",
+            "on-error": "#690005",
+            "primary-container": "#8083ff",
+            "secondary-fixed": "#acedff",
+            "inverse-surface": "#dfe2ef",
+            "surface-container-lowest": "#0a0e17",
+            "surface-container-low": "#181b25",
+            "on-surface-variant": "#c7c4d7",
+            "on-background": "#dfe2ef",
+            "on-surface": "#dfe2ef",
+            "error-container": "#93000a",
+            "on-secondary-container": "#00424e",
+            "on-primary": "#1000a9"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-sm": "0.5rem",
+            "gutter": "1rem",
+            "space-lg": "1.5rem",
+            "margin": "1.25rem",
+            "space-xs": "0.25rem",
+            "space-xl": "2rem",
+            "space-md": "1rem"
+          },
+          "fontFamily": {
+            "body-sm": [ "Inter", "sans-serif" ],
+            "body-md": [ "Inter", "sans-serif" ],
+            "label-mono-lg": [ "JetBrains Mono", "monospace" ],
+            "label-ui": [ "Plus Jakarta Sans", "sans-serif" ],
+            "label-mono-sm": [ "JetBrains Mono", "monospace" ],
+            "headline-sm": [ "Plus Jakarta Sans", "sans-serif" ],
+            "display-lg-mobile": [ "Plus Jakarta Sans", "sans-serif" ],
+            "body-lg": [ "Inter", "sans-serif" ],
+            "headline-lg": [ "Plus Jakarta Sans", "sans-serif" ],
+            "headline-md": [ "Plus Jakarta Sans", "sans-serif" ],
+            "display-lg": [ "Plus Jakarta Sans", "sans-serif" ]
+          },
+          "fontSize": {
+            "body-sm": [ "13px", { "lineHeight": "20px", "fontWeight": "400" } ],
+            "body-md": [ "15px", { "lineHeight": "24px", "fontWeight": "400" } ],
+            "label-mono-lg": [ "14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" } ],
+            "label-ui": [ "12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" } ],
+            "label-mono-sm": [ "11px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" } ],
+            "headline-sm": [ "18px", { "lineHeight": "26px", "fontWeight": "600" } ],
+            "display-lg-mobile": [ "32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" } ],
+            "body-lg": [ "17px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "400" } ],
+            "headline-lg": [ "28px", { "lineHeight": "36px", "letterSpacing": "-0.015em", "fontWeight": "600" } ],
+            "headline-md": [ "22px", { "lineHeight": "30px", "letterSpacing": "-0.01em", "fontWeight": "600" } ],
+            "display-lg": [ "40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" } ]
+          }
+        }
+      }
+    };
+  </script>
 </head>
-<body>
+<body class="bg-background font-body-md text-on-background selection:bg-primary-container selection:text-on-primary-container min-h-screen flex flex-col">
 
-  <!-- Ambient Glow -->
-  <div class="hero-glow"></div>
-
-  <!-- Navigation -->
-  <nav class="navbar">
-    <div class="container nav-container">
-      <a href="#" class="nav-brand">
-        <img src="assets/logo.svg" alt="Openflow Logo" class="nav-logo">
-        <span>Openflow</span>
-        <span class="version-tag" id="hero-version-tag">v0.1.0</span>
-      </a>
-
-      <ul class="nav-links">
-        <li><a href="#features" class="nav-link">Features</a></li>
-        <li><a href="#demo" class="nav-link">Live Demo</a></li>
-        <li><a href="#screenshots" class="nav-link">Screenshots</a></li>
-        <li><a href="#comparison" class="nav-link">Why Openflow</a></li>
-        <li><a href="#faq" class="nav-link">FAQ</a></li>
-      </ul>
-
-      <div class="nav-actions">
-        <a href="https://github.com/abhilashpanda04/Openflow" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" title="View Source on GitHub">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-          </svg>
-          GitHub
+  <!-- Header -->
+  <header class="fixed top-0 left-0 right-0 z-50 bg-surface/85 backdrop-blur-2xl shadow-[0_1px_8px_rgba(0,0,0,0.4)]">
+    <div class="h-20 max-w-7xl mx-auto px-6 lg:px-12 flex items-center justify-between gap-6">
+      <div class="flex items-center gap-space-md shrink-0">
+        <a class="flex items-center gap-space-sm group" href="#">
+          <img src="assets/logo.svg" alt="Openflow Logo" class="w-10 h-10 rounded-xl shadow-[0_0_24px_rgba(128,131,255,0.35)] transition-transform duration-300 group-hover:scale-105">
+          <span class="font-headline-md text-headline-md tracking-tight text-on-surface">Openflow</span>
         </a>
-        <a href="https://github.com/abhilashpanda04/Openflow/releases/latest/download/Openflow.dmg" class="btn btn-primary">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-          Download DMG
+        <span class="px-space-xs py-0.5 rounded-full bg-surface-container-high text-secondary font-label-mono-sm text-label-mono-sm border border-outline-variant/30">v0.1.0</span>
+      </div>
+      
+      <nav class="hidden xl:flex items-center gap-space-lg">
+        <a class="font-label-ui text-label-ui uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors" href="#features">Features</a>
+        <a class="font-label-ui text-label-ui uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors" href="#walkthrough">Screenshots</a>
+        <a class="font-label-ui text-label-ui uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors" href="#comparison">Comparison</a>
+        <a class="font-label-ui text-label-ui uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors" href="#quickstart">Quickstart</a>
+        <a class="font-label-ui text-label-ui uppercase tracking-wider text-on-surface-variant hover:text-on-surface transition-colors" href="#faq">FAQ</a>
+      </nav>
+      
+      <div class="flex items-center gap-space-md shrink-0">
+        <a class="hidden sm:flex items-center gap-space-xs px-space-md py-2.5 rounded-full bg-surface-container/60 hover:bg-surface-container-high text-on-surface font-label-ui text-label-ui tracking-wide transition-all border border-outline-variant/40" href="https://github.com/abhilashpanda04/Openflow" target="_blank" rel="noopener noreferrer">
+          <span class="material-symbols-outlined text-[18px] text-on-surface-variant">terminal</span>
+          <span>GitHub</span>
+        </a>
+        <a class="flex items-center gap-space-xs px-space-lg py-2.5 rounded-full bg-gradient-to-r from-primary-container to-secondary text-on-primary font-label-ui text-label-ui tracking-wide shadow-[0_0_28px_rgba(76,215,246,0.25)] hover:shadow-[0_0_36px_rgba(76,215,246,0.4)] hover:brightness-110 active:scale-95 transition-all" href="https://github.com/abhilashpanda04/Openflow/releases/latest/download/Openflow.dmg">
+          <span class="material-symbols-outlined text-[18px]">laptop_mac</span>
+          <span>Download for Mac</span>
         </a>
       </div>
     </div>
-  </nav>
+  </header>
 
-  <!-- Hero Section -->
-  <header class="hero">
-    <div class="container">
-      <div class="hero-pill">
-        <span class="pulse-dot"></span>
-        <span>Apple Silicon Native · 100% On-Device Neural Dictation</span>
-      </div>
-
-      <h1 class="hero-title">
-        Speak at the speed of thought.<br>
-        <span class="gradient-text">Zero cloud. Zero lag.</span>
-      </h1>
-
-      <p class="hero-subtitle">
-        Dictate 3x faster than typing directly into Cursor, Slack, Notion, Notes, or your terminal. Powered entirely on-device by <strong>WhisperKit CoreML</strong> and Apple Neural Engine.
-      </p>
-
-      <div class="hero-ctas">
-        <a href="https://github.com/abhilashpanda04/Openflow/releases/latest/download/Openflow.dmg" class="btn btn-primary btn-lg">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.63-.77 1.06-1.85.94-2.93-.91.04-2.02.61-2.67 1.38-.58.68-1.09 1.77-.95 2.82 1.02.08 2.05-.5 2.68-1.27z"/>
-          </svg>
-          Download for Mac (.DMG)
-        </a>
-        <a href="https://github.com/abhilashpanda04/Openflow" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-lg">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-          </svg>
-          View Source & 115 Tests
-        </a>
-      </div>
-
-      <p class="hero-caption">
-        Free & Open Source · macOS 14.0+ (Sonoma / Sequoia) · Global Hotkey <kbd>⌥ Right Option</kbd> or <kbd>⌘⇧Space</kbd>
-      </p>
-
-      <!-- Hero Showcase Box -->
-      <div class="hero-showcase" id="demo">
-        <div class="showcase-glow"></div>
-        <div class="showcase-frame">
-          <div class="showcase-grid">
-            <div class="hero-image-wrap">
-              <img src="screenshot/menubar-popover.png" alt="Openflow Menu Bar Interface" class="hero-image">
+  <!-- Main Content -->
+  <main class="w-full pt-20 bg-background flex-1">
+    <div class="flex flex-col w-full">
+      <!-- Top Subtle Background Atmosphere Layer -->
+      <div class="relative w-full overflow-hidden">
+        <!-- Atmospheric Radiant Orbs -->
+        <div class="absolute -top-32 left-1/2 -translate-x-1/2 w-[720px] h-[480px] bg-gradient-to-b from-primary-container/20 via-secondary-container/10 to-transparent blur-3xl pointer-events-none rounded-full"></div>
+        <div class="absolute top-96 left-1/4 -translate-x-1/2 w-[420px] h-[360px] bg-tertiary-container/10 blur-[100px] pointer-events-none rounded-full"></div>
+        <div class="absolute top-[520px] right-1/4 translate-x-1/3 w-[500px] h-[400px] bg-secondary/10 blur-[120px] pointer-events-none rounded-full"></div>
+        
+        <!-- 1. HERO SECTION -->
+        <section class="relative pt-12 pb-20 px-6 lg:px-12 max-w-7xl mx-auto flex flex-col items-center text-center">
+          <!-- Eyebrow Badge -->
+          <div class="inline-flex items-center gap-space-xs px-space-md py-1.5 rounded-full bg-surface-container-high/70 shadow-md backdrop-blur-xl mb-space-lg">
+            <span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+            <span class="font-label-ui text-label-ui text-secondary uppercase tracking-widest">Apple Silicon Native · 100% On-Device Neural Dictation</span>
+          </div>
+          
+          <!-- Main Headline -->
+          <h1 class="max-w-4xl font-display-lg text-display-lg lg:text-[64px] lg:leading-[72px] tracking-tight font-bold text-on-surface mb-space-md">
+            Speak at the speed of thought. <br/>
+            <span class="bg-gradient-to-r from-primary via-secondary to-tertiary-container bg-clip-text text-transparent">Zero cloud. Zero lag.</span>
+          </h1>
+          
+          <!-- Subheadline -->
+          <p class="max-w-2xl font-body-lg text-body-lg text-on-surface-variant mb-space-xl">
+            Dictate 3x faster than typing directly into Cursor, Slack, Notion, Notes, or your terminal. Powered entirely on-device by <span class="text-on-surface font-semibold">WhisperKit CoreML</span> and Apple Neural Engine.
+          </p>
+          
+          <!-- CTA Action Group -->
+          <div class="flex flex-col sm:flex-row items-center gap-space-md mb-space-lg w-full sm:w-auto">
+            <a class="w-full sm:w-auto flex items-center justify-center gap-space-sm px-space-xl py-3.5 rounded-full bg-gradient-to-r from-primary-container via-secondary-container to-secondary text-surface-container-lowest font-headline-sm text-headline-sm shadow-xl hover:shadow-[0_0_36px_rgba(76,215,246,0.4)] hover:brightness-110 active:scale-95 transition-all" href="https://github.com/abhilashpanda04/Openflow/releases/latest/download/Openflow.dmg">
+              <span class="material-symbols-outlined text-[22px]">laptop_mac</span>
+              <span>Download for Mac (.DMG)</span>
+            </a>
+            <a class="w-full sm:w-auto flex items-center justify-center gap-space-sm px-space-lg py-3.5 rounded-full bg-surface-container-high/80 hover:bg-surface-bright text-on-surface font-headline-sm text-headline-sm shadow-md transition-all" href="https://github.com/abhilashpanda04/Openflow" target="_blank" rel="noopener noreferrer">
+              <span class="material-symbols-outlined text-[20px] text-primary">terminal</span>
+              <span>View Source &amp; 115 Tests</span>
+            </a>
+          </div>
+          
+          <!-- Micro Metadata -->
+          <div class="flex flex-wrap items-center justify-center gap-x-space-md gap-y-2 font-label-mono-sm text-label-mono-sm text-outline">
+            <span class="flex items-center gap-1">
+              <span class="material-symbols-outlined text-[15px] text-secondary">verified</span>
+              Free &amp; Open Source
+            </span>
+            <span class="text-surface-container-highest">•</span>
+            <span>macOS 14.0+ (Sonoma / Sequoia)</span>
+            <span class="text-surface-container-highest">•</span>
+            <span class="flex items-center gap-1.5">
+              <span>Global Hotkey</span>
+              <kbd class="px-2 py-0.5 rounded bg-surface-container-highest text-on-surface font-label-mono-sm">⌥ Right Option</kbd>
+              <span class="text-outline">or</span>
+              <kbd class="px-2 py-0.5 rounded bg-surface-container-highest text-on-surface font-label-mono-sm">⌘⇧Space</kbd>
+            </span>
+          </div>
+          
+          <!-- Interactive Hero Mockup Card with Screenshot -->
+          <div class="w-full max-w-5xl mt-space-xl relative">
+            <div class="relative rounded-2xl bg-surface-container-lowest shadow-2xl overflow-hidden p-space-sm lg:p-space-md">
+              <!-- Window Chrome -->
+              <div class="flex items-center justify-between pb-space-sm px-space-xs">
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 rounded-full bg-tertiary-container/80 inline-block"></span>
+                  <span class="w-3 h-3 rounded-full bg-secondary-container/80 inline-block"></span>
+                  <span class="w-3 h-3 rounded-full bg-primary-container/80 inline-block"></span>
+                  <span class="ml-space-sm font-label-mono-sm text-label-mono-sm text-outline">openflow-hud — ANE WhisperKit session</span>
+                </div>
+                <div class="flex items-center gap-space-sm">
+                  <span class="px-2 py-0.5 rounded bg-surface-container font-label-mono-sm text-label-mono-sm text-secondary flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Apple Neural Engine (ANE)
+                  </span>
+                  <span class="px-2 py-0.5 rounded bg-surface-container font-label-mono-sm text-label-mono-sm text-tertiary">&lt; 15ms Latency</span>
+                </div>
+              </div>
+              
+              <!-- Split Workspace Preview -->
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-md pt-space-xs text-left items-center">
+                <!-- Left Console: Actual Running App Screenshot -->
+                <div class="lg:col-span-5 rounded-xl bg-surface-container-low p-space-sm flex flex-col items-center justify-center overflow-hidden">
+                  <img src="screenshot/menubar-popover.png" alt="Openflow Menu Bar Interface" class="w-full max-w-[340px] rounded-xl shadow-2xl border border-outline-variant/30 hover:scale-[1.02] transition-transform duration-300">
+                </div>
+                
+                <!-- Right Interactive Speech Stream & Spectrum Canvas -->
+                <div class="lg:col-span-7 rounded-xl bg-surface-container p-space-md flex flex-col justify-between h-full">
+                  <div>
+                    <div class="flex items-center justify-between mb-space-sm">
+                      <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-tertiary-container animate-ping"></span>
+                        <span class="font-label-ui text-label-ui uppercase tracking-wide text-on-surface font-semibold">Interactive Speech Stream</span>
+                      </div>
+                      <span class="font-label-mono-sm text-label-mono-sm text-secondary" id="hero-stream-status">Listening (300 WPM)...</span>
+                    </div>
+                    
+                    <!-- Speech Output Glass Box -->
+                    <div class="p-space-md rounded-xl bg-surface-container-low min-h-[140px] flex flex-col justify-between">
+                      <p class="font-body-lg text-body-lg text-on-surface leading-relaxed">
+                        <span id="hero-type-text">Refactor the entire authentication handler into an async CoreML pipeline. Use native Swift concurrency and ensure we catch all network timeouts—</span>
+                        <span class="inline-block w-2 h-5 bg-secondary ml-1 animate-pulse align-middle"></span>
+                      </p>
+                      <div class="flex items-center gap-2 pt-space-sm">
+                        <span class="px-2 py-0.5 rounded bg-tertiary-container/20 text-tertiary font-label-mono-sm text-label-mono-sm">Voice Action</span>
+                        <span class="font-label-mono-sm text-label-mono-sm text-on-surface-variant">“scratch that” discards immediately</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Frequency Audio Spectrum Bars -->
+                  <div class="pt-space-md">
+                    <div class="text-outline font-label-mono-sm text-label-mono-sm mb-2 flex items-center justify-between">
+                      <span>Engine: Native CoreML (ANE)</span>
+                      <span class="text-secondary font-label-mono-sm text-label-mono-sm">Live Audio Waveform</span>
+                    </div>
+                    <div class="flex items-end justify-between h-12 px-2 py-1 bg-surface-container-lowest rounded-lg">
+                      <div class="w-1.5 h-3 bg-secondary rounded-full animate-pulse"></div>
+                      <div class="w-1.5 h-5 bg-secondary-container rounded-full"></div>
+                      <div class="w-1.5 h-8 bg-primary rounded-full animate-bounce"></div>
+                      <div class="w-1.5 h-11 bg-primary-container rounded-full"></div>
+                      <div class="w-1.5 h-6 bg-tertiary-container rounded-full animate-pulse"></div>
+                      <div class="w-1.5 h-10 bg-secondary rounded-full"></div>
+                      <div class="w-1.5 h-7 bg-primary rounded-full animate-bounce"></div>
+                      <div class="w-1.5 h-4 bg-secondary-container rounded-full"></div>
+                      <div class="w-1.5 h-9 bg-primary-container rounded-full"></div>
+                      <div class="w-1.5 h-12 bg-secondary rounded-full animate-pulse"></div>
+                      <div class="w-1.5 h-7 bg-tertiary-container rounded-full"></div>
+                      <div class="w-1.5 h-10 bg-primary rounded-full animate-bounce"></div>
+                      <div class="w-1.5 h-5 bg-secondary rounded-full"></div>
+                      <div class="w-1.5 h-8 bg-secondary-container rounded-full"></div>
+                      <div class="w-1.5 h-3 bg-primary rounded-full animate-pulse"></div>
+                      <div class="w-1.5 h-9 bg-primary-container rounded-full"></div>
+                      <div class="w-1.5 h-12 bg-secondary rounded-full animate-bounce"></div>
+                      <div class="w-1.5 h-8 bg-tertiary-container rounded-full"></div>
+                      <div class="w-1.5 h-4 bg-primary rounded-full"></div>
+                      <div class="w-1.5 h-10 bg-secondary-container rounded-full animate-pulse"></div>
+                      <div class="w-1.5 h-6 bg-primary rounded-full"></div>
+                      <div class="w-1.5 h-3 bg-secondary rounded-full"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
+          </div>
+        </section>
+      </div>
 
-            <!-- Live Simulation Card -->
-            <div class="live-demo-card">
-              <div class="demo-header">
-                <div class="demo-title">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent-cyan)">
-                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
-                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                    <line x1="12" y1="19" x2="12" y2="22"></line>
-                  </svg>
-                  <span>Interactive Speech Stream</span>
-                </div>
-                <div class="demo-status">
-                  <span class="status-dot"></span>
-                  <span id="demo-status-text">Listening (300 WPM)...</span>
-                </div>
+      <!-- 2. TELEMETRY & KEY METRICS BAR -->
+      <section class="w-full py-12 px-6 lg:px-12 bg-surface-container-low/60">
+        <div class="max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-space-md">
+          <!-- Metric 1 -->
+          <div class="p-space-lg rounded-2xl bg-surface-container/70 shadow-lg flex flex-col items-center text-center">
+            <div class="font-display-lg text-display-lg font-bold text-secondary mb-1">300 WPM</div>
+            <div class="font-headline-sm text-headline-sm text-on-surface mb-0.5">Natural Speaking</div>
+            <div class="font-body-sm text-body-sm text-on-surface-variant">Natural Speaking Throughput</div>
+          </div>
+          <!-- Metric 2 -->
+          <div class="p-space-lg rounded-2xl bg-surface-container/70 shadow-lg flex flex-col items-center text-center">
+            <div class="font-display-lg text-display-lg font-bold text-primary mb-1">100%</div>
+            <div class="font-headline-sm text-headline-sm text-on-surface mb-0.5">On-Device &amp; Private</div>
+            <div class="font-body-sm text-body-sm text-on-surface-variant">Zero Cloud Telemetry</div>
+          </div>
+          <!-- Metric 3 -->
+          <div class="p-space-lg rounded-2xl bg-surface-container/70 shadow-lg flex flex-col items-center text-center">
+            <div class="font-display-lg text-display-lg font-bold text-tertiary mb-1">&lt; 15ms</div>
+            <div class="font-headline-sm text-headline-sm text-on-surface mb-0.5">Ultra Low Audio Latency</div>
+            <div class="font-body-sm text-body-sm text-on-surface-variant">via Apple Neural Engine</div>
+          </div>
+          <!-- Metric 4 -->
+          <div class="p-space-lg rounded-2xl bg-surface-container/70 shadow-lg flex flex-col items-center text-center">
+            <div class="font-display-lg text-display-lg font-bold text-secondary-container mb-1">115</div>
+            <div class="font-headline-sm text-headline-sm text-on-surface mb-0.5">Automated Unit Tests</div>
+            <div class="font-body-sm text-body-sm text-on-surface-variant">Passing Continuous Integration</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. CORE FEATURE MATRIX / BENTO GRID -->
+      <section class="py-24 px-6 lg:px-12 max-w-7xl mx-auto w-full" id="features">
+        <div class="text-center max-w-3xl mx-auto mb-16">
+          <span class="font-label-ui text-label-ui uppercase tracking-widest text-secondary font-semibold">Engineered for Perfection</span>
+          <h2 class="font-headline-lg text-headline-lg text-on-surface font-bold mt-2 mb-4">
+            Everything you need to write without typing
+          </h2>
+          <p class="font-body-md text-body-md text-on-surface-variant">
+            Openflow combines Apple Silicon hardware acceleration with smart audio preprocessing to deliver an effortless dictation experience.
+          </p>
+        </div>
+        
+        <!-- Bento Grid (6 Features) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-space-lg">
+          <!-- Card 1 -->
+          <div class="rounded-2xl bg-surface-container p-space-lg shadow-xl flex flex-col justify-between group hover:bg-surface-container-high transition-all">
+            <div>
+              <div class="w-12 h-12 rounded-xl bg-primary-container/20 flex items-center justify-center mb-space-md text-primary">
+                <span class="material-symbols-outlined text-[26px]">memory</span>
               </div>
-
-              <!-- 12-bar Chromatic Sound Wave -->
-              <div class="sound-wave" id="demo-sound-wave">
-                <div class="wave-bar"></div>
-                <div class="wave-bar"></div>
-                <div class="wave-bar"></div>
-                <div class="wave-bar"></div>
-                <div class="wave-bar"></div>
-                <div class="wave-bar"></div>
-                <div class="wave-bar"></div>
-                <div class="wave-bar"></div>
-                <div class="wave-bar"></div>
-                <div class="wave-bar"></div>
-                <div class="wave-bar"></div>
-                <div class="wave-bar"></div>
+              <h3 class="font-headline-md text-headline-md text-on-surface font-semibold mb-space-sm">Native WhisperKit CoreML</h3>
+              <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                Runs state-of-the-art OpenAI Whisper models directly on Apple Silicon Neural Engine (ANE) and GPU. Zero Python runtime, zero Docker overhead, and zero network dependency.
+              </p>
+            </div>
+            <div class="mt-space-lg pt-space-sm flex items-center gap-2 font-label-mono-sm text-label-mono-sm text-primary">
+              <span class="material-symbols-outlined text-[16px]">bolt</span>
+              <span>Apple Silicon Neural Engine</span>
+            </div>
+          </div>
+          
+          <!-- Card 2 -->
+          <div class="rounded-2xl bg-surface-container p-space-lg shadow-xl flex flex-col justify-between group hover:bg-surface-container-high transition-all">
+            <div>
+              <div class="w-12 h-12 rounded-xl bg-secondary-container/20 flex items-center justify-center mb-space-md text-secondary">
+                <span class="material-symbols-outlined text-[26px]">undo</span>
               </div>
-
-              <!-- Live Typed Text -->
-              <div class="demo-transcript-box">
-                <span id="demo-text"></span><span class="typing-cursor"></span>
+              <h3 class="font-headline-md text-headline-md text-on-surface font-semibold mb-space-sm">In-Line Voice Actions</h3>
+              <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                Say <code class="px-1.5 py-0.5 rounded bg-surface-container-highest text-secondary font-label-mono-sm">"scratch that"</code> to discard dictation instantly. Use <code class="px-1.5 py-0.5 rounded bg-surface-container-highest text-secondary font-label-mono-sm">"urgent all caps that"</code> to format words, or dispatch <code class="px-1.5 py-0.5 rounded bg-surface-container-highest text-secondary font-label-mono-sm">"select all"</code>, <code class="px-1.5 py-0.5 rounded bg-surface-container-highest text-secondary font-label-mono-sm">"new paragraph"</code>, and <code class="px-1.5 py-0.5 rounded bg-surface-container-highest text-secondary font-label-mono-sm">"undo"</code> seamlessly.
+              </p>
+            </div>
+            <div class="mt-space-lg pt-space-sm flex items-center gap-2 font-label-mono-sm text-label-mono-sm text-secondary">
+              <span class="material-symbols-outlined text-[16px]">record_voice_over</span>
+              <span>Instant Command Parsing</span>
+            </div>
+          </div>
+          
+          <!-- Card 3 -->
+          <div class="rounded-2xl bg-surface-container p-space-lg shadow-xl flex flex-col justify-between group hover:bg-surface-container-high transition-all">
+            <div>
+              <div class="w-12 h-12 rounded-xl bg-tertiary-container/20 flex items-center justify-center mb-space-md text-tertiary">
+                <span class="material-symbols-outlined text-[26px]">neurology</span>
               </div>
+              <h3 class="font-headline-md text-headline-md text-on-surface font-semibold mb-space-sm">Apple Intelligence Ready</h3>
+              <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                Integrated with macOS 15.1+ Apple Intelligence Writing Tools. Invoke proofreading, tone shifts (Professional, Friendly, Concise), or summarization directly with voice triggers.
+              </p>
+            </div>
+            <div class="mt-space-lg pt-space-sm flex items-center gap-2 font-label-mono-sm text-label-mono-sm text-tertiary">
+              <span class="material-symbols-outlined text-[16px]">auto_awesome</span>
+              <span>macOS 15.1 Sequoia Bridge</span>
+            </div>
+          </div>
+          
+          <!-- Card 4 -->
+          <div class="rounded-2xl bg-surface-container p-space-lg shadow-xl flex flex-col justify-between group hover:bg-surface-container-high transition-all">
+            <div>
+              <div class="w-12 h-12 rounded-xl bg-secondary-container/20 flex items-center justify-center mb-space-md text-secondary">
+                <span class="material-symbols-outlined text-[26px]">hearing</span>
+              </div>
+              <h3 class="font-headline-md text-headline-md text-on-surface font-semibold mb-space-sm">VAD &amp; Silence Trimming</h3>
+              <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                Smart Voice Activity Detection automatically stops recording when you pause (1s to 5s). Leading and trailing silence are trimmed to eliminate hallucinated repeats.
+              </p>
+            </div>
+            <div class="mt-space-lg pt-space-sm flex items-center gap-2 font-label-mono-sm text-label-mono-sm text-secondary">
+              <span class="material-symbols-outlined text-[16px]">graphic_eq</span>
+              <span>Energy &amp; Threshold Detection</span>
+            </div>
+          </div>
+          
+          <!-- Card 5 -->
+          <div class="rounded-2xl bg-surface-container p-space-lg shadow-xl flex flex-col justify-between group hover:bg-surface-container-high transition-all">
+            <div>
+              <div class="w-12 h-12 rounded-xl bg-primary-container/20 flex items-center justify-center mb-space-md text-primary">
+                <span class="material-symbols-outlined text-[26px]">notifications_active</span>
+              </div>
+              <h3 class="font-headline-md text-headline-md text-on-surface font-semibold mb-space-sm">Native Audio Chimes</h3>
+              <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                Dispatches native Siri acoustic feedback asynchronously when recording starts, completes, or cancels. Gives you clear audio cues without interrupting typing or microphone capture.
+              </p>
+            </div>
+            <div class="mt-space-lg pt-space-sm flex items-center gap-2 font-label-mono-sm text-label-mono-sm text-primary">
+              <span class="material-symbols-outlined text-[16px]">spatial_audio_off</span>
+              <span>Non-Blocking CoreAudio FX</span>
+            </div>
+          </div>
+          
+          <!-- Card 6 -->
+          <div class="rounded-2xl bg-surface-container p-space-lg shadow-xl flex flex-col justify-between group hover:bg-surface-container-high transition-all">
+            <div>
+              <div class="w-12 h-12 rounded-xl bg-tertiary-container/20 flex items-center justify-center mb-space-md text-tertiary">
+                <span class="material-symbols-outlined text-[26px]">keyboard</span>
+              </div>
+              <h3 class="font-headline-md text-headline-md text-on-surface font-semibold mb-space-sm">Universal Text Injection</h3>
+              <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                Works universally in any macOS application with zero configuration. Direct keyboard event synthesis pastes your text into Cursor, Xcode, Slack, Google Docs, or Chrome.
+              </p>
+            </div>
+            <div class="mt-space-lg pt-space-sm flex items-center gap-2 font-label-mono-sm text-label-mono-sm text-tertiary">
+              <span class="material-symbols-outlined text-[16px]">input</span>
+              <span>CoreGraphics CGEvent Tap</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
-              <div class="demo-controls">
-                <div class="demo-voice-cmd">
-                  Voice Action: <code>"scratch that"</code> discards immediately
-                </div>
-                <span style="font-size: 0.78rem; color: var(--text-muted);">
-                  Engine: Native CoreML (ANE)
+      <!-- 4. INTERACTIVE MACOS APP WALKTHROUGH TABS WITH REAL SCREENSHOTS -->
+      <section class="py-20 px-6 lg:px-12 bg-surface-container-low/40" id="walkthrough">
+        <div class="max-w-7xl mx-auto flex flex-col items-center text-center">
+          <span class="font-label-ui text-label-ui uppercase tracking-widest text-secondary font-semibold">Visual Walkthrough</span>
+          <h2 class="font-headline-lg text-headline-lg text-on-surface font-bold mt-2 mb-4">
+            Designed to look like a native macOS app
+          </h2>
+          <p class="font-body-md text-body-md text-on-surface-variant max-w-2xl mb-10">
+            Crafted with SwiftUI to follow Apple Human Interface Guidelines, supporting both dark obsidian and crisp light themes.
+          </p>
+          
+          <!-- Segmented Control Pills -->
+          <div class="flex flex-wrap items-center justify-center gap-2 p-1.5 rounded-full bg-surface-container-high shadow-inner mb-12 max-w-3xl">
+            <button class="px-space-md py-2 rounded-full font-label-ui text-label-ui text-on-primary bg-primary-container shadow-md transition-all" id="tab-btn-stats" onclick="switchAppTab('stats')">
+              Productivity &amp; Speed Stats
+            </button>
+            <button class="px-space-md py-2 rounded-full font-label-ui text-label-ui text-on-surface-variant hover:text-on-surface transition-all" id="tab-btn-dictation" onclick="switchAppTab('dictation')">
+              Dictation &amp; Silence Settings
+            </button>
+            <button class="px-space-md py-2 rounded-full font-label-ui text-label-ui text-on-surface-variant hover:text-on-surface transition-all" id="tab-btn-themes" onclick="switchAppTab('themes')">
+              Themes &amp; Custom Hotkeys
+            </button>
+            <button class="px-space-md py-2 rounded-full font-label-ui text-label-ui text-on-surface-variant hover:text-on-surface transition-all" id="tab-btn-menubar" onclick="switchAppTab('menubar')">
+              Menu Bar Companion
+            </button>
+          </div>
+          
+          <!-- App Walkthrough Presentation Window with Real Screenshots -->
+          <div class="w-full max-w-5xl rounded-2xl bg-surface shadow-2xl p-space-sm sm:p-space-lg text-left">
+            <!-- Native macOS Sequoia Titlebar -->
+            <div class="flex items-center justify-between pb-space-md mb-space-md border-b border-outline-variant/30">
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-error-container inline-block"></span>
+                <span class="w-3 h-3 rounded-full bg-secondary-container inline-block"></span>
+                <span class="w-3 h-3 rounded-full bg-primary-container inline-block"></span>
+                <img src="assets/logo.svg" alt="Openflow" class="w-5 h-5 rounded ml-2">
+                <span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Openflow Settings</span>
+                <span class="px-2 py-0.5 rounded bg-surface-container-high text-secondary font-label-mono-sm text-label-mono-sm">v0.1.0</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-outline text-[18px]">tune</span>
+                <span class="material-symbols-outlined text-outline text-[18px]">help</span>
+              </div>
+            </div>
+            
+            <!-- Tab Panel 1: Productivity & Speed Stats (Screenshot) -->
+            <div class="space-y-space-md" id="tab-panel-stats">
+              <div class="rounded-xl overflow-hidden shadow-2xl border border-outline-variant/30">
+                <img src="screenshot/productivity-stats.png" alt="Openflow Productivity & Speed Stats" class="w-full h-auto object-cover">
+              </div>
+              <p class="font-body-sm text-body-sm text-outline text-center pt-2">
+                Real-time metrics: words dictated, 14+ minutes saved today, 300 WPM pace, weekly volume chart, and engine distribution.
+              </p>
+            </div>
+            
+            <!-- Tab Panel 2: Dictation & Silence Settings (Screenshot) -->
+            <div class="hidden space-y-space-md" id="tab-panel-dictation">
+              <div class="rounded-xl overflow-hidden shadow-2xl border border-outline-variant/30">
+                <img src="screenshot/dictation-settings.png" alt="Openflow Dictation & Silence Settings" class="w-full h-auto object-cover">
+              </div>
+              <p class="font-body-sm text-body-sm text-outline text-center pt-2">
+                Granular formatting controls: spoken emoji, spoken punctuation, trailing space handling, and configurable VAD auto-stop thresholds.
+              </p>
+            </div>
+            
+            <!-- Tab Panel 3: Themes & Custom Hotkeys (Screenshot) -->
+            <div class="hidden space-y-space-md" id="tab-panel-themes">
+              <div class="rounded-xl overflow-hidden shadow-2xl border border-outline-variant/30">
+                <img src="screenshot/general-settings.png" alt="Openflow General Preferences & Keybindings" class="w-full h-auto object-cover">
+              </div>
+              <p class="font-body-sm text-body-sm text-outline text-center pt-2">
+                Select between Obsidian Dark, Crisp White, or System Auto. Configure single-key triggers like Right Option, Fn/Globe, or F5.
+              </p>
+            </div>
+            
+            <!-- Tab Panel 4: Menu Bar Companion (Screenshot) -->
+            <div class="hidden space-y-space-md" id="tab-panel-menubar">
+              <div class="rounded-xl overflow-hidden shadow-2xl border border-outline-variant/30 flex justify-center bg-surface-container-low p-6">
+                <img src="screenshot/menubar-popover.png" alt="Openflow Menu Bar Companion" class="max-w-md w-full h-auto object-contain rounded-xl shadow-2xl">
+              </div>
+              <p class="font-body-sm text-body-sm text-outline text-center pt-2">
+                Compact menu bar companion with live microphone input levels, hardware memory &amp; CPU monitors, and instant recording toggle.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. COMPETITIVE COMPARISON TABLE -->
+      <section class="py-24 px-6 lg:px-12 max-w-7xl mx-auto w-full" id="comparison">
+        <div class="text-center max-w-3xl mx-auto mb-16">
+          <span class="font-label-ui text-label-ui uppercase tracking-widest text-secondary font-semibold">Uncompromising Quality</span>
+          <h2 class="font-headline-lg text-headline-lg text-on-surface font-bold mt-2 mb-4">
+            Why choose Openflow over alternatives?
+          </h2>
+          <p class="font-body-md text-body-md text-on-surface-variant">
+            Comparing Openflow with built-in macOS dictation and cloud-based subscription dictation apps.
+          </p>
+        </div>
+        
+        <!-- Comparison Table Container -->
+        <div class="overflow-x-auto rounded-2xl bg-surface-container shadow-2xl">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-surface-container-high/80">
+                <th class="p-space-lg font-label-ui text-label-ui uppercase tracking-wider text-outline">Feature</th>
+                <th class="p-space-lg font-label-ui text-label-ui uppercase tracking-wider text-secondary bg-surface-container-highest/60">
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-secondary"></span>
+                    Openflow
+                  </div>
+                </th>
+                <th class="p-space-lg font-label-ui text-label-ui uppercase tracking-wider text-on-surface-variant">macOS Built-in Dictation</th>
+                <th class="p-space-lg font-label-ui text-label-ui uppercase tracking-wider text-on-surface-variant">Cloud Dictation (Wispr / Superwhisper)</th>
+              </tr>
+            </thead>
+            <tbody class="font-body-md text-body-md">
+              <tr class="hover:bg-surface-container-high/40 transition-colors">
+                <td class="p-space-lg font-headline-sm text-headline-sm text-on-surface">On-Device Neural Engine (CoreML)</td>
+                <td class="p-space-lg text-secondary font-semibold bg-surface-container-highest/30">
+                  <div class="flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                    <span>Yes (WhisperKit)</span>
+                  </div>
+                </td>
+                <td class="p-space-lg text-on-surface-variant">Partial / Basic</td>
+                <td class="p-space-lg text-outline">No (Requires Cloud API)</td>
+              </tr>
+              <tr class="hover:bg-surface-container-high/40 transition-colors">
+                <td class="p-space-lg font-headline-sm text-headline-sm text-on-surface">Privacy &amp; Zero Telemetry</td>
+                <td class="p-space-lg text-secondary font-semibold bg-surface-container-highest/30">
+                  <div class="flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                    <span>100% Offline</span>
+                  </div>
+                </td>
+                <td class="p-space-lg text-on-surface-variant">Sends telemetry to Apple</td>
+                <td class="p-space-lg text-outline">Uploads voice to third-party servers</td>
+              </tr>
+              <tr class="hover:bg-surface-container-high/40 transition-colors">
+                <td class="p-space-lg font-headline-sm text-headline-sm text-on-surface">Technical &amp; Code Dictation Accuracy</td>
+                <td class="p-space-lg text-secondary font-semibold bg-surface-container-highest/30">
+                  <div class="flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                    <span>High (Whisper Models)</span>
+                  </div>
+                </td>
+                <td class="p-space-lg text-outline">Frequently misinterprets code</td>
+                <td class="p-space-lg text-on-surface-variant">
+                  <div class="flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[18px] text-primary">check_circle</span>
+                    <span>High</span>
+                  </div>
+                </td>
+              </tr>
+              <tr class="hover:bg-surface-container-high/40 transition-colors">
+                <td class="p-space-lg font-headline-sm text-headline-sm text-on-surface">In-Line Voice Actions (“scratch that”)</td>
+                <td class="p-space-lg text-secondary font-semibold bg-surface-container-highest/30">
+                  <div class="flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                    <span>Built-in Engine</span>
+                  </div>
+                </td>
+                <td class="p-space-lg text-outline">None</td>
+                <td class="p-space-lg text-outline">Limited</td>
+              </tr>
+              <tr class="hover:bg-surface-container-high/40 transition-colors">
+                <td class="p-space-lg font-headline-sm text-headline-sm text-on-surface">Silence Trimming &amp; VAD Auto-Stop</td>
+                <td class="p-space-lg text-secondary font-semibold bg-surface-container-highest/30">
+                  <div class="flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                    <span>Built-in (1s-5s)</span>
+                  </div>
+                </td>
+                <td class="p-space-lg text-outline">None</td>
+                <td class="p-space-lg text-outline">Subscription only</td>
+              </tr>
+              <tr class="hover:bg-surface-container-high/40 transition-colors">
+                <td class="p-space-lg font-headline-sm text-headline-sm text-on-surface">Price &amp; Licensing</td>
+                <td class="p-space-lg text-secondary font-semibold bg-surface-container-highest/30">
+                  <div class="flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                    <span>100% Free &amp; Open Source</span>
+                  </div>
+                </td>
+                <td class="p-space-lg text-on-surface-variant">Free (Bundled)</td>
+                <td class="p-space-lg text-tertiary-container font-medium">$10 – $20 / month</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 6. QUICK SETUP STEPS -->
+      <section class="py-20 px-6 lg:px-12 bg-surface-container-low/40" id="quickstart">
+        <div class="max-w-7xl mx-auto">
+          <div class="text-center max-w-2xl mx-auto mb-16">
+            <span class="font-label-ui text-label-ui uppercase tracking-widest text-secondary font-semibold">Zero Configuration</span>
+            <h2 class="font-headline-lg text-headline-lg text-on-surface font-bold mt-2 mb-4">
+              Up and running in 30 seconds
+            </h2>
+            <p class="font-body-md text-body-md text-on-surface-variant">
+              No complicated terminal setups. Download, install, and start speaking.
+            </p>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-space-lg">
+            <!-- Step 1 -->
+            <div class="p-space-lg rounded-2xl bg-surface-container shadow-xl relative overflow-hidden flex flex-col justify-between">
+              <div>
+                <div class="font-display-lg text-display-lg font-bold text-outline-variant/60 mb-space-sm">01</div>
+                <h3 class="font-headline-md text-headline-md text-on-surface font-semibold mb-space-xs">Download Openflow</h3>
+                <p class="font-body-md text-body-md text-on-surface-variant">
+                  Grab the latest signed <code class="px-1.5 py-0.5 rounded bg-surface-container-high text-secondary font-label-mono-sm">Openflow.dmg</code> directly from GitHub Releases with a single click.
+                </p>
+              </div>
+              <div class="mt-space-lg pt-space-md">
+                <span class="inline-flex items-center gap-1.5 text-secondary font-label-ui text-label-ui uppercase tracking-wide">
+                  <span>Universal Binary</span>
+                  <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                </span>
+              </div>
+            </div>
+            
+            <!-- Step 2 -->
+            <div class="p-space-lg rounded-2xl bg-surface-container shadow-xl relative overflow-hidden flex flex-col justify-between">
+              <div>
+                <div class="font-display-lg text-display-lg font-bold text-outline-variant/60 mb-space-sm">02</div>
+                <h3 class="font-headline-md text-headline-md text-on-surface font-semibold mb-space-xs">Drag to Applications</h3>
+                <p class="font-body-md text-body-md text-on-surface-variant">
+                  Open the DMG, drag the Openflow app icon into your Mac's Applications folder, and launch it.
+                </p>
+              </div>
+              <div class="mt-space-lg pt-space-md">
+                <span class="inline-flex items-center gap-1.5 text-secondary font-label-ui text-label-ui uppercase tracking-wide">
+                  <span>Zero Dependencies</span>
+                  <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                </span>
+              </div>
+            </div>
+            
+            <!-- Step 3 -->
+            <div class="p-space-lg rounded-2xl bg-surface-container shadow-xl relative overflow-hidden flex flex-col justify-between">
+              <div>
+                <div class="font-display-lg text-display-lg font-bold text-outline-variant/60 mb-space-sm">03</div>
+                <h3 class="font-headline-md text-headline-md text-on-surface font-semibold mb-space-xs">Hold Key &amp; Dictate</h3>
+                <p class="font-body-md text-body-md text-on-surface-variant">
+                  Grant microphone &amp; accessibility permissions. Press <kbd class="px-1 py-0.5 rounded bg-surface-container-high text-on-surface font-label-mono-sm">Right ⌥</kbd> or <kbd class="px-1 py-0.5 rounded bg-surface-container-high text-on-surface font-label-mono-sm">⌘⇧Space</kbd> and speak anywhere!
+                </p>
+              </div>
+              <div class="mt-space-lg pt-space-md">
+                <span class="inline-flex items-center gap-1.5 text-secondary font-label-ui text-label-ui uppercase tracking-wide">
+                  <span>Instant Readiness</span>
+                  <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
                 </span>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      <!-- 7. FAQ ACCORDION GRID -->
+      <section class="py-24 px-6 lg:px-12 max-w-4xl mx-auto w-full" id="faq">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+          <span class="font-label-ui text-label-ui uppercase tracking-widest text-secondary font-semibold">Frequently Asked Questions</span>
+          <h2 class="font-headline-lg text-headline-lg text-on-surface font-bold mt-2 mb-4">
+            Got questions? We've got answers.
+          </h2>
+        </div>
+        
+        <div class="space-y-space-md">
+          <div class="rounded-xl bg-surface-container p-space-lg shadow-lg">
+            <details class="group cursor-pointer" open="">
+              <summary class="flex items-center justify-between font-headline-sm text-headline-sm text-on-surface list-none font-semibold">
+                <span>Does my voice audio leave my computer?</span>
+                <span class="material-symbols-outlined text-outline transition-transform duration-300 group-open:rotate-180">expand_more</span>
+              </summary>
+              <div class="mt-space-md pt-space-sm font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                <strong class="text-on-surface">Never.</strong> By default, Openflow runs 100% locally on your Mac using WhisperKit CoreML and the Apple Silicon Neural Engine. Temporary audio buffers recorded during dictation are immediately deleted from disk as soon as transcription finishes or cancels.
+              </div>
+            </details>
+          </div>
+          
+          <div class="rounded-xl bg-surface-container p-space-lg shadow-lg">
+            <details class="group cursor-pointer">
+              <summary class="flex items-center justify-between font-headline-sm text-headline-sm text-on-surface list-none font-semibold">
+                <span>Which Mac models are supported?</span>
+                <span class="material-symbols-outlined text-outline transition-transform duration-300 group-open:rotate-180">expand_more</span>
+              </summary>
+              <div class="mt-space-md pt-space-sm font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                Openflow is built natively for Apple Silicon Macs (M1, M2, M3, M4 and their Pro/Max/Ultra variants) running macOS 14.0 Sonoma or macOS 15+ Sequoia. CoreML WhisperKit takes full advantage of Apple's unified memory and Neural Engine.
+              </div>
+            </details>
+          </div>
+          
+          <div class="rounded-xl bg-surface-container p-space-lg shadow-lg">
+            <details class="group cursor-pointer">
+              <summary class="flex items-center justify-between font-headline-sm text-headline-sm text-on-surface list-none font-semibold">
+                <span>Can I customize the global shortcut?</span>
+                <span class="material-symbols-outlined text-outline transition-transform duration-300 group-open:rotate-180">expand_more</span>
+              </summary>
+              <div class="mt-space-md pt-space-sm font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                Yes! In Openflow Settings &gt; General, you can select convenient single-key presets such as <strong class="text-on-surface">Right Option</strong>, <strong class="text-on-surface">Fn / Globe</strong>, <strong class="text-on-surface">F5</strong>, or traditional multi-key shortcuts like <strong class="text-on-surface">Cmd + Shift + Space</strong>. Both push-to-talk (hold to speak) and tap-to-toggle are supported.
+              </div>
+            </details>
+          </div>
+          
+          <div class="rounded-xl bg-surface-container p-space-lg shadow-lg">
+            <details class="group cursor-pointer">
+              <summary class="flex items-center justify-between font-headline-sm text-headline-sm text-on-surface list-none font-semibold">
+                <span>What voice commands are supported?</span>
+                <span class="material-symbols-outlined text-outline transition-transform duration-300 group-open:rotate-180">expand_more</span>
+              </summary>
+              <div class="mt-space-md pt-space-sm font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                Openflow includes an intelligent <code class="px-1.5 py-0.5 rounded bg-surface-container-high text-secondary font-label-mono-sm">VoiceCommandEngine</code>. You can say <em>“scratch that”</em> to cancel dictation, <em>“urgent all caps that”</em> for uppercase, <em>“select all”</em>, <em>“copy”</em>, <em>“paste”</em>, <em>“delete line”</em>, <em>“new line”</em>, and <em>“new paragraph”</em>.
+              </div>
+            </details>
+          </div>
+          
+          <div class="rounded-xl bg-surface-container p-space-lg shadow-lg">
+            <details class="group cursor-pointer">
+              <summary class="flex items-center justify-between font-headline-sm text-headline-sm text-on-surface list-none font-semibold">
+                <span>Is Openflow really free and open-source?</span>
+                <span class="material-symbols-outlined text-outline transition-transform duration-300 group-open:rotate-180">expand_more</span>
+              </summary>
+              <div class="mt-space-md pt-space-sm font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                Yes. Openflow is licensed under the permissive <strong class="text-on-surface">Apache 2.0 license</strong>. There are no subscriptions, no locked tiers, no ads, and no tracking. You can inspect the complete source code, build it locally with Xcode/Swift, or contribute on GitHub.
+              </div>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <!-- 8. FINAL CONVERSION CTA CARD -->
+      <section class="py-20 px-6 lg:px-12 w-full max-w-7xl mx-auto mb-16">
+        <div class="relative rounded-3xl bg-gradient-to-b from-surface-container-high via-surface-container to-surface-container-lowest p-space-xl lg:p-16 text-center shadow-2xl overflow-hidden">
+          <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-[540px] h-[300px] bg-secondary-container/20 blur-3xl pointer-events-none rounded-full"></div>
+          <div class="relative z-10 max-w-2xl mx-auto">
+            <h2 class="font-headline-lg text-headline-lg lg:text-[44px] lg:leading-[52px] font-bold text-on-surface mb-space-sm">
+              Ready to speak at 300 WPM?
+            </h2>
+            <p class="font-body-lg text-body-lg text-on-surface-variant mb-space-xl">
+              Download Openflow today and turn speech into your fastest input method on macOS.
+            </p>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-space-md">
+              <a class="w-full sm:w-auto flex items-center justify-center gap-space-sm px-space-xl py-4 rounded-full bg-gradient-to-r from-primary-container via-secondary-container to-secondary text-surface-container-lowest font-headline-sm text-headline-sm shadow-xl hover:shadow-[0_0_36px_rgba(76,215,246,0.4)] hover:brightness-110 active:scale-95 transition-all" href="https://github.com/abhilashpanda04/Openflow/releases/latest/download/Openflow.dmg">
+                <span class="material-symbols-outlined text-[20px]">download</span>
+                <span>Download Openflow 0.1.0 (.DMG)</span>
+              </a>
+              <a class="w-full sm:w-auto flex items-center justify-center gap-space-sm px-space-lg py-4 rounded-full bg-surface-container-highest/80 hover:bg-surface-bright text-on-surface font-headline-sm text-headline-sm shadow-md transition-all" href="https://github.com/abhilashpanda04/Openflow" target="_blank" rel="noopener noreferrer">
+                <span class="material-symbols-outlined text-[20px] text-primary">star</span>
+                <span>Star on GitHub</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
-  </header>
-
-  <!-- Stats Ribbon -->
-  <section class="stats-ribbon">
-    <div class="container">
-      <div class="stats-grid">
-        <div class="stat-item">
-          <div class="stat-value">300 WPM</div>
-          <div class="stat-label">Natural Speaking Throughput</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value">100%</div>
-          <div class="stat-label">On-Device & Private (Zero Cloud)</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value">&lt; 15ms</div>
-          <div class="stat-label">Audio Latency via Neural Engine</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value">115</div>
-          <div class="stat-label">Automated Unit Tests Passing</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Features Section -->
-  <section class="section" id="features">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-tag">Engineered for Perfection</span>
-        <h2 class="section-title">Everything you need to write without typing</h2>
-        <p class="section-desc">Openflow combines Apple Silicon hardware acceleration with smart audio preprocessing to deliver an effortless dictation experience.</p>
-      </div>
-
-      <div class="features-grid">
-        <!-- Feature 1 -->
-        <div class="feature-card">
-          <div class="feature-icon-wrap">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="4" y="4" width="16" height="16" rx="2"></rect>
-              <rect x="9" y="9" width="6" height="6"></rect>
-              <line x1="9" y1="1" x2="9" y2="4"></line>
-              <line x1="15" y1="1" x2="15" y2="4"></line>
-              <line x1="9" y1="20" x2="9" y2="23"></line>
-              <line x1="15" y1="20" x2="15" y2="23"></line>
-              <line x1="20" y1="9" x2="23" y2="9"></line>
-              <line x1="20" y1="14" x2="23" y2="14"></line>
-              <line x1="1" y1="9" x2="4" y2="9"></line>
-              <line x1="1" y1="14" x2="4" y2="14"></line>
-            </svg>
-          </div>
-          <h3 class="feature-title">Native WhisperKit CoreML</h3>
-          <p class="feature-desc">Runs state-of-the-art OpenAI Whisper models directly on Apple Silicon Neural Engine (ANE) and GPU. Zero Python runtime, zero Docker overhead, and zero network dependency.</p>
-        </div>
-
-        <!-- Feature 2 -->
-        <div class="feature-card">
-          <div class="feature-icon-wrap">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="m12 19-7-7 7-7"></path>
-              <path d="M19 12H5"></path>
-            </svg>
-          </div>
-          <h3 class="feature-title">In-Line Voice Actions</h3>
-          <p class="feature-desc">Say <code>"scratch that"</code> to discard dictation instantly. Use <code>"urgent all caps that"</code> to format words, or dispatch <code>"select all"</code>, <code>"new paragraph"</code>, and <code>"undo"</code> seamlessly.</p>
-        </div>
-
-        <!-- Feature 3 -->
-        <div class="feature-card">
-          <div class="feature-icon-wrap">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2v4"></path>
-              <path d="m4.93 4.93 2.83 2.83"></path>
-              <path d="M2 12h4"></path>
-              <path d="m4.93 19.07 2.83-2.83"></path>
-              <path d="M12 18v4"></path>
-              <path d="m19.07 19.07-2.83-2.83"></path>
-              <path d="M18 12h4"></path>
-              <path d="m19.07 4.93-2.83 2.83"></path>
-            </svg>
-          </div>
-          <h3 class="feature-title">Apple Intelligence Ready</h3>
-          <p class="feature-desc">Integrated with macOS 15.1+ Apple Intelligence Writing Tools. Invoke proofreading, tone shifts (Professional, Friendly, Concise), or summarization directly with voice triggers.</p>
-        </div>
-
-        <!-- Feature 4 -->
-        <div class="feature-card">
-          <div class="feature-icon-wrap">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M11 5 6 9H2v6h4l5 4V5Z"></path>
-              <line x1="22" y1="9" x2="16" y2="15"></line>
-              <line x1="16" y1="9" x2="22" y2="15"></line>
-            </svg>
-          </div>
-          <h3 class="feature-title">VAD & Silence Trimming</h3>
-          <p class="feature-desc">Smart Voice Activity Detection automatically stops recording when you pause (1s to 5s). Leading and trailing silence are trimmed to eliminate hallucinated repeats.</p>
-        </div>
-
-        <!-- Feature 5 -->
-        <div class="feature-card">
-          <div class="feature-icon-wrap">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
-              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
-            </svg>
-          </div>
-          <h3 class="feature-title">Native Audio Chimes</h3>
-          <p class="feature-desc">Dispatches native Siri acoustic feedback asynchronously when recording starts, completes, or cancels. Gives you clear audio cues without interrupting typing or microphone capture.</p>
-        </div>
-
-        <!-- Feature 6 -->
-        <div class="feature-card">
-          <div class="feature-icon-wrap">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-              <line x1="8" y1="21" x2="16" y2="21"></line>
-              <line x1="12" y1="17" x2="12" y2="21"></line>
-            </svg>
-          </div>
-          <h3 class="feature-title">Universal Text Injection</h3>
-          <p class="feature-desc">Works universally in any macOS application with zero configuration. Direct keyboard event synthesis pastes your text into Cursor, Xcode, Slack, Google Docs, or Chrome.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Screenshots Gallery Section -->
-  <section class="section" id="screenshots" style="background: rgba(15, 23, 42, 0.3);">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-tag">Visual Walkthrough</span>
-        <h2 class="section-title">Designed to look like a native macOS app</h2>
-        <p class="section-desc">Crafted with SwiftUI to follow Apple Human Interface Guidelines, supporting both dark obsidian and crisp light themes.</p>
-      </div>
-
-      <!-- Tab Buttons -->
-      <div class="gallery-tabs">
-        <button class="tab-btn active" data-target="tab-stats">Productivity & Speed Stats</button>
-        <button class="tab-btn" data-target="tab-dictation">Dictation & Silence Settings</button>
-        <button class="tab-btn" data-target="tab-general">Themes & Custom Hotkeys</button>
-        <button class="tab-btn" data-target="tab-popover">Menu Bar Companion</button>
-      </div>
-
-      <!-- Tab Panes -->
-      <div class="gallery-content-wrap">
-        <!-- Pane 1: Stats -->
-        <div class="gallery-pane active" id="tab-stats">
-          <img src="screenshot/productivity-stats.png" alt="Openflow Productivity & Speech Stats" class="gallery-img">
-          <p class="gallery-caption">Real-time metrics: words dictated, 14+ minutes saved today, 300 WPM pace, weekly volume chart, and engine distribution.</p>
-        </div>
-
-        <!-- Pane 2: Dictation Settings -->
-        <div class="gallery-pane" id="tab-dictation">
-          <img src="screenshot/dictation-settings.png" alt="Openflow Dictation & Silence Detection" class="gallery-img">
-          <p class="gallery-caption">Granular formatting controls: spoken emoji, spoken punctuation, trailing space handling, and configurable VAD auto-stop thresholds.</p>
-        </div>
-
-        <!-- Pane 3: General Settings -->
-        <div class="gallery-pane" id="tab-general">
-          <img src="screenshot/general-settings.png" alt="Openflow General Preferences" class="gallery-img">
-          <p class="gallery-caption">Select between Obsidian Dark, Crisp White, or System Auto. Configure single-key triggers like Right Option, Fn/Globe, or F5.</p>
-        </div>
-
-        <!-- Pane 4: Menu Bar Popover -->
-        <div class="gallery-pane" id="tab-popover">
-          <img src="screenshot/menubar-popover.png" alt="Openflow Menu Bar Popover" class="gallery-img" style="max-width: 480px; margin: 0 auto; display: block;">
-          <p class="gallery-caption">Compact menu bar companion with live microphone input levels, hardware memory & CPU monitors, and instant recording toggle.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Comparison Table -->
-  <section class="section" id="comparison">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-tag">Uncompromising Quality</span>
-        <h2 class="section-title">Why choose Openflow over alternatives?</h2>
-        <p class="section-desc">Comparing Openflow with built-in macOS dictation and cloud-based subscription dictation apps.</p>
-      </div>
-
-      <div class="comparison-wrap">
-        <table class="comparison-table">
-          <thead>
-            <tr>
-              <th>Feature</th>
-              <th class="highlight-col">Openflow</th>
-              <th>macOS Built-in Dictation</th>
-              <th>Cloud Dictation (Wispr / Superwhisper)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>On-Device Neural Engine (CoreML)</strong></td>
-              <td class="highlight-col"><span class="check">✓</span> Yes (WhisperKit)</td>
-              <td><span class="cross">Partial / Basic</span></td>
-              <td><span class="cross">No (Requires Cloud API)</span></td>
-            </tr>
-            <tr>
-              <td><strong>Privacy & Zero Telemetry</strong></td>
-              <td class="highlight-col"><span class="check">✓</span> 100% Offline</td>
-              <td><span class="cross">Sends telemetry to Apple</span></td>
-              <td><span class="cross">Uploads voice to third-party servers</span></td>
-            </tr>
-            <tr>
-              <td><strong>Technical & Code Dictation Accuracy</strong></td>
-              <td class="highlight-col"><span class="check">✓</span> High (Whisper Models)</td>
-              <td><span class="cross">Frequently misinterprets code</span></td>
-              <td><span class="check">✓</span> High</td>
-            </tr>
-            <tr>
-              <td><strong>In-Line Voice Actions ("scratch that")</strong></td>
-              <td class="highlight-col"><span class="check">✓</span> Built-in Engine</td>
-              <td><span class="cross">None</span></td>
-              <td><span class="cross">Limited</span></td>
-            </tr>
-            <tr>
-              <td><strong>Silence Trimming & VAD Auto-Stop</strong></td>
-              <td class="highlight-col"><span class="check">✓</span> Built-in (1s-5s)</td>
-              <td><span class="cross">None</span></td>
-              <td><span class="cross">Subscription only</span></td>
-            </tr>
-            <tr>
-              <td><strong>Price & Licensing</strong></td>
-              <td class="highlight-col"><span class="check">✓</span> 100% Free & Open Source</td>
-              <td>Free (Bundled)</td>
-              <td><span class="cross">$10 – $20 / month</span></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <!-- Quick Start Steps -->
-  <section class="section" style="background: rgba(15, 23, 42, 0.4);">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-tag">Zero Configuration</span>
-        <h2 class="section-title">Up and running in 30 seconds</h2>
-        <p class="section-desc">No complicated terminal setups. Download, install, and start speaking.</p>
-      </div>
-
-      <div class="steps-grid">
-        <div class="step-card">
-          <div class="step-num">01</div>
-          <h3 class="step-title">Download Openflow</h3>
-          <p class="step-desc">Grab the latest signed <code>Openflow.dmg</code> directly from GitHub Releases with a single click.</p>
-        </div>
-
-        <div class="step-card">
-          <div class="step-num">02</div>
-          <h3 class="step-title">Drag to Applications</h3>
-          <p class="step-desc">Open the DMG, drag the Openflow app icon into your Mac's Applications folder, and launch it.</p>
-        </div>
-
-        <div class="step-card">
-          <div class="step-num">03</div>
-          <h3 class="step-title">Hold Key & Dictate</h3>
-          <p class="step-desc">Grant microphone & accessibility permissions. Press <kbd>Right ⌥</kbd> or <kbd>⌘⇧Space</kbd> and speak anywhere!</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FAQ Section -->
-  <section class="section" id="faq">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-tag">Frequently Asked Questions</span>
-        <h2 class="section-title">Got questions? We've got answers.</h2>
-      </div>
-
-      <div class="faq-grid">
-        <div class="faq-item">
-          <button class="faq-question">
-            <span>Does my voice audio leave my computer?</span>
-            <span class="faq-chevron">▾</span>
-          </button>
-          <div class="faq-answer">
-            <p><strong>Never.</strong> By default, Openflow runs 100% locally on your Mac using WhisperKit CoreML and the Apple Silicon Neural Engine. Temporary audio buffers recorded during dictation are immediately deleted from disk as soon as transcription finishes or cancels.</p>
-          </div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-question">
-            <span>Which Mac models are supported?</span>
-            <span class="faq-chevron">▾</span>
-          </button>
-          <div class="faq-answer">
-            <p>Openflow is built natively for Apple Silicon Macs (M1, M2, M3, M4 and their Pro/Max/Ultra variants) running macOS 14.0 Sonoma or macOS 15+ Sequoia. CoreML WhisperKit takes full advantage of Apple's unified memory and Neural Engine.</p>
-          </div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-question">
-            <span>Can I customize the global shortcut?</span>
-            <span class="faq-chevron">▾</span>
-          </button>
-          <div class="faq-answer">
-            <p>Yes! In Openflow Settings &gt; General, you can select convenient single-key presets such as <strong>Right Option</strong>, <strong>Fn / Globe</strong>, <strong>F5</strong>, or traditional multi-key shortcuts like <strong>Cmd + Shift + Space</strong>. Both push-to-talk (hold to speak) and tap-to-toggle are supported.</p>
-          </div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-question">
-            <span>What voice commands are supported?</span>
-            <span class="faq-chevron">▾</span>
-          </button>
-          <div class="faq-answer">
-            <p>Openflow includes an intelligent <code>VoiceCommandEngine</code>. You can say <em>"scratch that"</em> to cancel dictation, <em>"urgent all caps that"</em> for uppercase, <em>"select all"</em>, <em>"copy"</em>, <em>"paste"</em>, <em>"delete line"</em>, <em>"new line"</em>, and <em>"new paragraph"</em>.</p>
-          </div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-question">
-            <span>Is Openflow really free and open-source?</span>
-            <span class="faq-chevron">▾</span>
-          </button>
-          <div class="faq-answer">
-            <p>Yes. Openflow is licensed under the permissive <strong>Apache 2.0 license</strong>. There are no subscriptions, no locked tiers, no ads, and no tracking. You can inspect the complete source code, build it locally with Xcode/Swift, or contribute on GitHub.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Bottom CTA Banner -->
-  <section class="cta-banner">
-    <div class="container">
-      <div class="cta-card">
-        <h2 class="cta-title">Ready to speak at 300 WPM?</h2>
-        <p class="cta-desc">Download Openflow today and turn speech into your fastest input method on macOS.</p>
-        <div class="hero-ctas">
-          <a href="https://github.com/abhilashpanda04/Openflow/releases/latest/download/Openflow.dmg" class="btn btn-primary btn-lg">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.63-.77 1.06-1.85.94-2.93-.91.04-2.02.61-2.67 1.38-.58.68-1.09 1.77-.95 2.82 1.02.08 2.05-.5 2.68-1.27z"/>
-            </svg>
-            Download Openflow 0.1.0 (.DMG)
-          </a>
-          <a href="https://github.com/abhilashpanda04/Openflow" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-lg">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-            </svg>
-            Star on GitHub
-          </a>
-        </div>
-      </div>
-    </div>
-  </section>
+  </main>
 
   <!-- Footer -->
-  <footer class="footer">
-    <div class="container footer-container">
-      <div class="footer-brand">
-        <img src="assets/logo.svg" alt="Openflow" style="width: 24px; height: 24px; border-radius: 6px;">
-        <span>Openflow · Built for macOS Apple Silicon</span>
+  <footer class="w-full bg-surface-container-lowest mt-auto shadow-[0_-1px_12px_rgba(0,0,0,0.5)]">
+    <div class="max-w-7xl mx-auto px-6 lg:px-12 py-space-xl">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-space-xl mb-space-xl">
+        <div class="md:col-span-5 space-y-space-md">
+          <div class="flex items-center gap-space-sm">
+            <img src="assets/logo.svg" alt="Openflow" class="w-8 h-8 rounded-lg">
+            <span class="font-headline-sm text-headline-sm tracking-tight text-on-surface">Openflow</span>
+          </div>
+          <p class="font-body-md text-body-md text-on-surface-variant max-w-sm">
+            High-fidelity, on-device AI acoustic speech engine and dictation workspace designed strictly for Apple Silicon macOS.
+          </p>
+          <div class="flex flex-wrap items-center gap-space-sm pt-space-xs">
+            <div class="flex items-center gap-space-xs px-space-md py-1 rounded-full bg-surface-container text-on-surface font-label-mono-sm text-label-mono-sm">
+              <span class="material-symbols-outlined text-[16px] text-secondary">memory</span>
+              <span>Apple Silicon Native (M1/M2/M3/M4)</span>
+            </div>
+            <div class="flex items-center gap-space-xs px-space-md py-1 rounded-full bg-surface-container text-on-surface font-label-mono-sm text-label-mono-sm">
+              <span class="material-symbols-outlined text-[16px] text-primary">verified_user</span>
+              <span>Apache 2.0 Open Source</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="md:col-span-7 grid grid-cols-2 sm:grid-cols-3 gap-space-lg">
+          <div class="space-y-space-sm">
+            <div class="font-label-ui text-label-ui uppercase tracking-wider text-on-surface">Product</div>
+            <ul class="space-y-space-xs font-body-sm text-body-sm text-on-surface-variant">
+              <li><a class="hover:text-on-surface transition-colors" href="#features">Features</a></li>
+              <li><a class="hover:text-on-surface transition-colors" href="#walkthrough">Screenshots</a></li>
+              <li><a class="hover:text-on-surface transition-colors" href="#comparison">Comparison</a></li>
+              <li><a class="hover:text-on-surface transition-colors" href="#quickstart">Quickstart</a></li>
+            </ul>
+          </div>
+          <div class="space-y-space-sm">
+            <div class="font-label-ui text-label-ui uppercase tracking-wider text-on-surface">Resources</div>
+            <ul class="space-y-space-xs font-body-sm text-body-sm text-on-surface-variant">
+              <li><a class="hover:text-on-surface transition-colors" href="https://github.com/abhilashpanda04/Openflow#readme" target="_blank" rel="noopener noreferrer">Documentation</a></li>
+              <li><a class="hover:text-on-surface transition-colors" href="https://github.com/abhilashpanda04/Openflow/releases" target="_blank" rel="noopener noreferrer">Release Notes</a></li>
+              <li><a class="hover:text-on-surface transition-colors" href="https://github.com/abhilashpanda04/Openflow" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
+            </ul>
+          </div>
+          <div class="space-y-space-sm">
+            <div class="font-label-ui text-label-ui uppercase tracking-wider text-on-surface">Legal &amp; Trust</div>
+            <ul class="space-y-space-xs font-body-sm text-body-sm text-on-surface-variant">
+              <li><a class="hover:text-on-surface transition-colors" href="https://github.com/abhilashpanda04/Openflow/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">Apache 2.0 License</a></li>
+              <li><a class="hover:text-on-surface transition-colors" href="https://github.com/abhilashpanda04/Openflow/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security Policy</a></li>
+            </ul>
+          </div>
+        </div>
       </div>
-
-      <ul class="footer-links">
-        <li><a href="https://github.com/abhilashpanda04/Openflow" class="footer-link">GitHub</a></li>
-        <li><a href="https://github.com/abhilashpanda04/Openflow/releases" class="footer-link">Releases</a></li>
-        <li><a href="https://github.com/abhilashpanda04/Openflow/blob/main/LICENSE" class="footer-link">Apache 2.0 License</a></li>
-      </ul>
+      
+      <div class="pt-space-lg flex flex-col sm:flex-row items-center justify-between gap-space-md border-t border-surface-container-high/60">
+        <p class="font-label-mono-sm text-label-mono-sm text-outline">© 2025 Openflow. Published under the Apache License, Version 2.0.</p>
+        <div class="flex items-center gap-space-md font-label-mono-sm text-label-mono-sm text-outline">
+          <span class="flex items-center gap-1">
+            <span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+            100% Offline Engine
+          </span>
+          <span>macOS 14.0+</span>
+        </div>
+      </div>
     </div>
   </footer>
 
-  <script src="script.js"></script>
+  <!-- Interactive Scripts -->
+  <script>
+    function switchAppTab(tabId) {
+      const tabs = ['stats', 'dictation', 'themes', 'menubar'];
+      tabs.forEach(function(t) {
+        const btn = document.getElementById('tab-btn-' + t);
+        const panel = document.getElementById('tab-panel-' + t);
+        if (!btn || !panel) return;
+        if (t === tabId) {
+          btn.className = 'px-space-md py-2 rounded-full font-label-ui text-label-ui text-on-primary bg-primary-container shadow-md transition-all';
+          panel.classList.remove('hidden');
+        } else {
+          btn.className = 'px-space-md py-2 rounded-full font-label-ui text-label-ui text-on-surface-variant hover:text-on-surface transition-all';
+          panel.classList.add('hidden');
+        }
+      });
+    }
+
+    // Dynamic typing demo in hero box
+    document.addEventListener('DOMContentLoaded', function() {
+      const phrases = [
+        "Refactor the entire authentication handler into an async CoreML pipeline. Use native Swift concurrency and ensure we catch all network timeouts—",
+        "Let's deploy version 2.4 scratch that let's ship Openflow version 0.1.0 today.",
+        "Meeting at 3 PM urgent all caps that. Please review PR before standup."
+      ];
+      let pIdx = 0;
+      let cIdx = 0;
+      let isDeleting = false;
+      const typeEl = document.getElementById('hero-type-text');
+      const statusEl = document.getElementById('hero-stream-status');
+
+      function type() {
+        if (!typeEl) return;
+        const current = phrases[pIdx];
+        if (!isDeleting) {
+          if (cIdx <= current.length) {
+            typeEl.textContent = current.substring(0, cIdx);
+            cIdx++;
+            setTimeout(type, 35);
+          } else {
+            if (statusEl) statusEl.textContent = "✓ Injected to Active Field";
+            setTimeout(function() {
+              isDeleting = true;
+              if (statusEl) statusEl.textContent = "Listening (300 WPM)...";
+              type();
+            }, 3000);
+          }
+        } else {
+          if (cIdx > 0) {
+            typeEl.textContent = current.substring(0, cIdx);
+            cIdx -= 2;
+            setTimeout(type, 18);
+          } else {
+            isDeleting = false;
+            pIdx = (pIdx + 1) % phrases.length;
+            cIdx = 0;
+            setTimeout(type, 400);
+          }
+        }
+      }
+      setTimeout(type, 1000);
+    });
+  </script>
 </body>
 </html>
