@@ -42,34 +42,6 @@
 
 Powered by **WhisperKit CoreML** and **Apple Speech**, Openflow runs completely on-device with zero telemetry, zero cloud dependencies, and immediate responsiveness.
 
-```
-                     ┌──────────────────────────────────────┐
-                     │  Global Hotkey (e.g. ⌥ / ⌘⇧Space)     │
-                     └──────────────────┬───────────────────┘
-                                        │
-                                        ▼
-    ┌──────────────────────┐  Audio  ┌──────────────────────┐  VAD  ┌──────────────────────┐
-    │  Siri Start Cue 🔔   ├────────►│  RecordingWaveView   ├──────►│ AudioSilenceProcessor│
-    └──────────────────────┘         │  (36-Bar Spectrum)   │       │ (Cutoff & Trimming)  │
-                                     └──────────────────────┘       └──────────┬───────────┘
-                                                                               │
-                                        ┌──────────────────────────────────────┘
-                                        ▼
-    ┌─────────────────────────────────────────────────────────────────────────────────────┐
-    │  ASR Inference: Native WhisperKit CoreML / Apple Speech / Custom Server             │
-    └───────────────────────────────────┬─────────────────────────────────────────────────┘
-                                        │
-                                        ▼
-    ┌─────────────────────────────────────────────────────────────────────────────────────┐
-    │  VoiceCommandEngine & Apple Intelligence: "scratch that", "all caps that", shortcuts │
-    └───────────────────────────────────┬─────────────────────────────────────────────────┘
-                                        │
-                                        ▼
-    ┌──────────────────────┐  Paste  ┌──────────────────────┐
-    │  Siri Finish Cue 🔔  ├────────►│ Active App / Target  │
-    └──────────────────────┘         └──────────────────────┘
-```
-
 ---
 
 ## ✨ Key Features
