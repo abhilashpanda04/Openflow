@@ -799,7 +799,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         guard var fileURL = recorder.stop() else {
             transition(to: .idle)
-            showError("No recording file found.")
+            transcriptPanel.showActionFeedback("⚠️ No Recording Found", duration: 1.8)
             return
         }
 
@@ -814,8 +814,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             if trimResult.isAllSilence {
                 log("Audio is entirely silent. Skipping transcription.")
                 transition(to: .idle)
-                transcriptPanel.dismissRecordingOverlay()
-                transcriptPanel.showActionFeedback("🤫 No Speech Detected (Silence Skipped)")
+                transcriptPanel.showActionFeedback("🤫 No Speech Detected", duration: 1.8)
                 try? FileManager.default.removeItem(at: fileURL)
                 return
             }
@@ -844,6 +843,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     guard let self = self else { return }
                     self.transition(to: .idle)
                     let sanitized = self.sanitizeTranscriptText(response.text)
+                    if sanitized.isEmpty {
+                        self.log("Empty transcript received. Showing No Speech Detected in HUD modal.")
+                        self.transcriptPanel.showActionFeedback("🤫 No Speech Detected", duration: 1.8)
+                        return
+                    }
 
                     let commandEngine = VoiceCommandEngine()
                     let selected = self.capturedSelectedText ?? AccessibilitySelectionHelper.getSelectedText(targetApp: self.outputTargetApplication)
@@ -876,10 +880,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                         return
 
                     case .selectionEdit(let transformed, let desc):
-                        self.transcriptPanel.dismissRecordingOverlay()
                         let text = self.formatTranscriptText(transformed)
                         self.lastTranscript = text
                         if !text.isEmpty {
+                            self.transcriptPanel.dismissRecordingOverlay()
                             self.deliverTranscript(text)
                             TranscriptHistoryStore.shared.add(
                                 text: text,
@@ -889,6 +893,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                                 appName: targetAppName
                             )
                             self.transcriptPanel.showActionFeedback("✨ \(desc)")
+                        } else {
+                            self.transcriptPanel.showActionFeedback("🤫 No Speech Detected", duration: 1.8)
                         }
                         return
 
@@ -901,11 +907,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                         return
 
                     case .processedText(let processed):
-                        self.transcriptPanel.dismissRecordingOverlay()
                         let text = self.formatTranscriptText(processed)
                         self.lastTranscript = text
 
                         if !text.isEmpty {
+                            self.transcriptPanel.dismissRecordingOverlay()
                             self.deliverTranscript(text)
                             let engineDesc: String
                             switch self.config.engineType {
@@ -923,14 +929,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                                 durationSeconds: recordingDuration,
                                 appName: targetAppName
                             )
-                        }
 
-                        if self.shouldAutoShowTranscriptPanel() {
-                            self.transcriptPanel.show(
-                                transcript: text.isEmpty ? "(empty transcript)" : text,
-                                language: response.language ?? "unknown",
-                                activateApp: !self.config.outputMode.shouldPasteToActiveApp
-                            )
+                            if self.shouldAutoShowTranscriptPanel() {
+                                self.transcriptPanel.show(
+                                    transcript: text,
+                                    language: response.language ?? "unknown",
+                                    activateApp: !self.config.outputMode.shouldPasteToActiveApp
+                                )
+                            }
+                        } else {
+                            self.log("Processed text was empty. Showing No Speech Detected in HUD modal.")
+                            self.transcriptPanel.showActionFeedback("🤫 No Speech Detected", duration: 1.8)
                         }
                     }
                 }
@@ -938,9 +947,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 DispatchQueue.main.async { [weak self] in
                     guard let self = self else { return }
                     self.transition(to: .idle)
-                    self.transcriptPanel.dismissRecordingOverlay()
-                    self.log("Transcription failed request_id=\(requestID) error=\(error.localizedDescription)")
-                    self.showError("Transcription failed: \(error.localizedDescription)")
+                    self.log("Transcription ended/error request_id=\(requestID) error=\(error.localizedDescription)")
+                    // Present in the same wavy UI HUD modal without popping up any NSAlert modal asking the user to click OK
+                    let isNoSpeech = error.localizedDescription.lowercased().contains("speech") ||
+                                     error.localizedDescription.lowercased().contains("silence") ||
+                                     error.localizedDescription.lowercased().contains("empty") ||
+                                     error.localizedDescription.lowercased().contains("retry")
+                    let feedback = isNoSpeech ? "🤫 No Speech Detected" : "⚠️ \(error.localizedDescription)"
+                    self.transcriptPanel.showActionFeedback(feedback, duration: 2.0)
                 }
             }
         }
@@ -2008,7 +2022,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func pasteToCapturedApplication(_ text: String) {
         guard let targetApp = outputTargetApplication else {
-            showError("No target app was focused when recording started. Keep the destination app focused, then record again.")
+            transcriptPanel.showActionFeedback("⚠️ No Active App Focused", duration: 1.8)
             return
         }
 

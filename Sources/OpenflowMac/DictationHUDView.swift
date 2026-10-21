@@ -60,19 +60,19 @@ public struct DictationHUDView: View {
         Group {
             if state.mode == .actionNotice {
                 HStack(spacing: 9) {
-                    Image(systemName: "bolt.fill")
+                    Image(systemName: noticeIconName)
                         .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(Color(hex: "34d399"))
+                        .foregroundStyle(noticeColor)
 
-                    Text(state.statusMessage)
+                    Text(cleanStatusMessage)
                         .font(.system(size: 12.5, weight: .semibold))
                         .foregroundStyle(Color.white)
 
                     Spacer()
 
-                    Text("Done")
+                    Text(noticeBadgeText)
                         .font(.system(size: 10.5, weight: .medium))
-                        .foregroundStyle(Color.white.opacity(0.6))
+                        .foregroundStyle(Color.white.opacity(0.65))
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
                         .background(Color.white.opacity(0.1))
@@ -172,12 +172,66 @@ public struct DictationHUDView: View {
                 .fill(Color(nsColor: NSColor(calibratedRed: 11/255.0, green: 15/255.0, blue: 20/255.0, alpha: 0.94)))
                 .overlay(
                     Capsule(style: .continuous)
-                        .stroke(state.mode == .actionNotice ? Color(hex: "34d399").opacity(0.4) : Color.white.opacity(0.14), lineWidth: 1)
+                        .stroke(state.mode == .actionNotice ? noticeColor.opacity(0.45) : Color.white.opacity(0.14), lineWidth: 1)
                 )
                 .shadow(color: Color.black.opacity(0.65), radius: 24, x: 0, y: 12)
         )
         .onAppear {
             isBlinkingCursor = true
+        }
+    }
+
+    private var isWarningNotice: Bool {
+        let msg = state.statusMessage.lowercased()
+        return msg.contains("no speech") || msg.contains("no transcription") || msg.contains("silence") || msg.contains("interrupted") || msg.contains("warning")
+    }
+
+    private var isErrorNotice: Bool {
+        let msg = state.statusMessage.lowercased()
+        return msg.contains("error") || msg.contains("failed") || msg.contains("cancelled") || msg.contains("discarded")
+    }
+
+    private var cleanStatusMessage: String {
+        var msg = state.statusMessage
+        let emojis = ["🤫", "⚠️", "✨", "⚡️", "🚫", "🧠"]
+        for e in emojis {
+            if msg.hasPrefix(e) {
+                msg = msg.replacingOccurrences(of: e, with: "").trimmingCharacters(in: .whitespaces)
+            }
+        }
+        return msg
+    }
+
+    private var noticeIconName: String {
+        let msg = state.statusMessage.lowercased()
+        if msg.contains("no speech") || msg.contains("silence") {
+            return "mic.slash.fill"
+        } else if msg.contains("cancel") || msg.contains("discard") {
+            return "xmark.circle.fill"
+        } else if msg.contains("warning") || msg.contains("highlight") {
+            return "exclamationmark.triangle.fill"
+        } else {
+            return "bolt.fill"
+        }
+    }
+
+    private var noticeColor: Color {
+        if isWarningNotice {
+            return Color(hex: "f59e0b")
+        } else if isErrorNotice {
+            return Color(hex: "ef4444")
+        } else {
+            return Color(hex: "34d399")
+        }
+    }
+
+    private var noticeBadgeText: String {
+        if isWarningNotice {
+            return "Dismissed"
+        } else if isErrorNotice {
+            return "Alert"
+        } else {
+            return "Done"
         }
     }
 

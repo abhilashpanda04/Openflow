@@ -340,18 +340,25 @@ final class TranscriptPanelController {
         hideRecordingPanel()
     }
 
-    func showActionFeedback(_ message: String, duration: TimeInterval = 1.3) {
+    private var feedbackDismissToken = UUID()
+
+    func showActionFeedback(_ message: String, duration: TimeInterval = 1.6) {
         ensureRecordingPanel()
         stopDurationTimer()
         hudState.mode = .actionNotice
         hudState.statusMessage = message
         recordingTitleLabel?.stringValue = message
-        recordingSubtitleLabel?.stringValue = "Command Executed"
+        recordingSubtitleLabel?.stringValue = message
         positionRecordingPanel()
         recordingPanel?.orderFrontRegardless()
 
+        let token = UUID()
+        feedbackDismissToken = token
+
         DispatchQueue.main.asyncAfter(deadline: .now() + duration) { [weak self] in
-            guard let self = self, self.hudState.mode == .actionNotice else { return }
+            guard let self = self,
+                  self.hudState.mode == .actionNotice,
+                  self.feedbackDismissToken == token else { return }
             self.hideRecordingPanel()
         }
     }
