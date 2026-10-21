@@ -3036,10 +3036,18 @@ struct SettingsView: View {
                         readerManager.startReading(text: "Hello! This is Openflow reading with ultra-clear voice synthesis.")
                     } label: {
                         HStack(spacing: 5) {
-                            Image(systemName: "speaker.wave.2")
-                                .font(.system(size: 11))
-                            Text("Test Voice")
-                                .font(.system(size: 11, weight: .medium))
+                            if readerManager.isSynthesizing {
+                                ProgressView()
+                                    .scaleEffect(0.6)
+                                    .frame(width: 12, height: 12)
+                                Text("Synthesizing...")
+                                    .font(.system(size: 11, weight: .medium))
+                            } else {
+                                Image(systemName: "speaker.wave.2")
+                                    .font(.system(size: 11))
+                                Text("Test Voice")
+                                    .font(.system(size: 11, weight: .medium))
+                            }
                         }
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
@@ -3052,6 +3060,7 @@ struct SettingsView: View {
                         )
                     }
                     .buttonStyle(.plain)
+                    .disabled(readerManager.isSynthesizing)
 
                     Button {
                         readerManager.readClipboard()

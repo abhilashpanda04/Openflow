@@ -41,6 +41,7 @@ public final class ReaderManager: ObservableObject {
     }
 
     @Published public var state: ReaderPlaybackState = .idle
+    @Published public var isSynthesizing: Bool = false
     @Published public var sentences: [TextSentence] = []
     @Published public var currentSentenceIndex: Int = 0
     @Published public var currentWordRange: NSRange? = nil
@@ -112,14 +113,17 @@ public final class ReaderManager: ObservableObject {
 
         currentSentenceIndex = index
         state = .playing
+        isSynthesizing = true
         currentWordRange = nil
 
         let sentence = sentences[index]
         engine.speak(sentence: sentence.text, onWord: { [weak self] range in
             guard let self = self, self.state == .playing else { return }
+            self.isSynthesizing = false
             self.currentWordRange = range
         }, onCompletion: { [weak self] in
             guard let self = self, self.state == .playing else { return }
+            self.isSynthesizing = false
             if self.currentSentenceIndex + 1 < self.sentences.count {
                 self.playSentence(index: self.currentSentenceIndex + 1)
             } else {
@@ -157,6 +161,7 @@ public final class ReaderManager: ObservableObject {
     public func stop() {
         engine.stop()
         state = .stopped
+        isSynthesizing = false
         currentWordRange = nil
     }
 

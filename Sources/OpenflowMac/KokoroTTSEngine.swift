@@ -80,7 +80,9 @@ public final class KokoroTTSEngine: NSObject, TTSEngineProtocol, AVAudioPlayerDe
             guard let self = self else { return }
             do {
                 let mgr = try await self.ensureInitialized()
+                print(">>> Kokoro initialized successfully. Synthesizing...")
                 let wavData = try await mgr.synthesize(text: sentence, voice: rawVoice, speed: speed)
+                print(">>> Kokoro synthesized \(wavData.count) bytes")
 
                 await MainActor.run {
                     do {
@@ -88,15 +90,18 @@ public final class KokoroTTSEngine: NSObject, TTSEngineProtocol, AVAudioPlayerDe
                         player.delegate = self
                         player.volume = self.volume
                         player.prepareToPlay()
-                        player.play()
+                        let started = player.play()
+                        print(">>> Kokoro AVAudioPlayer started: \(started), duration: \(player.duration)")
                         self.audioPlayer = player
 
                         self.startWordProgressSimulation(sentence: sentence, duration: player.duration)
                     } catch {
+                        print(">>> Kokoro AVAudioPlayer error: \(error)")
                         onCompletion()
                     }
                 }
             } catch {
+                print(">>> Kokoro synthesis error: \(error)")
                 await MainActor.run {
                     onCompletion()
                 }
