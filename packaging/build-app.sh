@@ -118,6 +118,9 @@ if [ -n "$SPARKLE_FRAMEWORK" ] && [ -d "$SPARKLE_FRAMEWORK" ]; then
     echo "  ✓ Sparkle.framework copied"
 fi
 
+# Ensure Frameworks directory is in the binary's rpath
+install_name_tool -add_rpath @executable_path/../Frameworks "$APP_BUNDLE/Contents/MacOS/Openflow" 2>/dev/null || true
+
 echo -e "${GREEN}✓ All files copied into bundle${NC}"
 echo ""
 
