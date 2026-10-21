@@ -51,13 +51,20 @@ final class LocalWhisperEngine: ASREngine {
         progress?(0.15, "Preparing CoreML model: \(modelName)...")
 
         do {
+            let modelFolder = try await WhisperKit.download(
+                variant: modelName,
+                progressCallback: { p in
+                    progress?(p.fractionCompleted, "Downloading Whisper CoreML weights (\(Int(p.fractionCompleted * 100))%)...")
+                }
+            )
+
             let pipe = try await WhisperKit(
-                model: modelName,
+                modelFolder: modelFolder.path,
                 verbose: false,
                 logLevel: .none,
                 prewarm: true,
                 load: true,
-                download: true
+                download: false
             )
 
             self.whisperKit = pipe

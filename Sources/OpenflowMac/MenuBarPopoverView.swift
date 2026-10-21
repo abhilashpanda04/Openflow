@@ -65,6 +65,12 @@ public final class MenuBarPopoverState: ObservableObject {
     @Published public var isRemoteServer: Bool = false
     @Published public var audioLevel: CGFloat = 0.0
 
+    // Model Download Progress State
+    @Published public var isDownloadingModel: Bool = false
+    @Published public var modelDownloadProgress: Double = 0.0
+    @Published public var modelDownloadStatus: String = ""
+    @Published public var modelDownloadName: String = ""
+
     // Live Application Capacity & Resource Footprint
     @Published public var memoryUsage: String = "118 MB RAM"
     @Published public var cpuUsage: String = "1.2% CPU"
@@ -537,12 +543,43 @@ public struct MenuBarPopoverView: View {
                 ) {
                     HStack(spacing: 5) {
                         Circle()
-                            .fill(Color(hex: "10b981"))
+                            .fill(state.isDownloadingModel ? Color(hex: "f59e0b") : Color(hex: "10b981"))
                             .frame(width: 5, height: 5)
-                        Text(state.modelState)
+                        Text(state.isDownloadingModel ? "Downloading (\(Int(state.modelDownloadProgress * 100))%)" : state.modelState)
                             .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(Color(hex: "10b981"))
+                            .foregroundStyle(state.isDownloadingModel ? Color(hex: "f59e0b") : Color(hex: "10b981"))
                     }
+                }
+
+                // Active Download Progress Bar (When Downloading)
+                if state.isDownloadingModel {
+                    VStack(alignment: .leading, spacing: 5) {
+                        HStack {
+                            Text(state.modelDownloadName.isEmpty ? "Downloading Weights" : state.modelDownloadName)
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(PopoverTheme.textPrimary)
+                            Spacer()
+                            Text("\(Int(state.modelDownloadProgress * 100))%")
+                                .font(.system(size: 10.5, weight: .bold, design: .monospaced))
+                                .foregroundStyle(PopoverTheme.cyan)
+                        }
+
+                        ProgressView(value: state.modelDownloadProgress)
+                            .progressViewStyle(.linear)
+                            .tint(PopoverTheme.cyan)
+
+                        Text(state.modelDownloadStatus.isEmpty ? "Fetching CoreML model from Hugging Face..." : state.modelDownloadStatus)
+                            .font(.system(size: 9))
+                            .foregroundStyle(PopoverTheme.textMuted)
+                            .lineLimit(1)
+                    }
+                    .padding(8)
+                    .background(Color(hex: "06b6d4").opacity(PopoverTheme.isDark ? 0.08 : 0.05))
+                    .cornerRadius(6)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(Color(hex: "06b6d4").opacity(0.25), lineWidth: 1)
+                    )
                 }
 
                 // Backend Status Row

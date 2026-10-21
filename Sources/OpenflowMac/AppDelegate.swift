@@ -153,14 +153,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             stopBackendWarmupPolling()
             stopHealthMonitor()
             backendSetupDialogController.hide()
-            transitionBackendState(to: .ready)
-            isBackendReady = true
-            setBackendNotice(nil)
-            rebuildMenu()
-            Task { [weak self] in
-                guard let self = self else { return }
-                try? await self.activeEngine.initialize()
-            }
+            startBackendFlow(userRequestedRecording: false)
         } else {
             probeBackendReadiness { ready in
                 if ready {
@@ -304,7 +297,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             popoverState.engineTitle = "Remote Server"
             popoverState.engineBadge = "HTTP"
         }
-        popoverState.modelState = isBackendReady ? "Ready (On-Device Neural)" : "Initializing..."
+        if popoverState.isDownloadingModel {
+            popoverState.modelState = "Downloading (\(Int(popoverState.modelDownloadProgress * 100))%)"
+        } else {
+            popoverState.modelState = isBackendReady ? "Ready (On-Device Neural)" : "Initializing..."
+        }
         popoverState.backendStatus = isBackendReady ? "healthy · ~12ms" : "offline"
         let targetApp = outputTargetApplication?.localizedName ?? "Cursor"
         popoverState.outputTarget = "\(outputModeLabel()) (\(targetApp))"
@@ -396,10 +393,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if config.engineType != .remoteServer {
             backendSupervisor.stop()
             stopHealthMonitor()
-            isBackendReady = true
-            transitionBackendState(to: .ready)
-            setBackendNotice(nil)
-            rebuildMenu()
+            startBackendFlow(userRequestedRecording: false)
             return
         }
         if !isManagedLocalBackendURL {
@@ -1129,8 +1123,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func ensureBackendReadyThenStartRecording() {
         if config.engineType != .remoteServer {
-            isBackendReady = true
-            startRecording()
+            if isBackendReady {
+                startRecording()
+            } else {
+                startBackendFlow(userRequestedRecording: true)
+            }
             return
         }
         queuedRecordingIntent = true
@@ -1140,44 +1137,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func startBackendFlow(userRequestedRecording: Bool) {
         if userRequestedRecording {
             queuedRecordingIntent = true
-        }
-
-        if config.engineType != .remoteServer {
-            transitionBackendState(to: .ready)
-            isBackendReady = true
-            setBackendNotice(nil)
-            markBackendReady(triggerQueuedRecording: true, notifyUser: false)
-            Task { [weak self] in
-                guard let self = self else { return }
-                try? await self.activeEngine.initialize()
-            }
-            return
-        }
-
-        if isBackendReady {
-            markBackendReady(triggerQueuedRecording: true, notifyUser: false)
-            return
-        }
-
-        if case .starting = backendStartupState {
-            transcriptPanel.dismissRecordingOverlay()
-            updateSetupProgress(
-                phase: .warmingModel,
-                progress: max(60, backendSetupProgress),
-                status: "Loading speech model",
-                detail: warmingDetailMessage(elapsedSeconds: Date().timeIntervalSince(backendWarmupStartedAt ?? Date()))
-            )
-            return
-        }
-        if case .warming = backendStartupState {
-            transcriptPanel.dismissRecordingOverlay()
-            updateSetupProgress(
-                phase: .warmingModel,
-                progress: max(60, backendSetupProgress),
-                status: "Loading speech model",
-                detail: warmingDetailMessage(elapsedSeconds: Date().timeIntervalSince(backendWarmupStartedAt ?? Date()))
-            )
-            return
         }
 
         if config.engineType == .localCoreML {
@@ -1190,21 +1149,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             setBackendNotice("Preparing \(engineLabel) (\(config.localWhisperModel.rawValue))...")
             rebuildMenu()
+            let currentModelRaw = config.localWhisperModel.rawValue
+            let currentModelShortTitle = config.localWhisperModel.shortTitle
+            ModelDownloadProgressManager.shared.start(modelName: currentModelRaw, displayName: currentModelShortTitle)
+            DispatchQueue.main.async { [weak self] in
+                self?.popoverState.isDownloadingModel = true
+                self?.popoverState.modelDownloadProgress = 0.05
+                self?.popoverState.modelDownloadStatus = "Preparing \(currentModelShortTitle)..."
+                self?.popoverState.modelDownloadName = currentModelShortTitle
+            }
             Task { [weak self] in
                 guard let self = self else { return }
                 do {
                     try await self.activeEngine.initialize(progress: { [weak self] pct, msg in
                         DispatchQueue.main.async {
+                            ModelDownloadProgressManager.shared.update(progress: pct, message: msg)
+                            self?.popoverState.isDownloadingModel = (pct < 1.0)
+                            self?.popoverState.modelDownloadProgress = pct
+                            self?.popoverState.modelDownloadStatus = msg
+                            self?.popoverState.modelDownloadName = currentModelShortTitle
                             self?.setBackendNotice("CoreML: \(msg)")
                         }
                     })
                     DispatchQueue.main.async {
+                        ModelDownloadProgressManager.shared.finish()
+                        self.popoverState.isDownloadingModel = false
                         self.markBackendReady(triggerQueuedRecording: true, notifyUser: false)
                         self.setBackendNotice("\(engineLabel) Ready (\(self.config.localWhisperModel.rawValue))")
                         self.rebuildMenu()
                     }
                 } catch {
                     DispatchQueue.main.async {
+                        ModelDownloadProgressManager.shared.fail(error: error.localizedDescription)
+                        self.popoverState.isDownloadingModel = false
                         self.transitionBackendState(to: .failed("CoreML load error: \(error.localizedDescription)"))
                         self.setBackendNotice("CoreML error: \(error.localizedDescription)")
                         self.rebuildMenu()
@@ -1237,6 +1214,32 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     }
                 }
             }
+            return
+        }
+
+        if isBackendReady {
+            markBackendReady(triggerQueuedRecording: true, notifyUser: false)
+            return
+        }
+
+        if case .starting = backendStartupState {
+            transcriptPanel.dismissRecordingOverlay()
+            updateSetupProgress(
+                phase: .warmingModel,
+                progress: max(60, backendSetupProgress),
+                status: "Loading speech model",
+                detail: warmingDetailMessage(elapsedSeconds: Date().timeIntervalSince(backendWarmupStartedAt ?? Date()))
+            )
+            return
+        }
+        if case .warming = backendStartupState {
+            transcriptPanel.dismissRecordingOverlay()
+            updateSetupProgress(
+                phase: .warmingModel,
+                progress: max(60, backendSetupProgress),
+                status: "Loading speech model",
+                detail: warmingDetailMessage(elapsedSeconds: Date().timeIntervalSince(backendWarmupStartedAt ?? Date()))
+            )
             return
         }
 
@@ -1419,11 +1422,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             status: "Speech engine is ready",
             detail: "Backend setup finished successfully."
         )
-        backendSetupDialogController.showReady(
-            detail: queuedRecordingIntent ? "Ready. Recording will start now." : "Ready. You can start recording.",
-            startRecordingEnabled: true
-        )
-        scheduleBackendSetupReadyAutoClose()
+        if config.engineType == .remoteServer || backendSetupDialogController.isVisible {
+            backendSetupDialogController.showReady(
+                detail: queuedRecordingIntent ? "Ready. Recording will start now." : "Ready. You can start recording.",
+                startRecordingEnabled: true
+            )
+            scheduleBackendSetupReadyAutoClose()
+        }
         transcriptPanel.dismissRecordingOverlay()
 
         if notifyUser {

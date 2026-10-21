@@ -84,6 +84,7 @@ struct SettingsView: View {
     @State private var selectedTab: SettingsTab = .dictation
     @State private var showingResetStatsAlert = false
     @ObservedObject private var themeManager = AppThemeManager.shared
+    @ObservedObject private var downloadManager = ModelDownloadProgressManager.shared
 
     // Engine & Backend Settings
     @State private var backendBaseURL = UserDefaults.standard.string(forKey: UserSettingKey.backendBaseURL) ?? "http://127.0.0.1:8001"
@@ -1026,6 +1027,8 @@ struct SettingsView: View {
             // CoreML Model Picker (Parakeet, Qwen, Whisper)
             if engineType == .localCoreML {
                 VStack(alignment: .leading, spacing: 12) {
+                    ModelDownloadBannerView(downloadManager: downloadManager)
+
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("On-Device Speech Models (Mac Accelerated)")
@@ -1359,6 +1362,12 @@ struct SettingsView: View {
                     .foregroundStyle(Color(hex: "10b981"))
                     .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                 }
+
+                ModelDownloadCardProgressView(
+                    downloadManager: downloadManager,
+                    modelName: model.rawValue,
+                    isSelected: isSelected
+                )
             }
             .padding(10)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -3229,3 +3238,107 @@ extension SettingsView {
     }
 }
 #endif
+
+// MARK: - Download Progress Indicator Subviews
+
+struct ModelDownloadBannerView: View {
+    @ObservedObject var downloadManager: ModelDownloadProgressManager
+
+    @ViewBuilder
+    var body: some View {
+        if downloadManager.isDownloading {
+            content
+        }
+    }
+
+    private var content: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            headerRow
+            progressBar
+            statusRow
+        }
+        .padding(12)
+        .background(backgroundShape)
+        .overlay(borderShape)
+    }
+
+    private var headerRow: some View {
+        HStack {
+            titleGroup
+            Spacer()
+            percentText
+        }
+    }
+
+    private var titleGroup: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "arrow.down.circle.fill")
+                .foregroundStyle(Color(hex: "0284c7"))
+                .font(.system(size: 15))
+            Text("Downloading Model: \(downloadManager.modelDisplayName)")
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(MacTheme.textPrimary)
+        }
+    }
+
+    private var percentText: some View {
+        Text(downloadManager.formattedPercent)
+            .font(.system(size: 13, weight: .bold, design: .monospaced))
+            .foregroundStyle(Color(hex: "0284c7"))
+    }
+
+    private var progressBar: some View {
+        ProgressView(value: downloadManager.progress)
+            .progressViewStyle(.linear)
+            .tint(Color(hex: "0284c7"))
+    }
+
+    private var statusRow: some View {
+        HStack {
+            Text(downloadManager.statusMessage)
+                .font(.system(size: 10.5))
+                .foregroundStyle(MacTheme.textMuted)
+            Spacer()
+            Text("Apple Neural Engine CoreML")
+                .font(.system(size: 10))
+                .foregroundStyle(MacTheme.textMuted)
+        }
+    }
+
+    private var backgroundShape: some View {
+        RoundedRectangle(cornerRadius: 10, style: .continuous)
+            .fill(Color(hex: "0284c7").opacity(MacTheme.isDark ? 0.12 : 0.08))
+    }
+
+    private var borderShape: some View {
+        RoundedRectangle(cornerRadius: 10, style: .continuous)
+            .stroke(Color(hex: "0284c7").opacity(0.35), lineWidth: 1)
+    }
+}
+
+struct ModelDownloadCardProgressView: View {
+    @ObservedObject var downloadManager: ModelDownloadProgressManager
+    let modelName: String
+    let isSelected: Bool
+
+    @ViewBuilder
+    var body: some View {
+        if downloadManager.isDownloading && (downloadManager.modelName == modelName || isSelected) {
+            VStack(alignment: .leading, spacing: 3) {
+                ProgressView(value: downloadManager.progress)
+                    .progressViewStyle(.linear)
+                    .tint(MacTheme.accent)
+                HStack {
+                    Text("Downloading CoreML weights...")
+                        .font(.system(size: 8.5))
+                        .foregroundStyle(MacTheme.textMuted)
+                    Spacer()
+                    Text(downloadManager.formattedPercent)
+                        .font(.system(size: 8.5, weight: .bold, design: .monospaced))
+                        .foregroundStyle(MacTheme.accent)
+                }
+            }
+            .padding(.top, 2)
+        }
+    }
+}
