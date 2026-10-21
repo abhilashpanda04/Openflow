@@ -145,16 +145,7 @@ public struct MenuBarPopoverView: View {
             bottomNotchBar
         }
         .frame(width: 390)
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(PopoverTheme.base.opacity(PopoverTheme.isDark ? 0.96 : 0.98))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(PopoverTheme.borderLight, lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .shadow(color: Color.black.opacity(PopoverTheme.isDark ? 0.65 : 0.12), radius: 30, x: 0, y: 15)
+        .background(PopoverTheme.base)
         .preferredColorScheme(themeManager.colorScheme)
     }
 

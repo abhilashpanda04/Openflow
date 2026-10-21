@@ -457,13 +457,12 @@ struct SettingsView: View {
 
                     Spacer()
 
-                    Picker("", selection: $stopAfterSilence) {
-                        ForEach(StopAfterSilenceChoice.allCases) { choice in
-                            Text(choice.rawValue).tag(choice)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    .frame(width: 120)
+                    dropdownMenu(
+                        title: stopAfterSilence.rawValue,
+                        options: StopAfterSilenceChoice.allCases.map { ($0, $0.rawValue) },
+                        onSelect: { stopAfterSilence = $0 },
+                        width: 125
+                    )
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
@@ -484,13 +483,12 @@ struct SettingsView: View {
 
                     Spacer()
 
-                    Picker("", selection: $silenceSensitivity) {
-                        ForEach(SilenceSensitivity.allCases) { choice in
-                            Text(choice.rawValue).tag(choice)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    .frame(width: 140)
+                    dropdownMenu(
+                        title: silenceSensitivity.rawValue,
+                        options: SilenceSensitivity.allCases.map { ($0, $0.rawValue) },
+                        onSelect: { silenceSensitivity = $0 },
+                        width: 135
+                    )
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
@@ -511,13 +509,12 @@ struct SettingsView: View {
 
                     Spacer()
 
-                    Picker("", selection: $maxRecordingDuration) {
-                        ForEach(MaxRecordingDurationChoice.allCases) { choice in
-                            Text(choice.displayLabel).tag(choice)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    .frame(width: 130)
+                    dropdownMenu(
+                        title: maxRecordingDuration.displayLabel,
+                        options: MaxRecordingDurationChoice.allCases.map { ($0, $0.displayLabel) },
+                        onSelect: { maxRecordingDuration = $0 },
+                        width: 130
+                    )
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
@@ -823,6 +820,44 @@ struct SettingsView: View {
                 .stroke(MacTheme.border, lineWidth: 1)
         )
         .cornerRadius(6)
+    }
+
+    private func dropdownMenu<T: Hashable>(
+        title: String,
+        options: [(T, String)],
+        onSelect: @escaping (T) -> Void,
+        width: CGFloat
+    ) -> some View {
+        Menu {
+            ForEach(options, id: \.1) { option in
+                Button(option.1) {
+                    onSelect(option.0)
+                }
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Text(title)
+                    .font(.system(size: 11.5, weight: .medium))
+                    .foregroundStyle(MacTheme.textPrimary)
+                    .lineLimit(1)
+                Spacer()
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.system(size: 8))
+                    .foregroundStyle(MacTheme.textMuted)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(MacTheme.inputBg)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .stroke(MacTheme.border, lineWidth: 1)
+            )
+        }
+        .menuStyle(.borderlessButton)
+        .frame(width: width)
     }
 
     private func toggleRow(
