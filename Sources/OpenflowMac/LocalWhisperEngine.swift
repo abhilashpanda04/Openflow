@@ -77,6 +77,11 @@ final class LocalWhisperEngine: ASREngine {
         }
     }
 
+    func offload() {
+        whisperKit = nil
+        state = .uninitialized
+    }
+
     func transcribe(audioFileURL: URL, requestID: String) async throws -> TranscribeResponse {
         if whisperKit == nil {
             try await initialize()

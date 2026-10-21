@@ -88,6 +88,7 @@ struct SettingsView: View {
     @ObservedObject private var downloadManager = ModelDownloadProgressManager.shared
     @ObservedObject private var readerManager = ReaderManager.shared
     @ObservedObject private var kokoroEngine = KokoroTTSEngine.shared
+    @ObservedObject private var modelStorageManager = ModelStorageManager.shared
 
     // Engine & Backend Settings
     @State private var backendBaseURL = UserDefaults.standard.string(forKey: UserSettingKey.backendBaseURL) ?? "http://127.0.0.1:8001"
@@ -1045,6 +1046,26 @@ struct SettingsView: View {
 
                 Spacer()
 
+                Button {
+                    withAnimation {
+                        modelStorageManager.offloadSpeechEngine()
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.down.to.line.compact")
+                            .font(.system(size: 9.5, weight: .bold))
+                        Text("Offload RAM")
+                            .font(.system(size: 10, weight: .semibold))
+                    }
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background(Color(hex: "0284c7").opacity(0.15))
+                    .foregroundStyle(Color(hex: "0284c7"))
+                    .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .help("Unload active speech models from RAM to free system memory")
+
                 Text("Total: \(report.formattedTotalCapacity)")
                     .font(.system(size: 10, weight: .bold, design: .monospaced))
                     .padding(.horizontal, 7)
@@ -1322,6 +1343,7 @@ struct SettingsView: View {
 
     private func compressedModelCard(model: WhisperModelChoice) -> some View {
         let isSelected = localWhisperModel == model
+        let isDownloaded = modelStorageManager.isWhisperModelDownloaded(model)
 
         return Button {
             localWhisperModel = model
@@ -1358,6 +1380,21 @@ struct SettingsView: View {
                     }
 
                     Spacer(minLength: 4)
+
+                    if isDownloaded {
+                        Button {
+                            modelStorageManager.deleteWhisperModel(model)
+                        } label: {
+                            Image(systemName: "trash")
+                                .font(.system(size: 9))
+                                .foregroundStyle(Color.red.opacity(0.85))
+                                .frame(width: 18, height: 18)
+                                .background(Color.red.opacity(0.12))
+                                .clipShape(Circle())
+                        }
+                        .buttonStyle(.plain)
+                        .help("Delete \(model.shortTitle) from disk to free storage")
+                    }
 
                     ZStack {
                         Circle()
@@ -1401,6 +1438,20 @@ struct SettingsView: View {
                     .background(MacTheme.chipBg)
                     .foregroundStyle(Color(hex: "10b981"))
                     .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+
+                    if isDownloaded {
+                        HStack(spacing: 3) {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 8, weight: .bold))
+                            Text("Cached")
+                                .font(.system(size: 9, weight: .semibold))
+                        }
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2.5)
+                        .background(Color(hex: "10b981").opacity(0.15))
+                        .foregroundStyle(Color(hex: "10b981"))
+                        .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                    }
                 }
 
                 ModelDownloadCardProgressView(
@@ -3081,22 +3132,72 @@ struct SettingsView: View {
                                     .stroke(Color(hex: "0284c7").opacity(0.35), lineWidth: 1)
                             )
                         } else if kokoroEngine.isModelDownloaded {
-                            HStack(spacing: 5) {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .font(.system(size: 11, weight: .bold))
-                                    .foregroundStyle(Color(hex: "10b981"))
-                                Text("Ready (Downloaded)")
-                                    .font(.system(size: 11, weight: .semibold))
-                                    .foregroundStyle(Color(hex: "10b981"))
+                            HStack(spacing: 8) {
+                                HStack(spacing: 5) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.system(size: 11, weight: .bold))
+                                        .foregroundStyle(Color(hex: "10b981"))
+                                    Text("Ready")
+                                        .font(.system(size: 11, weight: .semibold))
+                                        .foregroundStyle(Color(hex: "10b981"))
+                                }
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Color(hex: "10b981").opacity(0.12))
+                                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                        .stroke(Color(hex: "10b981").opacity(0.30), lineWidth: 1)
+                                )
+
+                                Button {
+                                    withAnimation {
+                                        modelStorageManager.offloadReaderEngine()
+                                    }
+                                } label: {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "arrow.down.to.line.compact")
+                                            .font(.system(size: 9.5, weight: .bold))
+                                        Text("Offload RAM")
+                                            .font(.system(size: 10, weight: .medium))
+                                    }
+                                    .padding(.horizontal, 7)
+                                    .padding(.vertical, 4)
+                                    .background(MacTheme.cardSecondary)
+                                    .foregroundStyle(MacTheme.textPrimary)
+                                    .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                            .stroke(MacTheme.border, lineWidth: 1)
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                                .help("Offload Kokoro weights from RAM/ANE")
+
+                                Button {
+                                    withAnimation {
+                                        modelStorageManager.deleteKokoroModel()
+                                    }
+                                } label: {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "trash")
+                                            .font(.system(size: 9.5))
+                                        Text("Delete")
+                                            .font(.system(size: 10, weight: .medium))
+                                    }
+                                    .padding(.horizontal, 7)
+                                    .padding(.vertical, 4)
+                                    .background(Color.red.opacity(0.12))
+                                    .foregroundStyle(Color.red)
+                                    .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                            .stroke(Color.red.opacity(0.25), lineWidth: 1)
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                                .help("Delete Kokoro-82M model files from disk to free 150 MB")
                             }
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 5)
-                            .background(Color(hex: "10b981").opacity(0.12))
-                            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                    .stroke(Color(hex: "10b981").opacity(0.30), lineWidth: 1)
-                            )
                         } else {
                             Button {
                                 kokoroEngine.downloadModel()

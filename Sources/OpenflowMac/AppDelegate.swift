@@ -4,6 +4,8 @@ import SwiftUI
 import UserNotifications
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    public static private(set) weak var shared: AppDelegate?
+
     private enum RecordingState {
         case idle
         case recording
@@ -81,6 +83,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    func offloadSpeechEngine() {
+        localWhisperEngine?.offload()
+        localWhisperEngine = nil
+        localParakeetEngine = nil
+        localSenseVoiceEngine = nil
+        appleSpeechEngine = nil
+        log("Manually offloaded speech engines from memory")
+    }
+
     private var statusItem: NSStatusItem?
     private let popover = NSPopover()
     private let popoverState = MenuBarPopoverState()
@@ -120,6 +131,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let backendSetupDialogController = BackendSetupDialogController()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        Self.shared = self
         NSApp.setActivationPolicy(.accessory)
         NotificationCenter.default.addObserver(
             self,

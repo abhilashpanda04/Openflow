@@ -201,6 +201,30 @@ public final class KokoroTTSEngine: NSObject, TTSEngineProtocol, AVAudioPlayerDe
         onWordCallback = nil
     }
 
+    public var isLoadedInMemory: Bool {
+        manager != nil
+    }
+
+    public func offload() {
+        stop()
+        manager = nil
+        isInitializing = false
+    }
+
+    public func deleteModel() {
+        offload()
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        let aneFolder = home.appendingPathComponent(".cache/fluidaudio/Models/kokoro-82m-coreml")
+        let g2pFolder = home.appendingPathComponent(".cache/fluidaudio/Models/kokoro")
+        try? FileManager.default.removeItem(at: aneFolder)
+        try? FileManager.default.removeItem(at: g2pFolder)
+        DispatchQueue.main.async {
+            self.isModelDownloaded = false
+            self.downloadProgress = 0.0
+            self.statusMessage = "Model deleted. Click download to fetch."
+        }
+    }
+
     // MARK: - AVAudioPlayerDelegate
 
     public func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
