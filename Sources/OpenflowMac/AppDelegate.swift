@@ -41,6 +41,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let transcriptPanel = TranscriptPanelController()
 
     private var localWhisperEngine: LocalWhisperEngine?
+    private var localParakeetEngine: LocalParakeetEngine?
     private var appleSpeechEngine: AppleSpeechEngine?
     private var remoteServerEngine: RemoteServerASREngine?
     private var customEngine: ASREngine?
@@ -49,10 +50,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let custom = customEngine { return custom }
         switch config.engineType {
         case .localCoreML:
-            if let local = localWhisperEngine { return local }
-            let created = LocalWhisperEngine(modelName: config.localWhisperModel.rawValue)
-            localWhisperEngine = created
-            return created
+            if config.localWhisperModel.family == .parakeet {
+                if let parakeet = localParakeetEngine { return parakeet }
+                let created = LocalParakeetEngine(modelName: config.localWhisperModel.rawValue)
+                localParakeetEngine = created
+                return created
+            } else {
+                if let local = localWhisperEngine { return local }
+                let created = LocalWhisperEngine(modelName: config.localWhisperModel.rawValue)
+                localWhisperEngine = created
+                return created
+            }
         case .appleSpeech:
             if let apple = appleSpeechEngine { return apple }
             let created = AppleSpeechEngine()
@@ -422,7 +430,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         remoteServerEngine = RemoteServerASREngine(client: asrClient)
         switch config.engineType {
         case .localCoreML:
-            localWhisperEngine = LocalWhisperEngine(modelName: config.localWhisperModel.rawValue)
+            if config.localWhisperModel.family == .parakeet {
+                localParakeetEngine = LocalParakeetEngine(modelName: config.localWhisperModel.rawValue)
+                localWhisperEngine = nil
+            } else {
+                localWhisperEngine = LocalWhisperEngine(modelName: config.localWhisperModel.rawValue)
+                localParakeetEngine = nil
+            }
             stopHealthMonitor()
         case .appleSpeech:
             appleSpeechEngine = AppleSpeechEngine()
@@ -463,7 +477,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let backendTitle: String
         switch config.engineType {
         case .localCoreML:
-            backendTitle = "Engine: Native CoreML (\(config.localWhisperModel.rawValue))"
+            let engineLabel = config.localWhisperModel.family == .parakeet ? "Parakeet CoreML" : "WhisperKit CoreML"
+            backendTitle = "Engine: Native \(engineLabel) (\(config.localWhisperModel.rawValue))"
         case .appleSpeech:
             backendTitle = "Engine: Apple Speech (macOS Built-in)"
         case .remoteServer:
@@ -1148,7 +1163,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         if config.engineType == .localCoreML {
             transitionBackendState(to: .warming)
-            setBackendNotice("Preparing WhisperKit CoreML (\(config.localWhisperModel.rawValue))...")
+            let engineLabel = config.localWhisperModel.family == .parakeet ? "Parakeet CoreML" : "WhisperKit CoreML"
+            setBackendNotice("Preparing \(engineLabel) (\(config.localWhisperModel.rawValue))...")
             rebuildMenu()
             Task { [weak self] in
                 guard let self = self else { return }
@@ -1160,7 +1176,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     })
                     DispatchQueue.main.async {
                         self.markBackendReady(triggerQueuedRecording: true, notifyUser: false)
-                        self.setBackendNotice("CoreML Ready (\(self.config.localWhisperModel.rawValue))")
+                        self.setBackendNotice("\(engineLabel) Ready (\(self.config.localWhisperModel.rawValue))")
                         self.rebuildMenu()
                     }
                 } catch {

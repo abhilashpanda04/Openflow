@@ -36,6 +36,17 @@ final class AdditionalCoverageTests: XCTestCase {
         XCTAssertNotNil(app)
     }
 
+    func testLocalParakeetEngineInitialProperties() {
+        let engine = LocalParakeetEngine(modelName: "nvidia_parakeet-tdt-0.6b")
+        XCTAssertFalse(engine.isReady)
+        XCTAssertTrue(engine.engineName.contains("Parakeet CoreML"))
+        XCTAssertEqual(engine.statusDescription, "Not loaded")
+
+        let engine110 = LocalParakeetEngine(modelName: "nvidia_parakeet-tdt-110m")
+        XCTAssertEqual(engine110.statusDescription, "Not loaded")
+        XCTAssertTrue(engine110.engineName.contains("nvidia_parakeet-tdt-110m"))
+    }
+
     private func render(view: NSView) {
         let width = max(1, Int(view.bounds.width))
         let height = max(1, Int(view.bounds.height))
