@@ -3,9 +3,14 @@ import AppKit
 import PDFKit
 
 public struct FileTextExtractor {
+    public static let maxFileSizeBytes: Int64 = 50 * 1024 * 1024 // 50 MB
+    public static let maxPdfPages: Int = 1000
+
     public enum ExtractorError: LocalizedError {
         case unsupportedFormat(String)
         case emptyContent
+        case fileTooLarge(Int64, Int64)
+        case tooManyPages(Int, Int)
         case readFailed(String)
 
         public var errorDescription: String? {
@@ -14,14 +19,26 @@ public struct FileTextExtractor {
                 return "Unsupported file extension: .\(ext). Please select a .txt, .pdf, .md, or .rtf file."
             case .emptyContent:
                 return "The selected document contains no readable text."
+            case .fileTooLarge(let size, let max):
+                let sizeMB = Double(size) / (1024 * 1024)
+                let maxMB = Double(max) / (1024 * 1024)
+                return String(format: "File is too large (%.1f MB). Maximum allowed is %.0f MB.", sizeMB, maxMB)
+            case .tooManyPages(let pages, let max):
+                return "PDF has too many pages (\(pages)). Maximum allowed is \(max) pages."
             case .readFailed(let reason):
                 return "Failed to read document: \(reason)"
             }
         }
     }
 
-    /// Extracts plain text content from a .txt, .md, .pdf, or .rtf file.
+    /// Extracts plain text content from a .txt, .md, .pdf, or .rtf file with defensive size bounds.
     public static func extractText(from url: URL) throws -> (title: String, text: String) {
+        // Check file size defensively
+        if let attrs = try? FileManager.default.attributesOfItem(atPath: url.path),
+           let fileSize = attrs[.size] as? Int64, fileSize > maxFileSizeBytes {
+            throw ExtractorError.fileTooLarge(fileSize, maxFileSizeBytes)
+        }
+
         let ext = url.pathExtension.lowercased()
         let filename = url.deletingPathExtension().lastPathComponent
         var extractedText = ""
@@ -30,6 +47,9 @@ public struct FileTextExtractor {
         case "pdf":
             guard let pdf = PDFDocument(url: url) else {
                 throw ExtractorError.readFailed("Could not open PDF document.")
+            }
+            if pdf.pageCount > maxPdfPages {
+                throw ExtractorError.tooManyPages(pdf.pageCount, maxPdfPages)
             }
             var pageStrings: [String] = []
             for i in 0..<pdf.pageCount {

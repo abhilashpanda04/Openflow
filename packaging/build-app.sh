@@ -17,7 +17,11 @@ APP_NAME="Openflow"
 BUILD_DIR="$ROOT_DIR/.build/arm64-apple-macosx/$BUILD_CONFIG"
 APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
 INFO_PLIST="$PACKAGING_DIR/Info.plist"
-ENTITLEMENTS="$PACKAGING_DIR/entitlements.plist"
+if [ "$BUILD_CONFIG" = "release" ]; then
+    ENTITLEMENTS="$PACKAGING_DIR/entitlements.plist"
+else
+    ENTITLEMENTS="$PACKAGING_DIR/entitlements.debug.plist"
+fi
 ICON_PATH="$PACKAGING_DIR/icon/Openflow.icns"
 SIGN_IDENTITY="${CODESIGN_IDENTITY:--}"
 

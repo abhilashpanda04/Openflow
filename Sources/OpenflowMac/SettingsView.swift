@@ -96,6 +96,7 @@ struct SettingsView: View {
     @State private var retryCount = UserDefaults.standard.string(forKey: UserSettingKey.retryCount) ?? "2"
     @State private var retryDelayMs = UserDefaults.standard.string(forKey: UserSettingKey.retryBaseDelayMs) ?? "250"
     @State private var apiToken = UserDefaults.standard.string(forKey: UserSettingKey.apiToken) ?? ""
+    @State private var showApiToken = false
     @State private var maxUploadBytes = UserDefaults.standard.string(forKey: UserSettingKey.maxUploadBytes) ?? "26214400"
     @State private var outputMode = TranscriptOutputMode.parse(UserDefaults.standard.string(forKey: UserSettingKey.outputMode)) ?? .activeApp
     @State private var engineType = ASREngineType.parse(UserDefaults.standard.string(forKey: UserSettingKey.engineType)) ?? .localCoreML
@@ -1175,10 +1176,42 @@ struct SettingsView: View {
                                 .textFieldStyle(.roundedBorder)
                         }
 
+                        if isRemoteCleartextHTTP {
+                            HStack(spacing: 6) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.orange)
+                                Text("Voice audio & API token are unencrypted in transit over cleartext HTTP. Use https:// for remote servers.")
+                                    .font(.system(size: 10, weight: .medium))
+                                    .foregroundColor(.orange)
+                                Spacer()
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(Color.orange.opacity(0.12))
+                            .cornerRadius(6)
+                        }
+
                         HStack(spacing: 12) {
                             serverSettingRow("API Token") {
-                                TextField("Optional", text: $apiToken)
-                                    .textFieldStyle(.roundedBorder)
+                                HStack(spacing: 4) {
+                                    if showApiToken {
+                                        TextField("Optional", text: $apiToken)
+                                            .textFieldStyle(.roundedBorder)
+                                    } else {
+                                        SecureField("Optional", text: $apiToken)
+                                            .textFieldStyle(.roundedBorder)
+                                    }
+                                    Button {
+                                        showApiToken.toggle()
+                                    } label: {
+                                        Image(systemName: showApiToken ? "eye.slash" : "eye")
+                                            .font(.system(size: 11))
+                                            .foregroundColor(MacTheme.textSecondary)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .help(showApiToken ? "Hide token" : "Show token")
+                                }
                             }
                             serverSettingRow("Timeout (sec)") {
                                 TextField("45", text: $timeoutSeconds)
@@ -1544,6 +1577,18 @@ struct SettingsView: View {
             content()
             Spacer()
         }
+    }
+
+    private var isRemoteCleartextHTTP: Bool {
+        guard let url = URL(string: backendBaseURL.trimmingCharacters(in: .whitespacesAndNewlines)),
+              let scheme = url.scheme?.lowercased(),
+              scheme == "http" else {
+            return false
+        }
+        guard let host = url.host?.lowercased() else {
+            return false
+        }
+        return host != "127.0.0.1" && host != "localhost" && host != "::1"
     }
 
     // MARK: - Tab 3: General & Shortcuts

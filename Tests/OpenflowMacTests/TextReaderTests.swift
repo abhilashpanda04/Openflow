@@ -263,6 +263,23 @@ final class TextReaderTests: XCTestCase {
         XCTAssertThrowsError(try FileTextExtractor.extractText(from: tempFile))
     }
 
+    func testFileTextExtractorErrorDescriptions() {
+        let unsupported = FileTextExtractor.ExtractorError.unsupportedFormat("xyz")
+        XCTAssertTrue(unsupported.localizedDescription.contains(".xyz"))
+
+        let empty = FileTextExtractor.ExtractorError.emptyContent
+        XCTAssertTrue(empty.localizedDescription.contains("no readable text"))
+
+        let tooLarge = FileTextExtractor.ExtractorError.fileTooLarge(60 * 1024 * 1024, 50 * 1024 * 1024)
+        XCTAssertTrue(tooLarge.localizedDescription.contains("File is too large"))
+
+        let tooManyPages = FileTextExtractor.ExtractorError.tooManyPages(1200, 1000)
+        XCTAssertTrue(tooManyPages.localizedDescription.contains("too many pages"))
+
+        let readFailed = FileTextExtractor.ExtractorError.readFailed("Corrupted")
+        XCTAssertTrue(readFailed.localizedDescription.contains("Corrupted"))
+    }
+
     func testParagraphChunking() {
         let text = """
         Paragraph 1 begins here. It has multiple sentences in it.
