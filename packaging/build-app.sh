@@ -100,7 +100,8 @@ echo "  ✓ Binary copied"
 cp "$INFO_PLIST" "$APP_BUNDLE/Contents/Info.plist"
 
 # Update version if git tag exists
-VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.1.0-dev")
+TAG_VERSION=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || true)
+VERSION="${TAG_VERSION:-0.1.0}"
 BUILD_NUMBER=$(git rev-list --count HEAD 2>/dev/null || echo "1")
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$APP_BUNDLE/Contents/Info.plist" 2>/dev/null || true
 /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "$APP_BUNDLE/Contents/Info.plist" 2>/dev/null || true
