@@ -76,6 +76,17 @@ Powered by **WhisperKit CoreML** and **Apple Speech**, Openflow runs completely 
 - **Dark & Light Mode:** Thoughtfully designed UI that seamlessly adapts to your preferred macOS appearance.
 - **Speech Analytics & History:** Monitor words dictated, estimated minutes saved, active RAM/CPU footprint, and past transcripts.
 
+### 📖 Studio-Grade Speech Reader (Kokoro-82M TTS)
+- **Document & Book Narration:** Read aloud books, research papers, and documents (`.pdf`, `.txt`, `.md`, `.rtf`) or clipboard text with studio-grade on-device voice synthesis.
+- **Kokoro-82M AI CoreML:** 15 curated American & British voices accelerated natively on the Apple Neural Engine (ANE).
+- **Paragraph & Sentence Modes:** Switch between **Paragraph Mode** (continuous audiobook-style cadence) and **Sentence Mode** (granular rewind/forward navigation).
+- **Zero-Latency Background Pre-buffering:** Asynchronously synthesizes upcoming text chunks while current audio plays for zero-gap speech.
+- **Floating Mini-Player HUD:** Always-on-top compact reader with playback controls, sentence scrub bar, and variable speed adjustments (0.5x–2.0x).
+
+### 🧹 Model Storage & RAM Offloading
+- **Manual RAM Offload:** Unload speech recognition or TTS models from unified memory with a single click to keep Openflow's footprint ultralight when idle.
+- **Disk Cache Management:** Delete individual model weights (WhisperKit or Kokoro) directly from Settings to reclaim disk space, with instant one-tap redownloads.
+
 ---
 
 ## 📸 Screenshots & Interface
@@ -83,12 +94,21 @@ Powered by **WhisperKit CoreML** and **Apple Speech**, Openflow runs completely 
 <table>
   <tr>
     <td width="50%" align="center">
-      <strong>Productivity & Speed Analytics</strong><br/><br/>
-      <a href="screenshot/productivity-stats.png">
-        <img src="screenshot/productivity-stats.png" alt="Speech & Productivity Stats" width="100%" />
+      <strong>Speech Engine & Neural Inference</strong><br/><br/>
+      <a href="screenshot/speech-engine-settings.png">
+        <img src="screenshot/speech-engine-settings.png" alt="Speech Engine & Hardware Acceleration" width="100%" />
       </a>
-      <p align="left"><em>Real-time metrics tracking words dictated, typing time saved, speaking pace (WPM), active workflow applications, and engine distribution.</em></p>
+      <p align="left"><em>Select between WhisperKit CoreML (Apple Neural Engine), native Apple Speech, or Remote Server with live RAM, CPU, and model footprint diagnostics.</em></p>
     </td>
+    <td width="50%" align="center">
+      <strong>Speech Reader & Book Narration</strong><br/><br/>
+      <a href="screenshot/speech-reader.png">
+        <img src="screenshot/speech-reader.png" alt="Kokoro-82M Speech Reader & Floating Player" width="100%" />
+      </a>
+      <p align="left"><em>Studio-grade Kokoro-82M neural TTS with 15 voices, document upload (.pdf, .txt, .md), paragraph/sentence segmentation, and floating player.</em></p>
+    </td>
+  </tr>
+  <tr>
     <td width="50%" align="center">
       <strong>Dictation & Formatting Control</strong><br/><br/>
       <a href="screenshot/dictation-settings.png">
@@ -96,14 +116,21 @@ Powered by **WhisperKit CoreML** and **Apple Speech**, Openflow runs completely 
       </a>
       <p align="left"><em>Intelligent post-processing: spoken emoji, spoken punctuation, trailing space handling, sentence capitalization, and configurable VAD auto-stop silence thresholds.</em></p>
     </td>
-  </tr>
-  <tr>
     <td width="50%" align="center">
       <strong>Appearance & Shortcuts</strong><br/><br/>
       <a href="screenshot/general-settings.png">
         <img src="screenshot/general-settings.png" alt="General Settings & Shortcuts" width="100%" />
       </a>
       <p align="left"><em>Dual theme support (Light, Dark, System Auto), single-key activation presets (Right Option, F5, Fn/Globe), and direct-to-app or clipboard output routing.</em></p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <strong>Productivity & Speed Analytics</strong><br/><br/>
+      <a href="screenshot/productivity-stats.png">
+        <img src="screenshot/productivity-stats.png" alt="Speech & Productivity Stats" width="100%" />
+      </a>
+      <p align="left"><em>Real-time metrics tracking words dictated, typing time saved, speaking pace (WPM), active workflow applications, and engine distribution.</em></p>
     </td>
     <td width="50%" align="center">
       <strong>Menu Bar Diagnostics & Hero Controls</strong><br/><br/>
