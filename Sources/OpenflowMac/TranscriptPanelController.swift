@@ -271,6 +271,7 @@ final class TranscriptPanelController {
 
     func showRecording(targetAppName: String = "Active App") {
         ensureRecordingPanel()
+        hudState.isPresented = true
         hudState.mode = .recording
         hudState.targetAppName = targetAppName
         hudState.statusMessage = "Listening..."
@@ -285,6 +286,7 @@ final class TranscriptPanelController {
     func showTranscribing() {
         ensureRecordingPanel()
         stopDurationTimer()
+        hudState.isPresented = true
         hudState.mode = .transcribing
         hudState.statusMessage = "Transcribing with WhisperKit..."
         hudState.streamingText = "Processing audio with Neural Engine..."
@@ -297,6 +299,7 @@ final class TranscriptPanelController {
     func showWarming(queuedRecording: Bool, subtitle: String? = nil) {
         ensureRecordingPanel()
         stopDurationTimer()
+        hudState.isPresented = true
         hudState.mode = .warming
         hudState.statusMessage = "Preparing speech engine..."
         hudState.streamingText = subtitle ?? (queuedRecording
@@ -345,6 +348,7 @@ final class TranscriptPanelController {
     func showActionFeedback(_ message: String, duration: TimeInterval = 1.6) {
         ensureRecordingPanel()
         stopDurationTimer()
+        hudState.isPresented = true
         hudState.mode = .actionNotice
         hudState.statusMessage = message
         recordingTitleLabel?.stringValue = message
@@ -487,6 +491,7 @@ final class TranscriptPanelController {
 
     private func hideRecordingPanel() {
         stopDurationTimer()
+        hudState.isPresented = false
         recordingPanel?.orderOut(nil)
     }
 

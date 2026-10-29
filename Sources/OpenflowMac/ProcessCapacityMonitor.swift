@@ -100,7 +100,7 @@ public enum ProcessCapacityMonitor {
         return ProcessCapacityReport(
             memoryResidentMB: residentMB,
             memoryVirtualMB: virtualMB,
-            cpuPercent: max(0.4, min(100.0, totalCpu)),
+            cpuPercent: max(0.0, min(100.0, totalCpu)),
             threadCount: max(1, Int(threadCount)),
             activeModelFootprintMB: modelFootprintMB,
             totalAppCapacityMB: totalCapacity

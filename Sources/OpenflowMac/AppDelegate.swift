@@ -1080,6 +1080,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func startHealthMonitorIfNeeded() {
+        guard config.engineType == .remoteServer else {
+            stopHealthMonitor()
+            return
+        }
         guard healthMonitorTimer == nil else {
             return
         }

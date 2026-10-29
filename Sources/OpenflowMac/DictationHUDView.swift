@@ -10,6 +10,7 @@ public enum HUDMode {
 }
 
 public final class DictationHUDState: ObservableObject {
+    @Published public var isPresented: Bool = false
     @Published public var mode: HUDMode = .recording
     @Published public var targetAppName: String = "Active App"
     @Published public var streamingText: String = "Listening to your voice..."
@@ -118,8 +119,13 @@ public struct DictationHUDView: View {
                         Text("|")
                             .font(.system(size: 12, weight: .bold))
                             .foregroundStyle(Color.cyan)
-                            .opacity(isBlinkingCursor ? 1.0 : 0.0)
-                            .animation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true), value: isBlinkingCursor)
+                            .opacity(isBlinkingCursor && state.isPresented ? 1.0 : 0.0)
+                            .animation(
+                                state.isPresented
+                                    ? .easeInOut(duration: 0.5).repeatForever(autoreverses: true)
+                                    : .default,
+                                value: isBlinkingCursor
+                            )
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -177,7 +183,10 @@ public struct DictationHUDView: View {
                 .shadow(color: Color.black.opacity(0.65), radius: 24, x: 0, y: 12)
         )
         .onAppear {
-            isBlinkingCursor = true
+            isBlinkingCursor = state.isPresented
+        }
+        .onChange(of: state.isPresented) { _, isPresented in
+            isBlinkingCursor = isPresented
         }
     }
 
@@ -278,32 +287,31 @@ public struct DictationHUDView: View {
 
 public struct CompactRainbowWaveformView: View {
     @ObservedObject public var state: DictationHUDState
-    @State private var phase: Double = 0
-    private let timer = Timer.publish(every: 1.0 / 60.0, on: .main, in: .common).autoconnect()
 
     public init(state: DictationHUDState) {
         self.state = state
     }
 
     public var body: some View {
-        HStack(alignment: .center, spacing: 2.5) {
-            ForEach(0..<DictationHUDState.rainbowHexes.count, id: \.self) { i in
-                let color = Color(hex: DictationHUDState.rainbowHexes[i])
-                let height = barHeight(for: i)
-                RoundedRectangle(cornerRadius: 1.5, style: .continuous)
-                    .fill(color)
-                    .frame(width: 3, height: height)
-                    .shadow(color: color.opacity(0.70), radius: 2, x: 0, y: 0)
-                    .animation(.easeOut(duration: 0.10), value: height)
+        let isAnimating = state.isPresented && state.mode != .actionNotice
+        TimelineView(.animation(paused: !isAnimating)) { context in
+            let phase = isAnimating ? context.date.timeIntervalSinceReferenceDate * 4.8 : 0.0
+            HStack(alignment: .center, spacing: 2.5) {
+                ForEach(0..<DictationHUDState.rainbowHexes.count, id: \.self) { i in
+                    let color = Color(hex: DictationHUDState.rainbowHexes[i])
+                    let height = barHeight(for: i, phase: phase)
+                    RoundedRectangle(cornerRadius: 1.5, style: .continuous)
+                        .fill(color)
+                        .frame(width: 3, height: height)
+                        .shadow(color: color.opacity(0.70), radius: 2, x: 0, y: 0)
+                        .animation(.easeOut(duration: 0.10), value: height)
+                }
             }
-        }
-        .frame(height: 20)
-        .onReceive(timer) { _ in
-            phase += 0.08
+            .frame(height: 20)
         }
     }
 
-    private func barHeight(for index: Int) -> CGFloat {
+    private func barHeight(for index: Int, phase: Double) -> CGFloat {
         let minH: CGFloat = 4.0
         let maxH: CGFloat = 18.0
 
