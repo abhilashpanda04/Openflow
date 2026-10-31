@@ -6,4 +6,5 @@ dist/
 *private_key*
 agenticprep-clone/
 data_scraped/
+.agents/
 
