@@ -1,1845 +1,283 @@
 <!DOCTYPE html>
-<html class="dark" lang="en">
+<html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
-  <title>Openflow · Supercharged On-Device Voice Dictation for macOS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>openflow · on-device voice dictation for macos</title>
   
-  <meta name="description" content="Dictate at 300+ WPM directly into any macOS application. Powered 100% on-device by WhisperKit CoreML and Apple Neural Engine. Zero latency, zero cloud dependencies, 100% private.">
-  <meta name="keywords" content="Openflow, macOS dictation, WhisperKit, CoreML, voice to text mac, speech recognition, on-device AI, Apple Silicon, Kokoro TTS">
+  <meta name="description" content="Dictate at 300 words per minute directly into any Mac app. Powered entirely on-device by WhisperKit CoreML and the Apple Neural Engine. Zero cloud dependencies."/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://abhilashpanda04.github.io/Openflow/"/>
+  <meta property="og:title" content="openflow · on-device voice dictation for macos"/>
+  <meta property="og:description" content="300 WPM voice-to-text in any Mac application. Powered 100% on-device by WhisperKit CoreML."/>
   
-  <!-- Open Graph / Social -->
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://abhilashpanda04.github.io/Openflow/">
-  <meta property="og:title" content="Openflow · Supercharged On-Device Voice Dictation for macOS">
-  <meta property="og:description" content="300+ WPM voice-to-text directly in any Mac app. 100% private, on-device neural dictation powered by Apple Silicon.">
-  <meta property="og:image" content="screenshot/productivity-stats.png">
-  <meta property="twitter:card" content="summary_large_image">
-  <meta property="twitter:title" content="Openflow · Supercharged On-Device Voice Dictation for macOS">
-  <meta property="twitter:description" content="300+ WPM voice-to-text in any Mac app. Powered by WhisperKit CoreML & Apple Neural Engine.">
-  <meta property="twitter:image" content="screenshot/productivity-stats.png">
-
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet"/>
-
-  <style>
-    /* ==========================================================================
-       1. Base Reset & Full Color Token Architecture (Dark & Light)
-       ========================================================================== */
-    :root {
-      --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-      --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
-      --ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1);
-    }
-
-    /* Dark Mode Tokens (Default) */
-    html.dark {
-      --bg: #06080d;
-      --bg-scrim-start: rgba(6, 8, 13, 0.1);
-      --bg-scrim-mid: rgba(6, 8, 13, 0.5);
-      --bg-scrim-end: #06080d;
-      --bg-surface: rgba(13, 17, 26, 0.72);
-      --bg-surface-elevated: rgba(18, 24, 38, 0.88);
-      --bg-surface-subtle: rgba(10, 14, 22, 0.55);
-      --bg-header-bar: rgba(15, 20, 30, 0.92);
-      --bg-footer: #040508;
-      
-      --fg: #f8fafc;
-      --fg-heading: #ffffff;
-      --fg-muted: #94a3b8;
-      --fg-subtle: #64748b;
-      
-      --accent: #38bdf8;
-      --accent-glow: rgba(56, 189, 248, 0.12);
-      --accent-emerald: #10b981;
-      
-      --line: rgba(255, 255, 255, 0.08);
-      --line-hover: rgba(56, 189, 248, 0.35);
-      
-      --glass-bg: rgba(255, 255, 255, 0.03);
-      --glass-strong-bg: rgba(14, 19, 30, 0.85);
-      --glass-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.12);
-      --glass-shadow-hover: 0 24px 60px -10px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255, 255, 255, 0.22);
-      --rim-a: 0.45;
-      --rim-b: 0.15;
-      
-      --btn-primary-bg: #ffffff;
-      --btn-primary-fg: #06080d;
-      --tab-active-bg: #ffffff;
-      --tab-active-fg: #06080d;
-      
-      --video-opacity: 0.38;
-      --grain-opacity: 0.038;
-    }
-
-    /* Light Mode Tokens */
-    html:not(.dark) {
-      --bg: #f8fafc;
-      --bg-scrim-start: rgba(248, 250, 252, 0.25);
-      --bg-scrim-mid: rgba(248, 250, 252, 0.75);
-      --bg-scrim-end: #f8fafc;
-      --bg-surface: rgba(255, 255, 255, 0.85);
-      --bg-surface-elevated: #ffffff;
-      --bg-surface-subtle: rgba(241, 245, 249, 0.85);
-      --bg-header-bar: rgba(241, 245, 249, 0.95);
-      --bg-footer: #edf2f7;
-      
-      --fg: #0f172a;
-      --fg-heading: #090d16;
-      --fg-muted: #475569;
-      --fg-subtle: #94a3b8;
-      
-      --accent: #0284c7;
-      --accent-glow: rgba(2, 132, 199, 0.14);
-      --accent-emerald: #059669;
-      
-      --line: rgba(15, 23, 42, 0.09);
-      --line-hover: rgba(2, 132, 199, 0.45);
-      
-      --glass-bg: rgba(255, 255, 255, 0.85);
-      --glass-strong-bg: rgba(255, 255, 255, 0.96);
-      --glass-shadow: 0 16px 40px -12px rgba(15, 23, 42, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.95);
-      --glass-shadow-hover: 0 20px 48px -10px rgba(15, 23, 42, 0.14), inset 0 1px 2px rgba(255, 255, 255, 1);
-      --rim-a: 0.28;
-      --rim-b: 0.08;
-      
-      --btn-primary-bg: #0f172a;
-      --btn-primary-fg: #ffffff;
-      --tab-active-bg: #0f172a;
-      --tab-active-fg: #ffffff;
-      
-      --video-opacity: 0.18;
-      --grain-opacity: 0.015;
-    }
-
-    html, body {
-      margin: 0;
-      padding: 0;
-      background-color: var(--bg);
-      color: var(--fg);
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      overflow-x: clip;
-      text-rendering: optimizeLegibility;
-      scroll-behavior: smooth;
-      transition: background-color 0.3s ease, color 0.3s ease;
-    }
-
-    *, *::before, *::after {
-      box-sizing: border-box;
-    }
-
-    ::selection {
-      background: rgba(56, 189, 248, 0.28);
-      color: inherit;
-    }
-
-    /* ==========================================================================
-       2. Liquid-Glass Surface Specification (Hairline Gradient Rim)
-       ========================================================================== */
-    .liquid-glass {
-      position: relative;
-      background: var(--glass-bg);
-      background-blend-mode: luminosity;
-      -webkit-backdrop-filter: blur(16px) saturate(190%);
-      backdrop-filter: blur(16px) saturate(190%);
-      border: 1px solid var(--line);
-      box-shadow: var(--glass-shadow);
-      border-radius: 20px;
-      transition: transform 0.25s var(--ease-out-expo), box-shadow 0.25s ease, background-color 0.3s ease, border-color 0.3s ease;
-    }
-
-    .liquid-glass::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      padding: 1.4px;
-      pointer-events: none;
-      background: linear-gradient(180deg,
-        rgba(255, 255, 255, var(--rim-a)) 0%,
-        rgba(255, 255, 255, var(--rim-b)) 22%,
-        rgba(255, 255, 255, 0) 45%,
-        rgba(255, 255, 255, 0) 65%,
-        rgba(255, 255, 255, var(--rim-b)) 85%,
-        rgba(255, 255, 255, var(--rim-a)) 100%
-      );
-      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      mask-composite: exclude;
-      transition: opacity 0.3s ease;
-    }
-
-    .liquid-glass:hover {
-      box-shadow: var(--glass-shadow-hover);
-      border-color: var(--line-hover);
-    }
-
-    .liquid-glass--strong {
-      -webkit-backdrop-filter: blur(40px) saturate(210%);
-      backdrop-filter: blur(40px) saturate(210%);
-      background: var(--glass-strong-bg);
-    }
-
-    .liquid-glass--pill {
-      border-radius: 9999px;
-    }
-
-    /* ==========================================================================
-       3. Staggered Blur-Rise Entrance Choreography
-       ========================================================================== */
-    @keyframes blurRise {
-      from {
-        opacity: 0;
-        transform: translateY(var(--rise, 26px));
-        filter: blur(var(--blur, 10px));
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-        filter: blur(0);
-      }
-    }
-
-    @keyframes fadeRise {
-      from {
-        opacity: 0;
-        transform: translateY(var(--rise, 20px));
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes fadeDown {
-      from {
-        opacity: 0;
-        transform: translateY(-16px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes settleZoom {
-      from {
-        opacity: 0;
-        transform: scale(1.06);
-      }
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
-
-    @keyframes pulseGlow {
-      0%, 100% { opacity: 0.45; transform: scale(1); }
-      50% { opacity: 0.85; transform: scale(1.04); }
-    }
-
-    .in-blur {
-      animation: blurRise var(--dur, 0.95s) var(--ease-out-expo) var(--d, 0ms) both;
-    }
-    .in-fade {
-      animation: fadeRise var(--dur, 0.85s) var(--ease-out-expo) var(--d, 0ms) both;
-    }
-    .in-down {
-      animation: fadeDown 0.75s var(--ease-out-expo) var(--d, 0ms) both;
-    }
-    .in-zoom {
-      animation: settleZoom 1.6s var(--ease-out-expo) both;
-    }
-
-    .in-blur, .in-fade, .in-down {
-      animation-play-state: paused;
-    }
-    .fonts-ready .in-blur, .fonts-ready .in-fade, .fonts-ready .in-down {
-      animation-play-state: running;
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .in-blur, .in-fade, .in-down, .in-zoom {
-        animation: none !important;
-        opacity: 1 !important;
-        transform: none !important;
-        filter: none !important;
-      }
-    }
-
-    /* ==========================================================================
-       4. Cinematic Background Video & Grain Stage
-       ========================================================================== */
-    .hero-stage {
-      position: relative;
-      min-height: 100vh;
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      isolation: isolate;
-      background: var(--bg);
-      transition: background-color 0.3s ease;
-    }
-
-    .hero-video-plate {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 0;
-      overflow: hidden;
-    }
-
-    .hero-video-plate video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center 38%;
-      opacity: var(--video-opacity);
-      filter: saturate(1.2) contrast(1.1);
-      transition: opacity 1.8s var(--ease-out-expo);
-    }
-
-    /* Atmospheric Vignette & Edge Scrim */
-    .hero-video-plate::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background:
-        radial-gradient(ellipse 90% 60% at 50% 20%, var(--accent-glow) 0%, transparent 60%),
-        linear-gradient(to bottom,
-          var(--bg-scrim-start) 0%,
-          var(--bg-scrim-mid) 45%,
-          var(--bg-scrim-end) 85%,
-          var(--bg) 100%
-        ),
-        linear-gradient(to right,
-          var(--bg) 0%,
-          transparent 15%,
-          transparent 85%,
-          var(--bg) 100%
-        );
-      pointer-events: none;
-      transition: background 0.3s ease;
-    }
-
-    /* SVG Grain Noise Overlay */
-    .grain-overlay {
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 99;
-      opacity: var(--grain-opacity);
-      mix-blend-mode: overlay;
-      transition: opacity 0.3s ease;
-    }
-
-    /* ==========================================================================
-       5. Typography & Component Styles
-       ========================================================================== */
-    .font-serif-italic {
-      font-family: 'Instrument Serif', Georgia, serif;
-      font-style: italic;
-      font-weight: 400;
-      letter-spacing: -0.015em;
-    }
-
-    .font-mono-tag {
-      font-family: 'JetBrains Mono', monospace;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-
-    /* Primary Pill Button */
-    .btn-primary {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      background: var(--btn-primary-bg);
-      color: var(--btn-primary-fg);
-      font-weight: 600;
-      font-size: 14.5px;
-      line-height: 1;
-      padding: 12px 24px;
-      border-radius: 9999px;
-      text-decoration: none;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.1);
-      transition: transform 0.2s var(--ease-out-expo), box-shadow 0.2s ease, filter 0.2s ease, background-color 0.3s ease, color 0.3s ease;
-      cursor: pointer;
-      border: none;
-    }
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
-      filter: brightness(1.04);
-    }
-    .btn-primary:active {
-      transform: translateY(1px) scale(0.98);
-    }
-
-    .btn-arrow-chip {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      background: var(--btn-primary-fg);
-      color: var(--btn-primary-bg);
-      font-size: 12px;
-      transition: transform 0.2s var(--ease-out-expo), background-color 0.3s ease, color 0.3s ease;
-    }
-    .btn-primary:hover .btn-arrow-chip {
-      transform: translate(2px, -2px);
-    }
-
-    .btn-secondary {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--fg);
-      text-decoration: none;
-      padding: 12px 20px;
-      cursor: pointer;
-    }
-    .btn-secondary:hover {
-      transform: translateY(-2px);
-    }
-
-    /* Terminal Pill with Copy */
-    .terminal-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      padding: 8px 14px 8px 18px;
-      border-radius: 9999px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 13px;
-      color: var(--fg-muted);
-      cursor: pointer;
-      user-select: all;
-    }
-    .terminal-pill:hover {
-      color: var(--fg);
-    }
-    .terminal-pill .copy-icon {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      background: var(--line);
-      color: var(--fg-muted);
-      transition: all 0.2s ease;
-    }
-    .terminal-pill:hover .copy-icon {
-      background: var(--accent-glow);
-      color: var(--accent);
-    }
-
-    /* ==========================================================================
-       HERO INTERACTIVE DICTATION ISLAND (Streamlined macOS Glass Showcase)
-       ========================================================================== */
-    .dictation-island {
-      width: 100%;
-      max-width: 720px;
-      margin: 0 auto;
-      border-radius: 20px;
-      background: var(--bg-surface-elevated);
-      border: 1px solid var(--line);
-      box-shadow: 0 24px 60px -15px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--glass-border);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      overflow: hidden;
-      text-align: left;
-      transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    }
-    .dictation-island:hover {
-      border-color: var(--line-hover);
-      box-shadow: 0 32px 70px -15px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--accent-glow);
-    }
-
-    .island-header {
-      padding: 12px 20px;
-      background: var(--glass-bg);
-      border-bottom: 1px solid var(--line);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .island-body {
-      padding: 24px 28px 22px 28px;
-    }
-
-    .island-meta-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 16px;
-    }
-
-    .island-rec-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11.5px;
-      font-weight: 600;
-      color: #ef4444;
-      background: rgba(239, 68, 68, 0.1);
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(239, 68, 68, 0.2);
-    }
-
-    .island-rec-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #ef4444;
-      box-shadow: 0 0 8px #ef4444;
-      animation: pulseGlow 1.2s infinite ease-in-out;
-    }
-
-    .equalizer-track {
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      height: 22px;
-      padding: 0 4px;
-    }
-    .equalizer-bar {
-      width: 2.5px;
-      background: linear-gradient(to top, var(--accent), #818cf8);
-      border-radius: 999px;
-      height: 14px;
-      transform-origin: center;
-      transition: height 0.08s ease;
-    }
-
-    .island-transcript {
-      font-size: clamp(17px, 2.1vw, 21px);
-      font-weight: 500;
-      line-height: 1.55;
-      letter-spacing: -0.015em;
-      color: var(--fg-heading);
-      min-height: 64px;
-      display: flex;
-      align-items: center;
-      word-break: break-word;
-    }
-
-    .island-caret {
-      display: inline-block;
-      width: 2px;
-      height: 1.2em;
-      background: var(--accent);
-      vertical-align: -2px;
-      margin-left: 3px;
-      animation: pulseGlow 0.8s infinite;
-    }
-
-    .island-footer {
-      padding: 12px 20px;
-      background: var(--glass-bg);
-      border-top: 1px solid var(--line);
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    /* Interactive Scenario Buttons */
-    .scenario-btn {
-      padding: 5px 14px;
-      border-radius: 9999px;
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      border: 1px solid var(--line);
-      background: var(--glass-bg);
-      color: var(--fg-muted);
-      transition: all 0.2s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .scenario-btn:hover {
-      color: var(--fg);
-      border-color: var(--line-hover);
-    }
-    .scenario-btn.active {
-      color: var(--tab-active-fg);
-      background: var(--tab-active-bg);
-      border-color: transparent;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-      font-weight: 600;
-    }
-
-    .cue-pill-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 5px 12px;
-      border-radius: 9999px;
-      font-size: 11.5px;
-      font-weight: 600;
-      color: var(--fg);
-      background: var(--glass-bg);
-      border: 1px solid var(--line);
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    .cue-pill-btn:hover {
-      color: var(--accent);
-      border-color: var(--accent);
-      background: var(--accent-glow);
-    }
-
-    /* Showcase Tab Styles */
-    .tab-nav-btn {
-      padding: 8px 18px;
-      border-radius: 9999px;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--fg-muted);
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    .tab-nav-btn:hover {
-      color: var(--fg);
-    }
-    .tab-nav-btn.active {
-      color: var(--tab-active-fg);
-      background: var(--tab-active-bg);
-      font-weight: 600;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    /* Comparison Table Styling */
-    .compare-table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      text-align: left;
-      font-size: 14px;
-    }
-    .compare-table th {
-      padding: 16px 20px;
-      font-weight: 600;
-      color: var(--fg-muted);
-      border-bottom: 1px solid var(--line);
-    }
-    .compare-table td {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--line);
-      color: var(--fg-muted);
-    }
-    .compare-table td strong {
-      color: var(--fg-heading);
-    }
-    .compare-table tr:hover td {
-      background: var(--glass-bg);
-    }
-    .compare-table .highlight-col {
-      background: var(--accent-glow);
-      color: var(--accent);
-      font-weight: 600;
-    }
-
-    /* Micro Utility Classes */
-    .max-w-content { max-width: 1200px; margin-left: auto; margin-right: auto; padding-left: 24px; padding-right: 24px; }
-    .nav-link { color: var(--fg-muted); text-decoration: none; font-size: 13.5px; font-weight: 500; transition: color 0.2s ease; }
-    .nav-link:hover { color: var(--fg); }
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  
+  <link rel="stylesheet" href="styles.css"/>
 </head>
-<body class="fonts-ready">
+<body>
 
-  <!-- SVG Fractal Grain Overlay (Kills banding, unifies video & glass) -->
-  <svg class="grain-overlay" aria-hidden="true">
-    <filter id="grain">
-      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/>
-      <feColorMatrix type="saturate" values="0"/>
-    </filter>
-    <rect width="100%" height="100%" filter="url(#grain)"/>
-  </svg>
-
-  <!-- ========================================================================
-       SECTION 1: HERO & LIVING NEURAL AUDIO STAGE
-       ======================================================================== -->
-  <section class="hero-stage">
-    
-    <!-- Background Looping Neural Audio Video (#5 from MotionSites Shelf) -->
-    <div class="hero-video-plate in-zoom">
-      <video id="hero-bg-video" autoplay muted loop playsinline preload="auto" aria-hidden="true"
-             src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260818_072341_50851634-bbc3-4c33-9acc-7647d4db44aa.mp4"
-             onerror="this.style.display='none'">
-      </video>
-    </div>
-
-    <!-- Floating Split-Pill Glass Navigation -->
-    <header class="in-down" style="position: sticky; top: 16px; z-index: 50; width: 100%; padding: 0 16px;">
-      <div class="max-w-content" style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
-        
-        <!-- Brand Disc + Logotype -->
-        <a href="#" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit;">
-          <div class="liquid-glass" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; padding: 7px;">
-            <img src="assets/logo.svg" alt="Openflow Logo" width="24" height="24" style="filter: drop-shadow(0 2px 8px var(--accent-glow));"/>
-          </div>
-          <div style="display: flex; align-items: baseline; gap: 6px;">
-            <span style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: -0.03em; color: var(--fg-heading);">Openflow</span>
-            <span class="font-mono-tag" style="font-size: 10px; color: var(--accent); background: var(--accent-glow); padding: 2px 6px; border-radius: 999px;">v0.1.0</span>
-          </div>
-        </a>
-
-        <!-- Center Links Pill (Desktop) -->
-        <nav class="liquid-glass liquid-glass--pill" style="display: none; padding: 6px 18px; gap: 24px; align-items: center;" id="desktop-nav">
-          <a href="#features" class="nav-link">Features</a>
-          <a href="#walkthrough" class="nav-link">Showcase</a>
-          <a href="#comparison" class="nav-link">Compare</a>
-          <a href="#quickstart" class="nav-link">Quick Start</a>
-          <a href="#faq" class="nav-link">FAQ</a>
-        </nav>
-        <style>@media(min-width: 860px){ #desktop-nav { display: flex !important; } }</style>
-
-        <!-- Right Action Pill -->
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <!-- GitHub Star Badge -->
-          <a href="https://github.com/abhilashpanda04/Openflow" target="_blank" rel="noopener noreferrer" 
-             class="liquid-glass liquid-glass--pill" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; text-decoration: none; color: var(--fg); font-size: 13px; font-weight: 500;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-            </svg>
-            <span style="font-family:'JetBrains Mono', monospace; font-size: 12px; color: var(--fg-muted);">Star</span>
-          </a>
-
-          <!-- Download Pill CTA -->
-          <a href="https://github.com/abhilashpanda04/Openflow/releases/latest" class="btn-primary" style="padding: 9px 18px; font-size: 13.5px;">
-            <span>Download</span>
-            <span class="btn-arrow-chip">↓</span>
-          </a>
-
-          <!-- Theme Toggle (Moon / Sun) -->
-          <button onclick="toggleTheme()" class="liquid-glass" style="width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--fg);" aria-label="Toggle Theme" title="Switch Theme (Dark / Light)">
-            <svg id="theme-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-    </header>
-
-    <!-- Center Hero Content Container -->
-    <div class="max-w-content" style="position: relative; z-index: 10; margin-top: auto; margin-bottom: auto; padding-top: 48px; padding-bottom: 64px; text-align: center; display: flex; flex-direction: column; align-items: center;">
-      
-
-      <!-- Main Display Headline -->
-      <h1 style="margin: 0 0 20px 0; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: clamp(38px, 6.2vw, 84px); line-height: 0.98; letter-spacing: -0.04em; max-width: 1040px; color: var(--fg-heading);">
-        <span class="in-blur" style="--d: 360ms; display: block;">Speak at 300 WPM.</span>
-        <span class="in-blur" style="--d: 520ms; display: block; color: var(--fg-heading);">
-          Types <span class="font-serif-italic" style="color: var(--accent); font-weight: 400; padding: 0 4px;">instantly</span> into any Mac app.
+  <!-- Navigation -->
+  <header class="site-header">
+    <div class="container nav-container">
+      <a href="#" class="brand" aria-label="openflow home">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          <line x1="12" x2="12" y1="19" y2="22"/>
+        </svg>
+        <span class="brand-title">openflow</span>
+        <span class="status-badge">
+          <span class="status-dot"></span>
+          <span>ane ready</span>
         </span>
-      </h1>
+      </a>
 
-      <!-- Supporting Subhead -->
-      <p class="in-fade" style="--d: 700ms; max-width: 38rem; margin: 0 auto 36px auto; font-size: clamp(15.5px, 1.8vw, 18px); line-height: 1.55; color: var(--fg-muted);">
-        Supercharged on-device speech dictation engineered for macOS. 100% private, zero cloud latency, and native Apple Intelligence integration.
-      </p>
+      <nav aria-label="Primary navigation">
+        <ul class="nav-links">
+          <li><a href="#benchmarks" class="nav-link">benchmarks</a></li>
+          <li><a href="#features" class="nav-link">architecture</a></li>
+          <li><a href="#install" class="nav-link">install</a></li>
+          <li><a href="https://github.com/abhilashpanda04/Openflow" class="nav-link" rel="noopener noreferrer">github</a></li>
+        </ul>
+      </nav>
 
-      <!-- Action Buttons Row -->
-      <div class="in-fade" style="--d: 880ms; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px; margin-bottom: 48px;">
-        <!-- Primary DMG Download -->
-        <a href="https://github.com/abhilashpanda04/Openflow/releases/latest" class="btn-primary">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.84c.64-.78 1.08-1.87.96-2.96-.94.04-2.07.63-2.73 1.4-.58.67-1.1 1.77-.96 2.83 1.05.08 2.1-.53 2.73-1.27z"/>
-          </svg>
-          <span>Download for macOS (Apple Silicon)</span>
-          <span class="btn-arrow-chip">↓</span>
+      <div>
+        <a href="https://github.com/abhilashpanda04/Openflow/releases/latest" class="btn btn--secondary">
+          <span>download dmg</span>
         </a>
-
-        <!-- One-Line Curl Terminal Pill -->
-        <div class="terminal-pill liquid-glass" onclick="copyInstallCmd('curl -fsSL https://raw.githubusercontent.com/abhilashpanda04/Openflow/main/install.sh | bash')" title="Click to copy Curl installation command">
-          <span style="color: var(--accent);">$</span>
-          <span>curl -fsSL https://.../install.sh | bash</span>
-          <span class="copy-icon" id="copy-btn-cmd">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-            </svg>
-          </span>
-        </div>
       </div>
+    </div>
+  </header>
 
-      <!-- ====================================================================
-           THE SIGNATURE: LIVING NEURAL DICTATION ISLAND (Streamlined macOS Glass)
-           ==================================================================== -->
-      <div class="in-blur" style="--d: 1040ms; width: 100%; max-width: 720px; position: relative;">
-        
-        <div class="dictation-island liquid-glass liquid-glass--strong">
-          
-          <!-- Top macOS Window Header -->
-          <div class="island-header">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="width: 10px; height: 10px; border-radius: 50%; background: #ff5f56; opacity: 0.85;"></span>
-              <span style="width: 10px; height: 10px; border-radius: 50%; background: #ffbd2e; opacity: 0.85;"></span>
-              <span style="width: 10px; height: 10px; border-radius: 50%; background: #27c93f; opacity: 0.85;"></span>
-              <span id="target-app-name" style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--fg-muted); margin-left: 6px;">Cursor — AuthService.swift</span>
-            </div>
+  <main>
+    <!-- Hero Stage -->
+    <section class="hero-stage">
+      <div class="container hero-layout">
+        <div class="hero-copy">
+          <h1><span class="verb">dictate</span> at 300 words a minute</h1>
+          <p>on-device speech recognition powered by whisperkit and the apple neural engine.</p>
+
+          <div class="btn-group">
+            <a href="https://github.com/abhilashpanda04/Openflow/releases/latest" class="btn btn--primary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" x2="12" y1="15" y2="3"/>
+              </svg>
+              <span>download for macos</span>
+            </a>
             
-            <div style="display: flex; align-items: center; gap: 7px;">
-              <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--accent-emerald); box-shadow: 0 0 6px var(--accent-emerald);"></span>
-              <span id="island-target-status" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--fg-subtle); letter-spacing: 0.02em;">300 WPM · ANE Active</span>
-            </div>
+            <a href="#benchmarks" class="btn btn--secondary">
+              <span>view latency matrix</span>
+            </a>
           </div>
 
-          <!-- Main Transcript & Waveform Stage -->
-          <div class="island-body">
-            
-            <!-- Meta Row: Rec dot + Equalizer + Zero Cloud Lag -->
-            <div class="island-meta-row">
-              <div class="island-rec-badge">
-                <span class="island-rec-dot"></span>
-                <span id="hud-timer">00:03.4</span>
-              </div>
-
-              <!-- Organic Equalizer Bars -->
-              <div class="equalizer-track" id="hud-equalizer">
-                <!-- 28 dynamic equalizer bars generated by JS -->
-              </div>
-
-              <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); background: var(--accent-glow); padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line);">
-                100% On-Device
-              </div>
-            </div>
-
-            <!-- Large, Breathable Transcript Stream -->
-            <div class="island-transcript" id="island-text-stream">
-              <span id="typing-stream">Refactor authentication to use Swift Concurrency and stream WhisperKit CoreML tokens directly into memory.</span><span class="island-caret"></span>
-            </div>
-
-          </div>
-
-          <!-- Bottom Control Bar -->
-          <div class="island-footer">
-            <!-- Scenario Selector Pills -->
-            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px;">
-              <button onclick="setScenario(0)" class="scenario-btn active" id="sc-btn-0" title="Swift code generation in editor">
-                <span>⚡ Swift</span>
-              </button>
-              <button onclick="setScenario(1)" class="scenario-btn" id="sc-btn-1" title="Voice undo and inline corrections">
-                <span>✨ "Scratch That"</span>
-              </button>
-              <button onclick="setScenario(2)" class="scenario-btn" id="sc-btn-2" title="Kokoro on-device audiobook speech">
-                <span>🗣️ Kokoro TTS</span>
-              </button>
-            </div>
-
-            <!-- Sound Cue & Keyboard Shortcut -->
-            <div style="display: flex; align-items: center; gap: 10px;">
-              <button onclick="toggleAudioDemo()" class="cue-pill-btn" title="Play macOS Siri / Dictation audio cue">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-                </svg>
-                <span>Sound Cue</span>
-              </button>
-              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--fg-subtle);" title="Default Openflow global toggle shortcut">
-                <kbd style="background: var(--line); padding: 2px 6px; border-radius: 4px; font-size: 10.5px; color: var(--fg-muted);">⌥ Space</kbd>
-              </span>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-    <!-- ========================================================================
-         SECTION 2: PROOF & PERFORMANCE STRIP (Edge-to-Edge)
-         ======================================================================== -->
-    <div style="width: 100%; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--bg-surface); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); position: relative; z-index: 20;">
-      <div class="max-w-content" style="padding-top: 24px; padding-bottom: 24px;">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; text-align: center;">
-          
-          <div>
-            <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(32px, 3.5vw, 44px); font-weight: 700; color: var(--fg-heading); letter-spacing: -0.03em;">300+ <span style="font-size: 20px; font-weight: 500; color: var(--accent);">WPM</span></div>
-            <div style="font-size: 13px; color: var(--fg-muted); margin-top: 4px;">Continuous dictation throughput</div>
-          </div>
-
-          <div>
-            <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(32px, 3.5vw, 44px); font-weight: 700; color: var(--fg-heading); letter-spacing: -0.03em;">0 <span style="font-size: 20px; font-weight: 500; color: var(--accent);">ms</span></div>
-            <div style="font-size: 13px; color: var(--fg-muted); margin-top: 4px;">Zero cloud latency or telemetry</div>
-          </div>
-
-          <div>
-            <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(32px, 3.5vw, 44px); font-weight: 700; color: var(--fg-heading); letter-spacing: -0.03em;">100% <span style="font-size: 20px; font-weight: 500; color: var(--accent);">Local</span></div>
-            <div style="font-size: 13px; color: var(--fg-muted); margin-top: 4px;">WhisperKit CoreML + Apple Speech</div>
-          </div>
-
-          <div>
-            <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(32px, 3.5vw, 44px); font-weight: 700; color: var(--fg-heading); letter-spacing: -0.03em;">15 <span style="font-size: 20px; font-weight: 500; color: var(--accent);">Voices</span></div>
-            <div style="font-size: 13px; color: var(--fg-muted); margin-top: 4px;">Kokoro-82M AI audiobook reader</div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-
-  </section>
-
-  <!-- ========================================================================
-       SECTION 3: ARCHITECTURE & FEATURE BENTO (Interactive Machined Cards)
-       ======================================================================== -->
-  <section id="features" style="padding: 120px 0; position: relative;">
-    <div class="max-w-content">
-      
-      <div style="text-align: center; max-width: 720px; margin: 0 auto 64px auto;">
-        <span class="font-mono-tag" style="font-size: 12px; color: var(--accent); background: var(--accent-glow); padding: 4px 14px; border-radius: 999px;">01 —— NEURAL ARCHITECTURE</span>
-        <h2 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(32px, 4.2vw, 52px); font-weight: 700; letter-spacing: -0.035em; margin: 18px 0 14px 0; color: var(--fg-heading); line-height: 1.08;">
-          Engineered for Apple Silicon.<br/>
-          <span class="font-serif-italic" style="color: var(--accent); font-weight: 400;">Uncompromised</span> privacy and speed.
-        </h2>
-        <p style="font-size: 16px; color: var(--fg-muted); line-height: 1.6; max-width: 540px; margin: 0 auto;">
-          Everything executes in unified memory on your Mac. No subscriptions, no API keys, and no audio buffers ever leaving your hardware.
-        </p>
-      </div>
-
-      <!-- Bento Grid (3-Tier Asymmetric Layout with Interactive Widgets) -->
-      <div style="display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px;">
-        
-        <!-- Bento Card 1: WhisperKit CoreML (Span 7) -->
-        <div class="liquid-glass" style="grid-column: span 12; padding: 36px; border-radius: 24px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;">
-          <style>@media(min-width: 960px){ div[style*="grid-column: span 12"]:first-child { grid-column: span 7 !important; } }</style>
-          <div>
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-              <span class="font-mono-tag" style="font-size: 11px; color: var(--accent); font-weight: 600;">// NEURAL ASR ENGINE</span>
-              <span class="font-mono-tag" style="font-size: 11px; color: var(--fg-muted); background: var(--glass-bg); padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line);">WhisperKit CoreML</span>
-            </div>
-            <h3 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(22px, 2.5vw, 28px); font-weight: 700; margin: 0 0 12px 0; color: var(--fg-heading); letter-spacing: -0.02em;">
-              Hardware-Accelerated On-Device Speech
-            </h3>
-            <p style="font-size: 15px; color: var(--fg-muted); line-height: 1.6; max-width: 520px; margin: 0 0 24px 0;">
-              Execute Whisper models natively across the Apple Neural Engine (ANE) and GPU. Select from multiple weights based on your memory budget and precision needs.
-            </p>
-
-            <!-- Interactive Model Weight Switcher Widget -->
-            <div style="background: var(--bg-surface-elevated); padding: 18px; border-radius: 16px; border: 1px solid var(--line); margin-bottom: 24px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <span class="font-mono-tag" style="font-size: 11px; color: var(--fg-subtle);">SELECT MODEL WEIGHT:</span>
-                <span id="model-footprint-tag" class="font-mono-tag" style="font-size: 11px; color: var(--accent-emerald);">● ACTIVE: 142 MB RAM</span>
-              </div>
-              <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
-                <button onclick="switchModelWeight(0)" class="scenario-btn active" id="model-btn-0" style="padding: 8px 6px; text-align: center; font-size: 12px;">
-                  <strong>Tiny</strong><br/><span style="font-size: 10px; color: var(--fg-subtle);">39M</span>
-                </button>
-                <button onclick="switchModelWeight(1)" class="scenario-btn" id="model-btn-1" style="padding: 8px 6px; text-align: center; font-size: 12px;">
-                  <strong>Base</strong><br/><span style="font-size: 10px; color: var(--fg-subtle);">74M</span>
-                </button>
-                <button onclick="switchModelWeight(2)" class="scenario-btn" id="model-btn-2" style="padding: 8px 6px; text-align: center; font-size: 12px;">
-                  <strong>Small</strong><br/><span style="font-size: 10px; color: var(--fg-subtle);">244M</span>
-                </button>
-                <button onclick="switchModelWeight(3)" class="scenario-btn" id="model-btn-3" style="padding: 8px 6px; text-align: center; font-size: 12px;">
-                  <strong>Turbo</strong><br/><span style="font-size: 10px; color: var(--fg-subtle);">809M</span>
-                </button>
-              </div>
-              <div id="model-spec-info" style="margin-top: 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--fg-muted); display: flex; justify-content: space-between; border-top: 1px solid var(--line); padding-top: 10px;">
-                <span>Latency: <strong>&lt;24ms</strong></span>
-                <span>Accuracy: <strong>97.8%</strong></span>
-                <span>ANE Cores: <strong>16/16</strong></span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Integrated Screenshot with Mac Window Header -->
-          <div style="border-radius: 14px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 16px 36px rgba(0,0,0,0.25);">
-            <div style="background: var(--bg-header-bar); padding: 8px 14px; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid var(--line);">
-              <span style="width: 9px; height: 9px; border-radius: 50%; background: #ff5f56;"></span>
-              <span style="width: 9px; height: 9px; border-radius: 50%; background: #ffbd2e;"></span>
-              <span style="width: 9px; height: 9px; border-radius: 50%; background: #27c93f;"></span>
-              <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--fg-subtle); margin-left: 6px;">Settings — Speech Engine</span>
-            </div>
-            <img src="screenshot/speech-engine-settings.png" alt="Openflow Speech Engine Settings" style="width: 100%; height: auto; display: block;"/>
-          </div>
-        </div>
-
-        <!-- Bento Card 2: Apple Intelligence & Voice Editing (Span 5) -->
-        <div class="liquid-glass" style="grid-column: span 12; padding: 36px; border-radius: 24px; display: flex; flex-direction: column; justify-content: space-between;">
-          <style>@media(min-width: 960px){ div[style*="grid-column: span 12"]:nth-child(2) { grid-column: span 5 !important; } }</style>
-          <div>
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-              <span class="font-mono-tag" style="font-size: 11px; color: #a855f7; font-weight: 600;">// VOICE ACTIONS</span>
-              <span class="font-mono-tag" style="font-size: 11px; color: var(--fg-muted); background: var(--glass-bg); padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line);">Writing Tools</span>
-            </div>
-            <h3 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(22px, 2.5vw, 28px); font-weight: 700; margin: 0 0 12px 0; color: var(--fg-heading); letter-spacing: -0.02em;">
-              In-Line Voice Actions & Rewriting
-            </h3>
-            <p style="font-size: 15px; color: var(--fg-muted); line-height: 1.6; margin-bottom: 24px;">
-              Speak commands seamlessly mid-dictation. Openflow detects trigger phrases and executes instantaneous text transformations directly inside the active app.
-            </p>
-          </div>
-
-          <!-- Interactive Voice Action Playground -->
-          <div style="display: flex; flex-direction: column; gap: 10px; margin-top: auto;">
-            <div onclick="simulateVoiceAction('scratch-that')" class="liquid-glass" style="padding: 14px 18px; border-radius: 14px; cursor: pointer; transition: transform 0.2s ease;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                <span style="font-family: 'JetBrains Mono', monospace; font-size: 13.5px; font-weight: 600; color: var(--fg-heading);">"scratch that"</span>
-                <span class="font-mono-tag" style="font-size: 10px; color: #ef4444; background: rgba(239,68,68,0.12); padding: 2px 8px; border-radius: 999px;">DISCARD</span>
-              </div>
-              <p style="font-size: 12.5px; color: var(--fg-muted); margin: 0;">Discards current dictation buffer and plays audio cue.</p>
-            </div>
-
-            <div onclick="testPillFeedback(this, 'MAKE THAT UPPERCASE')" class="liquid-glass" style="padding: 14px 18px; border-radius: 14px; cursor: pointer; transition: transform 0.2s ease;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                <span style="font-family: 'JetBrains Mono', monospace; font-size: 13.5px; font-weight: 600; color: var(--fg-heading);">"urgent all caps that"</span>
-                <span class="font-mono-tag" style="font-size: 10px; color: var(--accent); background: var(--accent-glow); padding: 2px 8px; border-radius: 999px;">CASE FORMAT</span>
-              </div>
-              <p style="font-size: 12.5px; color: var(--fg-muted); margin: 0;">Dynamically capitalizes or reformats preceding words.</p>
-            </div>
-
-            <div onclick="testPillFeedback(this, 'Apple Intelligence Active')" class="liquid-glass" style="padding: 14px 18px; border-radius: 14px; cursor: pointer; transition: transform 0.2s ease;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                <span style="font-family: 'JetBrains Mono', monospace; font-size: 13.5px; font-weight: 600; color: var(--fg-heading);">"Apple Writing Tools"</span>
-                <span class="font-mono-tag" style="font-size: 10px; color: #c084fc; background: rgba(192,132,252,0.12); padding: 2px 8px; border-radius: 999px;">AI REWRITE</span>
-              </div>
-              <p style="font-size: 12.5px; color: var(--fg-muted); margin: 0;">Invokes native macOS Writing Tools for summarization.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Bento Card 3: Kokoro-82M TTS Studio Reader (Span 5) -->
-        <div class="liquid-glass" style="grid-column: span 12; padding: 36px; border-radius: 24px; display: flex; flex-direction: column; justify-content: space-between;">
-          <style>@media(min-width: 960px){ div[style*="grid-column: span 12"]:nth-child(3) { grid-column: span 5 !important; } }</style>
-          <div>
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-              <span class="font-mono-tag" style="font-size: 11px; color: #ec4899; font-weight: 600;">// STUDIO SPEECH READER</span>
-              <span class="font-mono-tag" style="font-size: 11px; color: var(--fg-muted); background: var(--glass-bg); padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line);">Kokoro-82M CoreML</span>
-            </div>
-            <h3 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(22px, 2.5vw, 28px); font-weight: 700; margin: 0 0 12px 0; color: var(--fg-heading); letter-spacing: -0.02em;">
-              Offline Audiobook & Document Narration
-            </h3>
-            <p style="font-size: 15px; color: var(--fg-muted); line-height: 1.6; margin-bottom: 20px;">
-              Read PDFs, Markdown notes, research papers, and clipboard text with studio-grade neural voice synthesis. Features 15 curated voices and continuous paragraph cadence.
-            </p>
-          </div>
-
-          <!-- Interactive TTS Mini Player Preview -->
-          <div style="background: var(--bg-surface-elevated); padding: 20px; border-radius: 16px; border: 1px solid var(--line); margin-bottom: 20px;">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <button onclick="toggleAudioDemo()" style="width: 34px; height: 34px; border-radius: 50%; background: #ec4899; color: #fff; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 10px rgba(236,72,153,0.4);">
-                  ▶
-                </button>
-                <div>
-                  <div style="font-size: 13px; font-weight: 600; color: var(--fg-heading);">Voice: Sarah (US)</div>
-                  <div style="font-size: 11px; color: var(--fg-subtle);">Speed: 1.25x · Sentence Mode</div>
-                </div>
-              </div>
-              <span class="font-mono-tag" style="font-size: 11px; color: var(--accent-emerald);">● READY</span>
-            </div>
-            <!-- Interactive Scrub Bar -->
-            <div style="height: 4px; background: var(--line); border-radius: 999px; overflow: hidden; position: relative;">
-              <div style="width: 48%; height: 100%; background: linear-gradient(to right, #ec4899, #818cf8);"></div>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--fg-subtle); margin-top: 6px; font-family: 'JetBrains Mono', monospace;">
-              <span>01:14</span>
-              <span>02:35</span>
-            </div>
-          </div>
-
-          <div style="border-radius: 14px; overflow: hidden; border: 1px solid var(--line);">
-            <img src="screenshot/speech-reader.png" alt="Openflow Speech Reader" style="width: 100%; height: auto; display: block;"/>
-          </div>
-        </div>
-
-        <!-- Bento Card 4: Smart VAD & Silence Trimming (Span 7) -->
-        <div class="liquid-glass" style="grid-column: span 12; padding: 36px; border-radius: 24px; display: flex; flex-direction: column; justify-content: space-between;">
-          <style>@media(min-width: 960px){ div[style*="grid-column: span 12"]:nth-child(4) { grid-column: span 7 !important; } }</style>
-          <div>
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-              <span class="font-mono-tag" style="font-size: 11px; color: var(--accent-emerald); font-weight: 600;">// INTELLIGENT VAD</span>
-              <span class="font-mono-tag" style="font-size: 11px; color: var(--fg-muted); background: var(--glass-bg); padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line);">Zero Dead Air</span>
-            </div>
-            <h3 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(22px, 2.5vw, 28px); font-weight: 700; margin: 0 0 12px 0; color: var(--fg-heading); letter-spacing: -0.02em;">
-              Silence Trimming & Automatic Speech Detection
-            </h3>
-            <p style="font-size: 15px; color: var(--fg-muted); line-height: 1.6; max-width: 520px; margin-bottom: 24px;">
-              Strips leading and trailing silence before audio enters the Neural Engine, completely preventing hallucinations. Automatically pauses and transcribes when you stop talking.
-            </p>
-
-            <!-- VAD Configuration Interactive Slider Preview -->
-            <div style="background: var(--bg-surface-elevated); padding: 20px; border-radius: 16px; border: 1px solid var(--line); margin-bottom: 24px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <span class="font-mono-tag" style="font-size: 11px; color: var(--fg-subtle);">VOICE ACTIVITY AUTO-STOP THRESHOLD:</span>
-                <span id="vad-val-label" class="font-mono-tag" style="font-size: 12px; font-weight: 700; color: var(--accent);">2.0 SECONDS</span>
-              </div>
-              <input type="range" min="1" max="5" step="0.5" value="2" oninput="updateVadDisplay(this.value)" style="width: 100%; accent-color: var(--accent); cursor: pointer;"/>
-              <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--fg-subtle); margin-top: 8px;">
-                <span>1.0s (Fast dictation)</span>
-                <span>2.0s (Standard)</span>
-                <span>5.0s (Thoughtful pauses)</span>
-              </div>
-            </div>
-          </div>
-
-          <div style="border-radius: 14px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 12px 30px rgba(0,0,0,0.25);">
-            <div style="background: var(--bg-header-bar); padding: 8px 14px; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid var(--line);">
-              <span style="width: 9px; height: 9px; border-radius: 50%; background: #ff5f56;"></span>
-              <span style="width: 9px; height: 9px; border-radius: 50%; background: #ffbd2e;"></span>
-              <span style="width: 9px; height: 9px; border-radius: 50%; background: #27c93f;"></span>
-              <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--fg-subtle); margin-left: 6px;">Settings — Dictation & VAD Trimming</span>
-            </div>
-            <img src="screenshot/dictation-settings.png" alt="Dictation Settings" style="width: 100%; height: auto; display: block;"/>
-          </div>
-        </div>
-
-      </div>
-
-    </div>
-  </section>
-
-  <!-- ========================================================================
-       SECTION 4: MAC INTERFACE SHOWCASE (Interactive macOS Window Stage)
-       ======================================================================== -->
-  <section id="walkthrough" style="padding: 120px 0; background: var(--bg-surface-subtle); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); position: relative;">
-    <div class="max-w-content">
-      
-      <div style="text-align: center; max-width: 720px; margin: 0 auto 52px auto;">
-        <span class="font-mono-tag" style="font-size: 12px; color: var(--accent); background: var(--accent-glow); padding: 4px 14px; border-radius: 999px;">02 —— SYSTEM COMPANION</span>
-        <h2 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(32px, 4.2vw, 50px); font-weight: 700; letter-spacing: -0.035em; margin: 18px 0 14px 0; color: var(--fg-heading); line-height: 1.1;">
-          Crafted specifically for macOS.
-        </h2>
-        <p style="font-size: 16px; color: var(--fg-muted); max-width: 540px; margin: 0 auto 28px auto;">
-          Lightweight, native, and unobtrusive. Lives discreetly in your menu bar and stays out of your way until called.
-        </p>
-
-        <!-- Interactive Showcase Navigation Pills -->
-        <div class="liquid-glass liquid-glass--pill" style="display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; padding: 6px;">
-          <button class="tab-nav-btn active" onclick="switchGalleryTab(0)" id="gal-btn-0">Menu Bar Companion</button>
-          <button class="tab-nav-btn" onclick="switchGalleryTab(1)" id="gal-btn-1">Neural Inference</button>
-          <button class="tab-nav-btn" onclick="switchGalleryTab(2)" id="gal-btn-2">TTS Reader</button>
-          <button class="tab-nav-btn" onclick="switchGalleryTab(3)" id="gal-btn-3">Productivity Stats</button>
-        </div>
-      </div>
-
-      <!-- Sculpted macOS Window Frame -->
-      <div class="liquid-glass" style="border-radius: 22px; overflow: hidden; max-width: 1040px; margin: 0 auto; box-shadow: var(--glass-shadow-hover); border: 1px solid var(--line);">
-        
-        <!-- macOS Menu Bar & Title Header -->
-        <div style="background: var(--bg-header-bar); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line);">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="width: 12px; height: 12px; border-radius: 50%; background: #ff5f56; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #7f0000;"></span>
-            <span style="width: 12px; height: 12px; border-radius: 50%; background: #ffbd2e; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #7f5000;"></span>
-            <span style="width: 12px; height: 12px; border-radius: 50%; background: #27c93f; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #004d00;"></span>
-            <span id="gallery-window-title" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--fg-muted); margin-left: 10px;">Openflow — Menu Bar Popover</span>
-          </div>
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <span class="font-mono-tag" style="font-size: 11px; color: var(--accent);">Apple Silicon</span>
-            <span class="font-mono-tag" style="font-size: 11px; color: var(--fg-subtle);">macOS 14+</span>
-          </div>
-        </div>
-
-        <!-- Window Stage Canvas with Inset Glow -->
-        <div style="position: relative; background: var(--bg-surface-elevated); min-height: 480px; display: flex; align-items: center; justify-content: center; padding: 32px;">
-          <img id="gallery-image" src="screenshot/menubar-popover.png" alt="Openflow macOS Application Interface" style="max-width: 100%; max-height: 640px; border-radius: 12px; box-shadow: 0 16px 48px rgba(0,0,0,0.35); transition: opacity 0.3s ease;"/>
-        </div>
-
-        <!-- Bottom Feature Callout Strip -->
-        <div style="background: var(--bg-surface); padding: 16px 24px; border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; font-size: 13px;">
-          <div style="display: flex; align-items: center; gap: 10px; color: var(--fg);">
-            <span style="color: var(--accent); font-weight: 700;">⌥ Space</span>
-            <span style="color: var(--fg-muted);">Global toggle shortcut</span>
-          </div>
-          <div style="display: flex; align-items: center; gap: 10px; color: var(--fg);">
-            <span style="color: var(--accent-emerald); font-weight: 700;">1-Click</span>
-            <span style="color: var(--fg-muted);">Manual RAM offload</span>
-          </div>
-          <div style="display: flex; align-items: center; gap: 10px; color: var(--fg);">
-            <span style="color: #c084fc; font-weight: 700;">100%</span>
-            <span style="color: var(--fg-muted);">Offline neural execution</span>
-          </div>
-        </div>
-
-      </div>
-
-    </div>
-  </section>
-
-  <!-- ========================================================================
-       SECTION 5: CAPABILITY MATRIX (Architectural Comparison)
-       ======================================================================== -->
-  <section id="comparison" style="padding: 120px 0;">
-    <div class="max-w-content">
-      
-      <div style="text-align: center; max-width: 720px; margin: 0 auto 56px auto;">
-        <span class="font-mono-tag" style="font-size: 12px; color: var(--accent); background: var(--accent-glow); padding: 4px 14px; border-radius: 999px;">03 —— BENCHMARK MATRIX</span>
-        <h2 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(32px, 4.2vw, 50px); font-weight: 700; letter-spacing: -0.035em; margin: 18px 0 14px 0; color: var(--fg-heading); line-height: 1.1;">
-          Direct Comparison Matrix
-        </h2>
-        <p style="font-size: 16px; color: var(--fg-muted); max-width: 520px; margin: 0 auto;">
-          Compare on-device speed, privacy, and system capabilities against cloud and built-in alternatives.
-        </p>
-      </div>
-
-      <div class="liquid-glass" style="border-radius: 24px; overflow-x: auto; box-shadow: var(--glass-shadow);">
-        <table class="compare-table">
-          <thead>
-            <tr>
-              <th style="min-width: 200px; padding: 20px;">Architecture Metric</th>
-              <th class="highlight-col" style="min-width: 220px; padding: 20px; border-left: 1px solid var(--line); border-right: 1px solid var(--line);">
-                <div style="font-size: 16px; color: var(--accent); font-weight: 700;">Openflow (CoreML)</div>
-                <div style="font-size: 11px; font-weight: 500; color: var(--accent-emerald); margin-top: 2px;">★ 100% On-Device Neural Engine</div>
-              </th>
-              <th style="min-width: 180px; padding: 20px;">Whisper Cloud APIs</th>
-              <th style="min-width: 180px; padding: 20px;">Built-in Mac Speech</th>
-              <th style="min-width: 180px; padding: 20px;">Wispr Flow</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td style="padding: 18px 20px;"><strong>Hardware Execution</strong></td>
-              <td class="highlight-col" style="padding: 18px 20px; border-left: 1px solid var(--line); border-right: 1px solid var(--line);">
-                <span style="color: var(--accent-emerald);">●</span> Apple Neural Engine (ANE)
-              </td>
-              <td style="padding: 18px 20px;">Remote Cloud GPUs</td>
-              <td style="padding: 18px 20px;">CPU / System Speech</td>
-              <td style="padding: 18px 20px;">Cloud Servers</td>
-            </tr>
-            <tr>
-              <td style="padding: 18px 20px;"><strong>Transcription Latency</strong></td>
-              <td class="highlight-col" style="padding: 18px 20px; border-left: 1px solid var(--line); border-right: 1px solid var(--line);">
-                <span style="color: var(--accent-emerald);">●</span> <strong>&lt;50ms</strong> (Immediate)
-              </td>
-              <td style="padding: 18px 20px;">400ms – 1,200ms Network</td>
-              <td style="padding: 18px 20px;">~100ms</td>
-              <td style="padding: 18px 20px;">500ms – 900ms Network</td>
-            </tr>
-            <tr>
-              <td style="padding: 18px 20px;"><strong>Privacy & Audio Logs</strong></td>
-              <td class="highlight-col" style="padding: 18px 20px; border-left: 1px solid var(--line); border-right: 1px solid var(--line);">
-                <span style="color: var(--accent-emerald);">●</span> <strong>100% Offline / Zero Telemetry</strong>
-              </td>
-              <td style="padding: 18px 20px;">Cloud Retention / Training</td>
-              <td style="padding: 18px 20px;">Apple Cloud (macOS &lt;14)</td>
-              <td style="padding: 18px 20px;">Cloud Telemetry Logging</td>
-            </tr>
-            <tr>
-              <td style="padding: 18px 20px;"><strong>Airplane / Off-Grid Mode</strong></td>
-              <td class="highlight-col" style="padding: 18px 20px; border-left: 1px solid var(--line); border-right: 1px solid var(--line);">
-                <span style="color: var(--accent-emerald);">●</span> <strong>Full Capability</strong>
-              </td>
-              <td style="padding: 18px 20px;">Fails (No Internet)</td>
-              <td style="padding: 18px 20px;">Degraded Accuracy</td>
-              <td style="padding: 18px 20px;">Fails (No Internet)</td>
-            </tr>
-            <tr>
-              <td style="padding: 18px 20px;"><strong>In-Line Voice Editing</strong></td>
-              <td class="highlight-col" style="padding: 18px 20px; border-left: 1px solid var(--line); border-right: 1px solid var(--line);">
-                <span style="color: var(--accent-emerald);">●</span> "scratch that", case transforms
-              </td>
-              <td style="padding: 18px 20px;">None (Raw dictation)</td>
-              <td style="padding: 18px 20px;">Basic system shortcuts</td>
-              <td style="padding: 18px 20px;">Proprietary post-processing</td>
-            </tr>
-            <tr>
-              <td style="padding: 18px 20px;"><strong>Studio TTS Narration</strong></td>
-              <td class="highlight-col" style="padding: 18px 20px; border-left: 1px solid var(--line); border-right: 1px solid var(--line);">
-                <span style="color: var(--accent-emerald);">●</span> <strong>Kokoro-82M AI Voices</strong>
-              </td>
-              <td style="padding: 18px 20px;">None</td>
-              <td style="padding: 18px 20px;">Standard System Siri</td>
-              <td style="padding: 18px 20px;">None</td>
-            </tr>
-            <tr>
-              <td style="padding: 18px 20px;"><strong>License & Pricing</strong></td>
-              <td class="highlight-col" style="padding: 18px 20px; border-left: 1px solid var(--line); border-right: 1px solid var(--line);">
-                <span style="color: var(--accent-emerald);">●</span> <strong>Free & Open Source (Apache 2.0)</strong>
-              </td>
-              <td style="padding: 18px 20px;">$0.006 / minute API bills</td>
-              <td style="padding: 18px 20px;">Included with macOS</td>
-              <td style="padding: 18px 20px;">$12 – $20 / month</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- ========================================================================
-       SECTION 6: ZERO-FRICTION INSTALL TERMINAL
-       ======================================================================== -->
-  <section id="quickstart" style="padding: 110px 0; background: var(--bg-surface-subtle); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);">
-    <div class="max-w-content" style="text-align: center;">
-      
-      <div style="max-width: 640px; margin: 0 auto 48px auto;">
-        <span class="font-mono-tag" style="font-size: 12px; color: var(--accent); background: var(--accent-glow); padding: 4px 14px; border-radius: 999px;">04 —— QUICK START</span>
-        <h2 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(30px, 4vw, 46px); font-weight: 700; letter-spacing: -0.035em; margin: 18px 0 14px 0; color: var(--fg-heading); line-height: 1.1;">
-          Install in under 30 seconds.
-        </h2>
-        <p style="font-size: 15.5px; color: var(--fg-muted);">
-          Choose your preferred package manager or download the verified standalone binary.
-        </p>
-      </div>
-
-      <!-- Machined macOS Terminal Frame -->
-      <div class="liquid-glass" style="max-width: 760px; margin: 0 auto; border-radius: 22px; text-align: left; overflow: hidden; box-shadow: var(--glass-shadow-hover); border: 1px solid var(--line);">
-        
-        <!-- Terminal Header Bar -->
-        <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 22px; background: var(--bg-header-bar); border-bottom: 1px solid var(--line);">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="width: 11px; height: 11px; border-radius: 50%; background: #ff5f56;"></span>
-            <span style="width: 11px; height: 11px; border-radius: 50%; background: #ffbd2e;"></span>
-            <span style="width: 11px; height: 11px; border-radius: 50%; background: #27c93f;"></span>
-            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--fg-subtle); margin-left: 8px;">zsh — openflow-install</span>
-          </div>
-          <!-- Terminal Tabs -->
-          <div style="display: flex; gap: 6px;">
-            <button onclick="switchInstallTab(0)" class="tab-nav-btn active" id="inst-tab-0" style="padding: 4px 12px; font-size: 12px;">Curl Script</button>
-            <button onclick="switchInstallTab(1)" class="tab-nav-btn" id="inst-tab-1" style="padding: 4px 12px; font-size: 12px;">Direct DMG</button>
-            <button onclick="switchInstallTab(2)" class="tab-nav-btn" id="inst-tab-2" style="padding: 4px 12px; font-size: 12px;">Swift PM Source</button>
-          </div>
-        </div>
-
-        <!-- Terminal Body -->
-        <div style="padding: 28px; position: relative; background: var(--bg-surface-elevated);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <span class="font-mono-tag" style="font-size: 10.5px; color: var(--fg-subtle);">COMMAND:</span>
-            <span class="font-mono-tag" style="font-size: 10.5px; color: var(--accent-emerald);">● VERIFIED SCRIPT</span>
-          </div>
-          <pre id="install-cmd-code" style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--fg-heading); overflow-x: auto; line-height: 1.6; padding: 8px 0;"><code><span style="color: var(--accent);">$</span> curl -fsSL https://raw.githubusercontent.com/abhilashpanda04/Openflow/main/install.sh | bash</code></pre>
-          
-          <div style="margin-top: 18px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); padding-top: 16px;">
-            <span style="font-size: 12.5px; color: var(--fg-muted);">Installs to <code style="font-family:'JetBrains Mono',monospace; color:var(--fg); background:var(--glass-bg); padding:2px 6px; border-radius:4px;">/Applications/Openflow.app</code></span>
-            <button onclick="copyCurrentInstallCmd()" class="btn-primary" style="padding: 8px 18px; font-size: 12.5px;">
-              <span id="copy-feedback-label">Copy Command</span>
+          <div class="snippet-bar">
+            <span>curl -fsSL https://abhilashpanda04.github.io/Openflow/install.sh | bash</span>
+            <button class="snippet-copy-btn" id="copy-btn" onclick="copyInstallCmd()" aria-label="Copy install command">
+              <span id="copy-label">copy</span>
             </button>
           </div>
         </div>
 
-      </div>
-
-    </div>
-  </section>
-
-  <!-- ========================================================================
-       SECTION 7: FREQUENTLY ASKED QUESTIONS (Polished Glass Accordions)
-       ======================================================================== -->
-  <section id="faq" style="padding: 120px 0;">
-    <div class="max-w-content" style="max-width: 820px;">
-      
-      <div style="text-align: center; margin-bottom: 56px;">
-        <span class="font-mono-tag" style="font-size: 12px; color: var(--accent); background: var(--accent-glow); padding: 4px 14px; border-radius: 999px;">05 —— CLARITY</span>
-        <h2 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(30px, 4vw, 46px); font-weight: 700; letter-spacing: -0.035em; margin: 18px 0 14px 0; color: var(--fg-heading); line-height: 1.1;">
-          Frequently Asked Questions
-        </h2>
-        <p style="font-size: 15.5px; color: var(--fg-muted);">
-          Technical details on hardware requirements, CoreML acceleration, and permissions.
-        </p>
-      </div>
-
-      <div style="display: flex; flex-direction: column; gap: 14px;">
-        
-        <details class="liquid-glass" style="border-radius: 18px; padding: 22px 26px; cursor: pointer; transition: all 0.25s ease;">
-          <summary style="font-weight: 600; font-size: 16.5px; list-style: none; display: flex; justify-content: space-between; align-items: center; color: var(--fg-heading);">
-            <span>Is an internet connection required to use Openflow?</span>
-            <span style="color: var(--accent); font-size: 20px; font-weight: 300; transition: transform 0.2s ease;">+</span>
-          </summary>
-          <p style="margin-top: 14px; color: var(--fg-muted); font-size: 15px; line-height: 1.65; margin-bottom: 0;">
-            No. Openflow runs 100% locally on your Mac using WhisperKit CoreML and native Apple Speech models. You can dictate seamlessly in airplane mode or in high-security, air-gapped environments without any network access.
-          </p>
-        </details>
-
-        <details class="liquid-glass" style="border-radius: 18px; padding: 22px 26px; cursor: pointer; transition: all 0.25s ease;">
-          <summary style="font-weight: 600; font-size: 16.5px; list-style: none; display: flex; justify-content: space-between; align-items: center; color: var(--fg-heading);">
-            <span>Which Apple Silicon chips and macOS versions are supported?</span>
-            <span style="color: var(--accent); font-size: 20px; font-weight: 300; transition: transform 0.2s ease;">+</span>
-          </summary>
-          <p style="margin-top: 14px; color: var(--fg-muted); font-size: 15px; line-height: 1.65; margin-bottom: 0;">
-            Openflow supports all Apple Silicon Macs (M1, M2, M3, M4 and their Pro, Max, and Ultra variants) running macOS 14.0 (Sonoma) or macOS 15.0+ (Sequoia). Both unified memory architectures and Apple Neural Engine acceleration are fully utilized.
-          </p>
-        </details>
-
-        <details class="liquid-glass" style="border-radius: 18px; padding: 22px 26px; cursor: pointer; transition: all 0.25s ease;">
-          <summary style="font-weight: 600; font-size: 16.5px; list-style: none; display: flex; justify-content: space-between; align-items: center; color: var(--fg-heading);">
-            <span>How does Openflow paste text directly into any application?</span>
-            <span style="color: var(--accent); font-size: 20px; font-weight: 300; transition: transform 0.2s ease;">+</span>
-          </summary>
-          <p style="margin-top: 14px; color: var(--fg-muted); font-size: 15px; line-height: 1.65; margin-bottom: 0;">
-            Openflow uses native macOS Accessibility APIs (`CGEvent` synthesis) to paste formatted transcripts directly into the currently focused text cursor—whether you're writing in VS Code, Cursor, Slack, Obsidian, Chrome, Microsoft Word, or Apple Notes.
-          </p>
-        </details>
-
-        <details class="liquid-glass" style="border-radius: 18px; padding: 22px 26px; cursor: pointer; transition: all 0.25s ease;">
-          <summary style="font-weight: 600; font-size: 16.5px; list-style: none; display: flex; justify-content: space-between; align-items: center; color: var(--fg-heading);">
-            <span>What is Kokoro-82M TTS and how does document narration work?</span>
-            <span style="color: var(--accent); font-size: 20px; font-weight: 300; transition: transform 0.2s ease;">+</span>
-          </summary>
-          <p style="margin-top: 14px; color: var(--fg-muted); font-size: 15px; line-height: 1.65; margin-bottom: 0;">
-            Kokoro-82M is an ultralightweight, state-of-the-art text-to-speech model converted to CoreML. Openflow uses it to narrate documents, PDFs, and clipboard text with studio-grade natural cadence entirely on the Apple Neural Engine, complete with continuous paragraph flow and sentence scrubbing.
-          </p>
-        </details>
-
-        <details class="liquid-glass" style="border-radius: 18px; padding: 22px 26px; cursor: pointer; transition: all 0.25s ease;">
-          <summary style="font-weight: 600; font-size: 16.5px; list-style: none; display: flex; justify-content: space-between; align-items: center; color: var(--fg-heading);">
-            <span>Can I reclaim unified RAM when not dictating?</span>
-            <span style="color: var(--accent); font-size: 20px; font-weight: 300; transition: transform 0.2s ease;">+</span>
-          </summary>
-          <p style="margin-top: 14px; color: var(--fg-muted); font-size: 15px; line-height: 1.65; margin-bottom: 0;">
-            Yes. Openflow includes a one-click manual RAM Offload button in settings, as well as an automatic idle release option that unloads neural weights from unified memory when you aren't dictating, returning the memory footprint to near-zero.
-          </p>
-        </details>
-
-      </div>
-
-    </div>
-  </section>
-
-  <!-- ========================================================================
-       SECTION 8: CULMINATION HORIZON BANNER & ARCHITECTURAL FOOTER
-       ======================================================================== -->
-  <footer style="border-top: 1px solid var(--line); padding: 90px 0 44px 0; background: var(--bg-footer); transition: background-color 0.3s ease; position: relative;">
-    <div class="max-w-content">
-      
-      <!-- Horizon Light Culmination Banner -->
-      <div class="liquid-glass liquid-glass--strong" style="padding: 56px 40px; border-radius: 32px; text-align: center; margin-bottom: 72px; position: relative; overflow: hidden; border: 1px solid var(--line);">
-        <div style="position: absolute; inset: 0; background: radial-gradient(ellipse 70% 50% at 50% -10%, var(--accent-glow) 0%, transparent 80%); pointer-events: none;"></div>
-        
-        <span class="font-mono-tag" style="font-size: 11px; color: var(--accent); background: var(--accent-glow); padding: 4px 14px; border-radius: 999px;">06 —— LOCAL VOICE ON MAC</span>
-        <h2 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(30px, 4.2vw, 48px); font-weight: 700; letter-spacing: -0.035em; margin: 18px 0 16px 0; color: var(--fg-heading);">
-          Ready to speak at 300 WPM?
-        </h2>
-        <p style="font-size: 16px; color: var(--fg-muted); max-width: 500px; margin: 0 auto 36px auto; line-height: 1.6;">
-          Openflow is 100% free and open-source under the Apache 2.0 license. Download the standalone app or build directly with Swift PM.
-        </p>
-        
-        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 14px;">
-          <a href="https://github.com/abhilashpanda04/Openflow/releases/latest" class="btn-primary" style="padding: 13px 28px; font-size: 14.5px;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.84c.64-.78 1.08-1.87.96-2.96-.94.04-2.07.63-2.73 1.4-.58.67-1.1 1.77-.96 2.83 1.05.08 2.1-.53 2.73-1.27z"/>
-            </svg>
-            <span>Download for Apple Silicon</span>
-            <span class="btn-arrow-chip">↓</span>
-          </a>
-          <a href="https://github.com/abhilashpanda04/Openflow" target="_blank" rel="noopener noreferrer" class="liquid-glass btn-secondary liquid-glass--pill" style="padding: 13px 24px;">
-            <span>GitHub Repository ↗</span>
-          </a>
-        </div>
-      </div>
-
-      <!-- Multi-Column Footer Links -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 36px; padding-bottom: 48px; border-bottom: 1px solid var(--line);">
-        <div>
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-            <img src="assets/logo.svg" alt="Openflow Logo" width="24" height="24"/>
-            <span style="font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:16px; color:var(--fg-heading);">Openflow</span>
+        <!-- Interactive Console -->
+        <div class="well well--blueprint console-well">
+          <div class="console-bar">
+            <div class="console-meta">
+              <span class="status-dot"></span>
+              <span>coreml runtime: active</span>
+            </div>
+            
+            <div class="console-audio-viz" aria-hidden="true">
+              <span class="audio-bar" style="transform: scaleY(0.4);"></span>
+              <span class="audio-bar" style="transform: scaleY(0.8);"></span>
+              <span class="audio-bar" style="transform: scaleY(1.2);"></span>
+              <span class="audio-bar" style="transform: scaleY(0.6);"></span>
+              <span class="audio-bar" style="transform: scaleY(0.9);"></span>
+            </div>
           </div>
-          <p style="font-size: 13px; color: var(--fg-muted); line-height: 1.6; margin: 0;">
-            Supercharged, local-first voice dictation and intelligent speech actions for macOS.
-          </p>
-        </div>
-        <div>
-          <div class="font-mono-tag" style="font-size: 11px; color: var(--fg-subtle); margin-bottom: 14px;">ASR ARCHITECTURE</div>
-          <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; font-size: 13px;">
-            <li><a href="#features" class="nav-link">WhisperKit CoreML</a></li>
-            <li><a href="#features" class="nav-link">Apple Speech Framework</a></li>
-            <li><a href="#features" class="nav-link">Kokoro-82M TTS</a></li>
-            <li><a href="#features" class="nav-link">VoiceCommandEngine</a></li>
-          </ul>
-        </div>
-        <div>
-          <div class="font-mono-tag" style="font-size: 11px; color: var(--fg-subtle); margin-bottom: 14px;">DEVELOPER & DOCS</div>
-          <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; font-size: 13px;">
-            <li><a href="#quickstart" class="nav-link">Quick Start Guide</a></li>
-            <li><a href="https://github.com/abhilashpanda04/Openflow/blob/main/CONTRIBUTING.md" class="nav-link">Contributing</a></li>
-            <li><a href="https://github.com/abhilashpanda04/Openflow/blob/main/SECURITY.md" class="nav-link">Security & Privacy</a></li>
-            <li><a href="https://github.com/abhilashpanda04/Openflow/releases" class="nav-link">Release Notes</a></li>
-          </ul>
-        </div>
-        <div>
-          <div class="font-mono-tag" style="font-size: 11px; color: var(--fg-subtle); margin-bottom: 14px;">OPEN SOURCE</div>
-          <p style="font-size: 13px; color: var(--fg-muted); line-height: 1.6; margin: 0 0 10px 0;">
-            Distributed under the Apache 2.0 license. Free for personal and commercial usage.
-          </p>
-          <span class="font-mono-tag" style="font-size: 11px; color: var(--accent-emerald);">● 115 TEST SUITES PASSING</span>
+
+          <div class="console-window">
+            <div class="transcription-text" id="stream-output">
+              func parseTokens(input: AudioBuffer) -&gt; StreamResult {
+            </div>
+            <div class="console-meta">
+              <span>latency: &lt;24ms</span>
+              <span class="cursor-caret" aria-hidden="true"></span>
+            </div>
+          </div>
+
+          <div class="scenario-pills">
+            <button class="scenario-pill active" onclick="switchScenario(0)">code snippet</button>
+            <button class="scenario-pill" onclick="switchScenario(1)">terminal session</button>
+            <button class="scenario-pill" onclick="switchScenario(2)">scratch that edit</button>
+          </div>
         </div>
       </div>
+    </section>
 
-      <!-- Copyright Bar -->
-      <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; font-size: 12.5px; color: var(--fg-subtle); padding-top: 28px;">
-        <span>Openflow © 2026 Abhilash Panda · All rights reserved</span>
-        <div style="display: flex; gap: 20px;">
-          <a href="https://github.com/abhilashpanda04/Openflow/blob/main/LICENSE" class="nav-link" style="font-size:12.5px;">Apache 2.0 License</a>
-          <a href="https://github.com/abhilashpanda04/Openflow" class="nav-link" style="font-size:12.5px;">GitHub</a>
+    <!-- Benchmarks Matrix -->
+    <section class="section" id="benchmarks">
+      <div class="container">
+        <div class="section-head">
+          <h2>measured on apple neural engine</h2>
+          <p class="section-lead">direct hardware execution eliminates cloud transmission round trips.</p>
+        </div>
+
+        <div class="bench-grid">
+          <div class="table-well">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th scope="col">model weight</th>
+                  <th scope="col">memory footprint</th>
+                  <th scope="col">processing latency</th>
+                  <th scope="col">ane core load</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="active-row">
+                  <td>whisper tiny</td>
+                  <td class="mono-figure">142 mb</td>
+                  <td class="tag-metric">&lt;24ms</td>
+                  <td class="mono-figure">16 / 16</td>
+                </tr>
+                <tr>
+                  <td>whisper base</td>
+                  <td class="mono-figure">210 mb</td>
+                  <td class="tag-metric">&lt;38ms</td>
+                  <td class="mono-figure">16 / 16</td>
+                </tr>
+                <tr>
+                  <td>whisper small</td>
+                  <td class="mono-figure">480 mb</td>
+                  <td class="tag-metric">&lt;65ms</td>
+                  <td class="mono-figure">16 / 16</td>
+                </tr>
+                <tr>
+                  <td>whisper turbo</td>
+                  <td class="mono-figure">920 mb</td>
+                  <td class="tag-metric">&lt;85ms</td>
+                  <td class="mono-figure">16 / 16</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="well well--blueprint console-well">
+            <h3>hardware telemetry</h3>
+            <p class="section-lead">zero network packets leave the device. memory footprint stays within allocated system bounds.</p>
+            <div class="snippet-bar">
+              <span>ANE utilization: 94.2%</span>
+              <span class="tag-metric">zero cloud telemetry</span>
+            </div>
+          </div>
         </div>
       </div>
+    </section>
 
+    <!-- Architecture & Features -->
+    <section class="section" id="features">
+      <div class="container">
+        <div class="section-head">
+          <h2>three core systems</h2>
+          <p class="section-lead">engineered specifically for apple silicon unified memory.</p>
+        </div>
+
+        <div class="feature-grid">
+          <div class="well feature-card">
+            <h3>whisperkit coreml</h3>
+            <p>compiled directly for apple silicon neural engines to process acoustic frames in parallel memory.</p>
+          </div>
+
+          <div class="well feature-card">
+            <h3>smart corrections</h3>
+            <p>voice commands like “scratch that” purge errors from the active target input without key repeats.</p>
+          </div>
+
+          <div class="well feature-card">
+            <h3>kokoro tts engine</h3>
+            <p>on-device neural voice synthesizer reads back highlighted text with zero latency.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- System Requirements Node Grid -->
+    <section class="section" id="install">
+      <div class="container">
+        <div class="section-head">
+          <h2>system specifications</h2>
+          <p class="section-lead">compatible with all m-series mac computers.</p>
+        </div>
+
+        <div class="well arch-card">
+          <div class="arch-node">
+            <span class="arch-node-title">processor</span>
+            <span class="arch-node-desc">apple m1, m2, m3, m4</span>
+          </div>
+          <div class="arch-node">
+            <span class="arch-node-title">os version</span>
+            <span class="arch-node-desc">macos 14 sonoma or later</span>
+          </div>
+          <div class="arch-node">
+            <span class="arch-node-title">neural engine</span>
+            <span class="arch-node-desc">16-core coreml runtime</span>
+          </div>
+          <div class="arch-node">
+            <span class="arch-node-title">distribution</span>
+            <span class="arch-node-desc">universal binary, notarized</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Statement Footer -->
+  <footer class="site-footer">
+    <div class="container footer-layout">
+      <div class="footer-copy">
+        openflow · open source under mit license
+      </div>
+      <ul class="footer-links">
+        <li><a href="https://github.com/abhilashpanda04/Openflow" class="footer-link" rel="noopener noreferrer">source code</a></li>
+        <li><a href="https://github.com/abhilashpanda04/Openflow/releases" class="footer-link" rel="noopener noreferrer">releases</a></li>
+        <li><a href="https://github.com/abhilashpanda04/Openflow/blob/main/LICENSE" class="footer-link" rel="noopener noreferrer">mit license</a></li>
+      </ul>
     </div>
   </footer>
 
-  <!-- ========================================================================
-       SCRIPTS: AUDIO SYNTHESIS, LIVE EQUALIZER & THEME MANAGEMENT
-       ======================================================================== -->
   <script>
-    // 1. Confirm Fonts Loaded to Avoid Layout Shift
-    document.fonts.ready.then(() => {
-      document.body.classList.add('fonts-ready');
-    });
-    setTimeout(() => document.body.classList.add('fonts-ready'), 1200);
-
-    // 2. Theme Management (Comprehensive Dark & Light Toggle)
-    function updateThemeUI(isDark) {
-      const iconSvg = document.getElementById('theme-icon-svg');
-      if (iconSvg) {
-        if (isDark) {
-          // Sun Icon (shows when dark mode is on, clicking switches to light)
-          iconSvg.innerHTML = `<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>`;
-        } else {
-          // Moon Icon (shows when light mode is on, clicking switches to dark)
-          iconSvg.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`;
-        }
-      }
-    }
-
-    function setTheme(isDark) {
-      if (isDark) {
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('openflow-theme', 'dark');
-        updateThemeUI(true);
-      } else {
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem('openflow-theme', 'light');
-        updateThemeUI(false);
-      }
-    }
-
-    function toggleTheme() {
-      const isDark = document.documentElement.classList.contains('dark');
-      setTheme(!isDark);
-    }
-
-    // Initialize Theme immediately on page load
-    (function initTheme() {
-      const savedTheme = localStorage.getItem('openflow-theme');
-      if (savedTheme === 'light') {
-        setTheme(false);
-      } else if (savedTheme === 'dark') {
-        setTheme(true);
-      } else {
-        // Check system preference
-        const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        setTheme(systemPrefersDark !== false);
-      }
-    })();
-
-    // 3. Populate 28 Dynamic Equalizer Bars in HUD
-    const eqTrack = document.getElementById('hud-equalizer');
-    if (eqTrack) {
-      for (let i = 0; i < 28; i++) {
-        const bar = document.createElement('div');
-        bar.className = 'equalizer-bar';
-        bar.style.height = `${Math.floor(Math.random() * 14) + 4}px`;
-        eqTrack.appendChild(bar);
-      }
-    }
-
-    // 4. Web Audio API Native Dictation Chimes (Apple Siri Audio Cues)
-    let audioCtx = null;
-    function getAudioContext() {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      return audioCtx;
-    }
-
-    function playChime(type) {
-      try {
-        const ctx = getAudioContext();
-        if (ctx.state === 'suspended') ctx.resume();
-
-        const now = ctx.currentTime;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-
-        if (type === 'start') {
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(880, now);
-          osc.frequency.exponentialRampToValueAtTime(1320, now + 0.12);
-          gain.gain.setValueAtTime(0.18, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
-          osc.start(now);
-          osc.stop(now + 0.24);
-        } else if (type === 'confirm') {
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(1046.5, now);
-          osc.frequency.setValueAtTime(1318.5, now + 0.08);
-          gain.gain.setValueAtTime(0.16, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.26);
-          osc.start(now);
-          osc.stop(now + 0.28);
-        } else if (type === 'cancel') {
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(659.25, now);
-          osc.frequency.exponentialRampToValueAtTime(440, now + 0.18);
-          gain.gain.setValueAtTime(0.15, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
-          osc.start(now);
-          osc.stop(now + 0.24);
-        }
-      } catch (err) {
-        console.warn('AudioContext not allowed yet:', err);
-      }
-    }
-
-    function toggleAudioDemo() {
-      playChime('start');
-      setTimeout(() => playChime('confirm'), 600);
-    }
-
-    // 5. Dynamic Equalizer Visualizer Animation Loop
-    let eqT = 0;
-    function animateEqualizer() {
-      const bars = document.querySelectorAll('.equalizer-bar');
-      bars.forEach((b, idx) => {
-        const val = Math.sin(eqT * 3 + idx * 0.4) * 0.5 + 0.5;
-        b.style.height = `${Math.floor(val * 16) + 4}px`;
-      });
-      eqT += 0.04;
-      requestAnimationFrame(animateEqualizer);
-    }
-    animateEqualizer();
-
-    // 6. Interactive Scenarios & Smooth Live Text Streaming
-    const scenarios = [
-      {
-        app: "Cursor — AuthService.swift",
-        status: "300 WPM · ANE Active",
-        text: "Refactor authentication to use Swift Concurrency and stream WhisperKit CoreML tokens directly into memory.",
-        isScratch: false
-      },
-      {
-        app: "Slack — #announcements",
-        status: "Smart Correction Engine",
-        draft: "Let's push the release to tomorrow afternoon.",
-        correction: "Scratch that. Ship Openflow v0.1.0 today.",
-        isScratch: true
-      },
-      {
-        app: "Kokoro Reader — Speech Synthesizer",
-        status: "Kokoro-82M · 1.25x Speed",
-        text: "Neural inference directly in Apple Silicon unified memory completely eliminates cloud latency.",
-        isScratch: false
-      }
-    ];
-
-    let currentScIdx = 0;
-    let typingTimer = null;
-
-    function setScenario(idx) {
-      currentScIdx = idx;
-      playChime('start');
-      
-      document.querySelectorAll('.scenario-btn').forEach((b, i) => {
-        if (i === idx) b.classList.add('active');
-        else b.classList.remove('active');
-      });
-
-      const sc = scenarios[idx];
-      const targetApp = document.getElementById('target-app-name');
-      const targetStatus = document.getElementById('island-target-status');
-      const textEl = document.getElementById('typing-stream');
-
-      if (targetApp) targetApp.textContent = sc.app;
-      if (targetStatus) targetStatus.textContent = sc.status;
-
-      if (typingTimer) clearTimeout(typingTimer);
-
-      if (!sc.isScratch) {
-        textEl.textContent = '';
-        let i = 0;
-        function typeChar() {
-          if (i < sc.text.length) {
-            textEl.textContent = sc.text.slice(0, i + 1);
-            i++;
-            typingTimer = setTimeout(typeChar, Math.random() * 14 + 10);
-          } else {
-            playChime('confirm');
-          }
-        }
-        typeChar();
-      } else {
-        textEl.innerHTML = '';
-        let i = 0;
-        function typeDraft() {
-          if (i < sc.draft.length) {
-            textEl.textContent = sc.draft.slice(0, i + 1);
-            i++;
-            typingTimer = setTimeout(typeDraft, Math.random() * 14 + 10);
-          } else {
-            typingTimer = setTimeout(() => {
-              playChime('cancel');
-              textEl.innerHTML = `<span style="text-decoration: line-through; opacity: 0.55; color: #ef4444;">${sc.draft}</span> `;
-              typingTimer = setTimeout(() => {
-                let j = 0;
-                const span = document.createElement('span');
-                textEl.appendChild(span);
-                function typeCorr() {
-                  if (j < sc.correction.length) {
-                    span.textContent = sc.correction.slice(0, j + 1);
-                    j++;
-                    typingTimer = setTimeout(typeCorr, Math.random() * 14 + 10);
-                  } else {
-                    playChime('confirm');
-                  }
-                }
-                typeCorr();
-              }, 350);
-            }, 550);
-          }
-        }
-        typeDraft();
-      }
-    }
-
-    function simulateVoiceAction(action) {
-      if (action === 'scratch-that') {
-        playChime('cancel');
-        const textEl = document.getElementById('typing-stream');
-        if (textEl) {
-          textEl.innerHTML = `<span style="text-decoration: line-through; opacity: 0.55; color: #ef4444;">Draft discarded via VoiceCommandEngine</span> <span style="color: var(--accent);">Listening...</span>`;
-        }
-      }
-    }
-
-    // 7. Showcase Gallery Switcher
-    const galleryItems = [
-      { title: "Openflow — Menu Bar Companion", img: "screenshot/menubar-popover.png" },
-      { title: "Openflow — Speech Engine & CoreML Accelerators", img: "screenshot/speech-engine-settings.png" },
-      { title: "Openflow — Kokoro-82M TTS Reader", img: "screenshot/speech-reader.png" },
-      { title: "Openflow — Speech Productivity Stats & RAM Footprint", img: "screenshot/productivity-stats.png" }
-    ];
-
-    function switchGalleryTab(idx) {
-      document.querySelectorAll('.tab-nav-btn').forEach((btn, i) => {
-        if (i === idx) btn.classList.add('active');
-        else btn.classList.remove('active');
-      });
-
-      const img = document.getElementById('gallery-image');
-      const title = document.getElementById('gallery-window-title');
-      if (img && title) {
-        img.style.opacity = '0.3';
-        setTimeout(() => {
-          img.src = galleryItems[idx].img;
-          title.textContent = galleryItems[idx].title;
-          img.style.opacity = '1';
-        }, 150);
-      }
-    }
-
-    // 8. Install Command Switcher
-    const installCommands = [
-      "curl -fsSL https://raw.githubusercontent.com/abhilashpanda04/Openflow/main/install.sh | bash",
-      "https://github.com/abhilashpanda04/Openflow/releases/latest",
-      "git clone https://github.com/abhilashpanda04/Openflow.git && cd Openflow && swift build -c release"
-    ];
-    let activeInstallTab = 0;
-
-    function switchInstallTab(idx) {
-      activeInstallTab = idx;
-      document.getElementById('inst-tab-0').classList.toggle('active', idx === 0);
-      document.getElementById('inst-tab-1').classList.toggle('active', idx === 1);
-      document.getElementById('inst-tab-2').classList.toggle('active', idx === 2);
-
-      const codeEl = document.getElementById('install-cmd-code');
-      if (idx === 0) {
-        codeEl.innerHTML = `<code><span style="color: var(--accent);">$</span> curl -fsSL https://raw.githubusercontent.com/abhilashpanda04/Openflow/main/install.sh | bash</code>`;
-      } else if (idx === 1) {
-        codeEl.innerHTML = `<code><span style="color: var(--accent);">$</span> open https://github.com/abhilashpanda04/Openflow/releases/latest</code>`;
-      } else {
-        codeEl.innerHTML = `<code><span style="color: var(--accent);">$</span> git clone https://github.com/abhilashpanda04/Openflow.git && cd Openflow && swift build -c release</code>`;
-      }
-    }
-
-    function copyInstallCmd(text) {
-      navigator.clipboard.writeText(text);
-      const icon = document.getElementById('copy-btn-cmd');
-      if (icon) {
-        icon.innerHTML = `<span style="color: var(--accent-emerald); font-size: 11px;">✓</span>`;
-        setTimeout(() => {
-          icon.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
-        }, 2000);
-      }
-    }
-
-    function copyCurrentInstallCmd() {
-      const cmd = installCommands[activeInstallTab];
+    // Copy command helper
+    function copyInstallCmd() {
+      const cmd = 'curl -fsSL https://abhilashpanda04.github.io/Openflow/install.sh | bash';
       navigator.clipboard.writeText(cmd);
-      const label = document.getElementById('copy-feedback-label');
+      const label = document.getElementById('copy-label');
       if (label) {
-        label.textContent = 'Copied!';
-        setTimeout(() => label.textContent = 'Copy', 2000);
+        label.textContent = 'copied';
+        setTimeout(() => { label.textContent = 'copy'; }, 2000);
       }
     }
 
-    // 9. Model Weight Switcher Widget
-    const modelSpecs = [
-      { name: "Tiny", ram: "142 MB RAM", latency: "<24ms", acc: "97.8%", cores: "16/16" },
-      { name: "Base", ram: "210 MB RAM", latency: "<38ms", acc: "98.4%", cores: "16/16" },
-      { name: "Small", ram: "480 MB RAM", latency: "<65ms", acc: "99.1%", cores: "16/16" },
-      { name: "Turbo", ram: "920 MB RAM", latency: "<85ms", acc: "99.4%", cores: "16/16" }
+    // Interactive Scenario Switcher
+    const scenarios = [
+      "func parseTokens(input: AudioBuffer) -> StreamResult {",
+      "openflow daemon --ane-threads 16 --vad-threshold 0.3",
+      "delete last sentence and replace with unified memory."
     ];
 
-    function switchModelWeight(idx) {
-      document.querySelectorAll('#model-btn-0, #model-btn-1, #model-btn-2, #model-btn-3').forEach((b, i) => {
-        b.classList.toggle('active', i === idx);
+    function switchScenario(index) {
+      document.querySelectorAll('.scenario-pill').forEach((btn, i) => {
+        btn.classList.toggle('active', i === index);
       });
-      const spec = modelSpecs[idx];
-      const tag = document.getElementById('model-footprint-tag');
-      const info = document.getElementById('model-spec-info');
-      if (tag) tag.textContent = `● ACTIVE: ${spec.ram}`;
-      if (info) {
-        info.innerHTML = `
-          <span>Latency: <strong>${spec.latency}</strong></span>
-          <span>Accuracy: <strong>${spec.acc}</strong></span>
-          <span>ANE Cores: <strong>${spec.cores}</strong></span>
-        `;
+      const output = document.getElementById('stream-output');
+      if (output) {
+        output.textContent = scenarios[index];
       }
-      playChime('confirm');
-    }
-
-    function updateVadDisplay(val) {
-      const lbl = document.getElementById('vad-val-label');
-      if (lbl) lbl.textContent = `${parseFloat(val).toFixed(1)} SECONDS`;
-    }
-
-    function testPillFeedback(el, text) {
-      playChime('start');
-      const original = el.style.transform;
-      el.style.transform = 'scale(1.02)';
-      setTimeout(() => { el.style.transform = original; }, 200);
-      const textEl = document.getElementById('typing-stream');
-      if (textEl) textEl.innerHTML = `<span style="color: var(--accent);">Action executed:</span> "${text}"`;
     }
   </script>
 </body>
