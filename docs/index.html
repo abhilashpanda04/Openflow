@@ -1,284 +1,2129 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-  <title>openflow · on-device voice dictation for macos</title>
+  <title>Openflow · On-Device Voice Dictation for macOS</title>
   
-  <meta name="description" content="Dictate at 300 words per minute directly into any Mac app. Powered entirely on-device by WhisperKit CoreML and the Apple Neural Engine. Zero cloud dependencies."/>
+  <meta name="description" content="Dictate code, notes, and messages at the speed of thought. 100% on-device WhisperKit CoreML and Apple Neural Engine. Zero cloud dependencies, free and open source."/>
   <meta property="og:type" content="website"/>
   <meta property="og:url" content="https://abhilashpanda04.github.io/Openflow/"/>
-  <meta property="og:title" content="openflow · on-device voice dictation for macos"/>
-  <meta property="og:description" content="300 WPM voice-to-text in any Mac application. Powered 100% on-device by WhisperKit CoreML."/>
-  
+  <meta property="og:title" content="Openflow · On-Device Voice Dictation for macOS"/>
+  <meta property="og:description" content="Dictate code, notes, and messages at the speed of thought. Powered 100% locally by WhisperKit CoreML and Apple Silicon."/>
+  <meta property="og:image" content="screenshot/productivity-stats.png"/>
+
   <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-  
-  <link rel="stylesheet" href="styles.css"/>
+  <!-- Exact same font as the reference site: Geist and Geist Mono -->
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+
+  <!-- Prevent Theme Flash -->
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('openflow-theme');
+        if (saved) {
+          document.documentElement.setAttribute('data-theme', saved);
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+          document.documentElement.setAttribute('data-theme', 'light');
+        } else {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      } catch(e) {}
+    })();
+  </script>
+
+  <style>
+    /* ==========================================================================
+       The Study Room Typography + Openflow Logo Cyan Palette
+       Fonts: Geist Sans & Geist Mono (Exact match to thestudyroomdsa.com)
+       Colors: Deep Midnight Navy #0A2540 -> Cyan #0E7490 -> Sky #38BDF8 -> Ice #BAE6FD
+       ========================================================================== */
+    /* ==========================================================================
+       THEME SYSTEM: Dark & White (Light)
+       Typography: Geist Sans & Geist Mono (Exact match to reference site)
+       Brand Palette: Midnight Navy #0A2540 -> Teal #0E7490 -> Sky #38BDF8 -> Ice #BAE6FD
+       ========================================================================== */
+    :root, html[data-theme="dark"] {
+      /* Typography */
+      --font-geist-sans: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-geist-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
+      
+      /* Background Canvas (Deep Navy Slate inspired by logo and reference) */
+      --bg-base: #070e1a;
+      --bg-canvas: #0a1324;
+      --bg-surface: #0e1c31;
+      --bg-surface-elevated: #142844;
+      --bg-surface-soft: #0b1627;
+      
+      /* Logo Exact Colors */
+      --logo-navy: #0A2540;
+      --logo-teal: #0E7490;
+      --logo-sky: #38BDF8;
+      --logo-ice: #BAE6FD;
+      --logo-frost: #E0F2FE;
+      --logo-white: #F8FAFC;
+      
+      /* Text Colors */
+      --text-ink: #f8fafc;
+      --text-bone: #cbd5e1;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      
+      /* Accents */
+      --accent: #38bdf8;
+      --accent-contrast: #040914;
+      --accent-soft: rgba(56, 189, 248, 0.12);
+      --accent-border: rgba(56, 189, 248, 0.32);
+      --accent-secondary: #0e7490;
+      --accent-glow: rgba(56, 189, 248, 0.28);
+      
+      /* Borders & Lines */
+      --line: rgba(186, 230, 253, 0.12);
+      --line-card: rgba(56, 189, 248, 0.16);
+      --line-active: rgba(56, 189, 248, 0.5);
+      
+      /* Wave Gradient */
+      --wave-stop-1: #38bdf8;
+      --wave-stop-2: #bae6fd;
+      
+      /* Syntax Tokens */
+      --syntax-kw: #38bdf8;
+      --syntax-fn: #bae6fd;
+      --syntax-type: #7dd3fc;
+      --syntax-str: #a5f3fc;
+      --syntax-comment: #94a3b8;
+      --win-editor-text: #cbd5e1;
+      
+      /* Surface & Component Colors */
+      --header-bg: rgba(7, 14, 26, 0.88);
+      --terminal-bg: var(--bg-surface);
+      --terminal-color: var(--logo-frost);
+      --terminal-btn-bg: rgba(255, 255, 255, 0.08);
+      --terminal-btn-border: rgba(255, 255, 255, 0.16);
+      --card-bg: var(--bg-surface);
+      --card-drawer-bg: var(--bg-surface-soft);
+      --card-spec-panel-bg: rgba(4, 9, 20, 0.55);
+      --card-cue-chip-bg: rgba(56, 189, 248, 0.08);
+      --card-cue-chip-color: var(--logo-ice);
+      --card-local-bg: linear-gradient(180deg, #10243d 0%, #0c1a2d 100%);
+      --chip-btn-bg: rgba(255, 255, 255, 0.04);
+      --win-shell-bg: var(--bg-surface);
+      --win-titlebar-bg: rgba(0, 0, 0, 0.25);
+      --win-tabs-bg: rgba(0, 0, 0, 0.35);
+      --win-hud-bg: var(--bg-surface-elevated);
+      --win-editor-bg: var(--bg-surface-soft);
+      --win-dim-pill-bg: rgba(255, 255, 255, 0.06);
+      --glow-mesh-bg: radial-gradient(circle, rgba(14, 116, 144, 0.2) 0%, rgba(10, 37, 64, 0.35) 45%, transparent 75%);
+      --grid-line-color: rgba(186, 230, 253, 0.02);
+      
+      /* Shadows */
+      --shadow-soft: 0 24px 60px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(56, 189, 248, 0.1);
+      --shadow-pop: 0 30px 80px -20px rgba(0, 0, 0, 0.85), 0 0 45px rgba(56, 189, 248, 0.18);
+    }
+
+    /* ==========================================================================
+       WHITE THEME (LIGHT MODE) - Swiss Editorial Paper & Logo Oceanic Teal
+       Inspired directly by thestudyroomdsa.com/dsa/think-in-patterns
+       Warm archival paper (#F5F3EC), ivory card surfaces (#FFFFFF),
+       deep midnight slate ink (#13222E), and Logo Teal (#0E7490).
+       ========================================================================== */
+    html[data-theme="light"] {
+      /* Background Canvas */
+      --bg-base: #f5f3ec;
+      --bg-canvas: #ffffff;
+      --bg-surface: #ffffff;
+      --bg-surface-elevated: #ede9df;
+      --bg-surface-soft: #f0ece1;
+      
+      /* Text Colors (Deep rich editorial slate ink with high legibility) */
+      --text-ink: #13222e;
+      --text-bone: #2a3b4c;
+      --text-muted: #5b6c84;
+      --text-dim: #8896a8;
+      
+      /* Accents (Deep Logo Teal for AAA contrast on paper, with Sky highlights) */
+      --accent: #0e7490;
+      --accent-contrast: #ffffff;
+      --accent-soft: rgba(14, 116, 144, 0.08);
+      --accent-border: rgba(14, 116, 144, 0.22);
+      --accent-secondary: #0284c7;
+      --accent-glow: rgba(14, 116, 144, 0.25);
+      
+      /* Borders & Lines (12-16% ink hairline rules, exactly matching the reference) */
+      --line: rgba(19, 34, 46, 0.12);
+      --line-card: rgba(19, 34, 46, 0.12);
+      --line-active: #0e7490;
+      
+      /* Dynamic Sine Wave Gradient */
+      --wave-stop-1: #0e7490;
+      --wave-stop-2: #0284c7;
+      
+      /* Syntax Tokens */
+      --syntax-kw: #0e7490;
+      --syntax-fn: #0284c7;
+      --syntax-type: #b45309;
+      --syntax-str: #15803d;
+      --syntax-comment: #64748b;
+      --win-editor-text: #13222e;
+      
+      /* Surface & Component Colors */
+      --header-bg: rgba(245, 243, 236, 0.92);
+      --terminal-bg: #ede9df;
+      --terminal-color: #0e2a47;
+      --terminal-btn-bg: #ffffff;
+      --terminal-btn-border: rgba(19, 34, 46, 0.16);
+      --card-bg: #ffffff;
+      --card-drawer-bg: #faf8f4;
+      --card-spec-panel-bg: #ede9df;
+      --card-cue-chip-bg: #f0ece1;
+      --card-cue-chip-color: #0e7490;
+      --card-local-bg: linear-gradient(180deg, #f0fdfa 0%, #e0f2fe 100%);
+      --chip-btn-bg: #ede9df;
+      --win-shell-bg: #ffffff;
+      --win-titlebar-bg: #ede9df;
+      --win-tabs-bg: #e2ddd0;
+      --win-hud-bg: #f8fafc;
+      --win-editor-bg: #faf9f5;
+      --win-dim-pill-bg: #ede9df;
+      --glow-mesh-bg: radial-gradient(circle, rgba(14, 116, 144, 0.08) 0%, rgba(2, 132, 199, 0.04) 50%, transparent 75%);
+      --grid-line-color: rgba(19, 34, 46, 0.035);
+      
+      /* Shadows */
+      --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.04), 0 16px 36px -12px rgba(19, 34, 46, 0.08), 0 0 0 1px rgba(19, 34, 46, 0.08);
+      --shadow-pop: 0 24px 60px -15px rgba(19, 34, 46, 0.14), 0 0 35px rgba(14, 116, 144, 0.1);
+    }
+
+    /* Universal Reset */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      background: var(--bg-base);
+      color: var(--text-ink);
+      font-family: var(--font-geist-sans);
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+      scroll-behavior: smooth;
+    }
+
+    ::selection {
+      background: var(--accent-soft);
+      color: var(--logo-sky);
+    }
+
+    /* Ambient Subtle Grid & Navy Radial Glow */
+    .ambient-background {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .ambient-glow-mesh {
+      position: absolute;
+      top: -140px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1000px;
+      height: 700px;
+      border-radius: 50%;
+      background: var(--glow-mesh-bg);
+      filter: blur(120px);
+      transition: background 0.3s ease;
+    }
+
+    .grid-fine-lines {
+      position: absolute;
+      inset: 0;
+      background-size: 56px 56px;
+      background-image: 
+        linear-gradient(to right, var(--grid-line-color) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid-line-color) 1px, transparent 1px);
+      mask-image: radial-gradient(circle at 50% 20%, black 25%, transparent 80%);
+      -webkit-mask-image: radial-gradient(circle at 50% 20%, black 25%, transparent 80%);
+      transition: background-image 0.3s ease;
+    }
+
+    #acoustic-sinewave-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.92;
+    }
+
+    /* Layout Container */
+    .container {
+      width: 100%;
+      max-width: 1180px;
+      margin-inline: auto;
+      padding-inline: 24px;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* ==========================================================================
+       Editorial Site Header (The Study Room Navigation Layout)
+       ========================================================================== */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: var(--header-bg);
+      backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid var(--line);
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      text-decoration: none;
+      color: var(--text-ink);
+    }
+
+    .brand-wave {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      flex-shrink: 0;
+      transition: transform 0.25s ease, filter 0.25s ease;
+    }
+
+    .brand-wave svg {
+      display: block;
+    }
+
+    .brand-group:hover .brand-wave,
+    .footer-brand:hover .brand-wave {
+      transform: scale(1.12);
+      filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.7));
+    }
+
+    /* Dynamic SVG stop colors for header and footer sinewave */
+    #headerSineGrad stop:first-child, #headerSineGrad stop:last-child,
+    #footerSineGrad stop:first-child, #footerSineGrad stop:last-child {
+      stop-color: var(--wave-stop-1);
+    }
+    #headerSineGrad stop:nth-child(2),
+    #footerSineGrad stop:nth-child(2) {
+      stop-color: var(--wave-stop-2);
+    }
+
+    .brand-text-block {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .brand-main {
+      font-size: 1.05rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-sub {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-family: var(--font-geist-mono);
+    }
+
+    .site-nav {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-link {
+      color: var(--text-bone);
+      text-decoration: none;
+      font-size: 0.92rem;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      transition: color 0.18s ease;
+    }
+
+    .nav-link:hover {
+      color: var(--accent);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      color: inherit;
+    }
+
+    .theme-track {
+      position: relative;
+      width: 48px;
+      height: 28px;
+      border-radius: 999px;
+      background: var(--chip-btn-bg);
+      border: 1px solid var(--line-card);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 6px;
+      transition: background 0.25s ease, border-color 0.25s ease;
+    }
+
+    .theme-toggle-btn:hover .theme-track {
+      border-color: var(--accent);
+    }
+
+    .theme-track .sun-icon {
+      color: var(--text-muted);
+      z-index: 1;
+      transition: color 0.2s ease;
+      display: block !important;
+    }
+
+    .theme-track .moon-icon {
+      color: var(--text-muted);
+      z-index: 1;
+      transition: color 0.2s ease;
+      display: block !important;
+    }
+
+    .theme-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+      transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease;
+      z-index: 2;
+    }
+
+    /* Light mode: thumb sits on the left (translate 0) */
+    html[data-theme="light"] .theme-thumb {
+      transform: translateX(0);
+      background: #ffffff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(19, 34, 46, 0.1);
+    }
+    html[data-theme="light"] .theme-track .sun-icon {
+      color: #0e7490;
+    }
+
+    /* Dark mode: thumb slides 20px to the right */
+    html[data-theme="dark"] .theme-thumb {
+      transform: translateX(20px);
+      background: var(--accent);
+    }
+    html[data-theme="dark"] .theme-track .moon-icon {
+      color: #040914;
+    }
+
+    /* Code Syntax Highlighting (Adaptive Theme) */
+    .code-kw { color: var(--syntax-kw); font-weight: 600; }
+    .code-fn { color: var(--syntax-fn); font-weight: 500; }
+    .code-type { color: var(--syntax-type); font-weight: 500; }
+    .code-str { color: var(--syntax-str); }
+    .code-comment { color: var(--syntax-comment); font-style: italic; }
+
+    /* Refined Light Mode Visual Overrides */
+    html[data-theme="light"] .hero-h1 em {
+      color: #0e7490;
+    }
+    html[data-theme="light"] .btn-solid-primary {
+      background: linear-gradient(180deg, #0e304f 0%, #0a2540 100%);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 8px 24px -4px rgba(10, 37, 64, 0.35);
+    }
+    html[data-theme="light"] .btn-solid-primary:hover {
+      background: #0e7490;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 12px 32px rgba(14, 116, 144, 0.4);
+    }
+    html[data-theme="light"] .header-cta-btn {
+      background: #0a2540;
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(10, 37, 64, 0.2);
+    }
+    html[data-theme="light"] .header-cta-btn:hover {
+      background: #0e7490;
+    }
+    html[data-theme="light"] .metric-digit-val.highlight {
+      color: #0e7490;
+      text-shadow: none;
+    }
+    html[data-theme="light"] .pattern-accordion-card:hover {
+      border-color: #0e7490;
+      background: #ffffff;
+      box-shadow: 0 8px 24px -8px rgba(14, 116, 144, 0.14);
+    }
+    html[data-theme="light"] .pattern-accordion-card.is-open {
+      border-color: #0e7490;
+      background: #ffffff;
+      box-shadow: 0 12px 36px -10px rgba(14, 116, 144, 0.18), 0 0 0 1px #0e7490;
+    }
+    html[data-theme="light"] .win-tab-btn.active {
+      background: #ffffff;
+      color: #0e7490;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    html[data-theme="light"] .chip-btn.active {
+      background: #ffffff;
+      border-color: #0e7490;
+      color: #0e7490;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+    html[data-theme="light"] .card-compare-box.is-local {
+      background: linear-gradient(180deg, #f0fdfa 0%, #e0f2fe 100%);
+      border-color: #0e7490;
+      box-shadow: 0 20px 45px -15px rgba(14, 116, 144, 0.18), 0 0 0 1px #0e7490;
+    }
+    html[data-theme="light"] .pill-cyan {
+      background: #0e7490;
+      color: #ffffff;
+    }
+
+    .header-cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 20px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: var(--accent-contrast);
+      font-size: 0.86rem;
+      font-weight: 600;
+      text-decoration: none;
+      box-shadow: 0 4px 20px var(--accent-soft);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .header-cta-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 28px rgba(56, 189, 248, 0.45);
+    }
+
+    /* ==========================================================================
+       Hero Section: Chapter Overview + Outcome Card (Exact Reference Hierarchy)
+       ========================================================================== */
+    .hero-section {
+      padding-top: clamp(64px, 9vh, 92px);
+      padding-bottom: clamp(60px, 8vh, 84px);
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+      gap: 52px;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .chapter-eyebrow {
+      font-family: var(--font-geist-mono);
+      font-size: 0.82rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .chapter-eyebrow::after {
+      content: "";
+      display: inline-block;
+      width: 40px;
+      height: 1px;
+      background: var(--accent);
+      opacity: 0.4;
+    }
+
+    /* Exact H1 Typography from Reference Site:
+       font-family: Geist; font-weight: 500; letter-spacing: -0.07em; line-height: 0.92;
+       em: font-style: normal; color: var(--accent);
+    */
+    .hero-h1 {
+      font-family: var(--font-geist-sans);
+      font-size: clamp(3rem, 6.2vw, 5.2rem);
+      font-weight: 500;
+      letter-spacing: -0.07em;
+      line-height: 0.94;
+      margin: 0 0 24px;
+    }
+
+    .hero-h1 em {
+      color: var(--accent);
+      font-style: normal;
+    }
+
+    .hero-lead-summary {
+      font-size: 1.15rem;
+      color: var(--text-bone);
+      line-height: 1.62;
+      margin-bottom: 32px;
+      max-width: 580px;
+      font-weight: 400;
+    }
+
+    .hero-buttons-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .btn-solid-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: var(--accent-contrast);
+      font-size: 0.96rem;
+      font-weight: 600;
+      text-decoration: none;
+      box-shadow: 0 10px 30px var(--accent-soft);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    .btn-solid-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 40px rgba(56, 189, 248, 0.45);
+    }
+
+    .terminal-inline-bar {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 18px;
+      border-radius: 999px;
+      background: var(--terminal-bg);
+      border: 1px solid var(--line-card);
+      font-family: var(--font-geist-mono);
+      font-size: 0.84rem;
+      color: var(--terminal-color);
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+
+    .btn-copy-tag {
+      background: var(--terminal-btn-bg);
+      border: 1px solid var(--terminal-btn-border);
+      color: var(--text-ink);
+      font-family: var(--font-geist-mono);
+      font-size: 0.74rem;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-copy-tag:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-contrast);
+    }
+
+    /* Outcome Card (The Study Room Box Blend) */
+    .study-outcome-card {
+      background: var(--card-bg);
+      border: 1px solid var(--line-card);
+      border-radius: 20px;
+      padding: 36px;
+      position: relative;
+      box-shadow: var(--shadow-soft);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .outcome-pill-tag {
+      font-family: var(--font-geist-mono);
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border: 1px solid var(--accent-border);
+      padding: 4px 12px;
+      border-radius: 6px;
+      align-self: flex-start;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .outcome-quote-text {
+      font-size: 1.15rem;
+      font-weight: 500;
+      color: var(--text-ink);
+      line-height: 1.5;
+      letter-spacing: -0.015em;
+    }
+
+    .card-divider-hairline {
+      height: 1px;
+      background: var(--line);
+    }
+
+    .outcome-metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .metric-item-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .metric-caption-label {
+      font-family: var(--font-geist-mono);
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .metric-digit-val {
+      font-size: 1.4rem;
+      font-weight: 600;
+      font-family: var(--font-geist-mono);
+      color: var(--text-ink);
+      letter-spacing: -0.03em;
+    }
+
+    .metric-digit-val.highlight {
+      color: var(--accent);
+      text-shadow: 0 0 20px rgba(56, 189, 248, 0.35);
+    }
+
+    /* ==========================================================================
+       The Pattern Library (The Study Room Accordion System in Geist)
+       ========================================================================== */
+    .patterns-library-section {
+      padding: 96px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-editorial-header {
+      margin-bottom: 48px;
+    }
+
+    .section-kicker-cyan {
+      font-family: var(--font-geist-mono);
+      font-size: 0.8rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+    }
+
+    .section-display-h2 {
+      font-family: var(--font-geist-sans);
+      font-size: clamp(2.2rem, 4vw, 3.2rem);
+      font-weight: 500;
+      letter-spacing: -0.05em;
+      line-height: 1.05;
+      margin-bottom: 16px;
+    }
+
+    .section-lead-muted {
+      color: var(--text-muted);
+      font-size: 1.08rem;
+      max-width: 680px;
+      line-height: 1.6;
+    }
+
+    .pattern-stack-deck {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .pattern-accordion-card {
+      background: var(--card-bg);
+      border: 1px solid var(--line-card);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .pattern-accordion-card:hover {
+      border-color: var(--line-active);
+      background: var(--card-drawer-bg);
+    }
+
+    .pattern-accordion-card.is-open {
+      border-color: var(--line-active);
+      background: var(--card-drawer-bg);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .pattern-header-trigger {
+      width: 100%;
+      background: transparent;
+      border: none;
+      padding: 24px 28px;
+      display: grid;
+      grid-template-columns: 50px 1.4fr 2.5fr 40px;
+      align-items: center;
+      gap: 20px;
+      text-align: left;
+      cursor: pointer;
+      color: var(--text-ink);
+    }
+
+    .pattern-index-num {
+      font-family: var(--font-geist-mono);
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .pattern-item-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .pattern-signal-text {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.48;
+    }
+
+    .pattern-toggle-mark {
+      font-family: var(--font-geist-mono);
+      font-size: 1.4rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      text-align: right;
+      transition: transform 0.22s ease, color 0.2s ease;
+    }
+
+    .pattern-accordion-card.is-open .pattern-toggle-mark {
+      transform: rotate(45deg);
+      color: var(--accent);
+    }
+
+    /* Expandable Pattern Drawer */
+    .pattern-drawer-body {
+      display: none;
+      padding: 0 28px 28px;
+      border-top: 1px solid var(--line);
+      background: var(--card-drawer-bg);
+    }
+
+    .pattern-accordion-card.is-open .pattern-drawer-body {
+      display: block;
+      animation: expandDrawerSmooth 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes expandDrawerSmooth {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .drawer-grid-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+      gap: 32px;
+      padding-top: 24px;
+    }
+
+    .drawer-section-kicker {
+      font-family: var(--font-geist-mono);
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .drawer-paragraph {
+      color: var(--text-bone);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .drawer-chips-cluster {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .drawer-cue-chip {
+      font-family: var(--font-geist-mono);
+      font-size: 0.75rem;
+      padding: 3px 10px;
+      border-radius: 6px;
+      background: var(--card-cue-chip-bg);
+      border: 1px solid var(--line-card);
+      color: var(--card-cue-chip-color);
+    }
+
+    .drawer-spec-panel {
+      background: var(--card-spec-panel-bg);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      font-family: var(--font-geist-mono);
+      font-size: 0.8rem;
+    }
+
+    .spec-item-row {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-muted);
+    }
+
+    .spec-item-row strong {
+      color: var(--accent);
+    }
+
+    /* ==========================================================================
+       Interactive Studio Showcase (macOS Window)
+       ========================================================================== */
+    .studio-showcase-section {
+      padding: 96px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .mac-window-shell {
+      background: var(--win-shell-bg);
+      border: 1px solid var(--line-card);
+      border-radius: 20px;
+      box-shadow: var(--shadow-pop);
+      overflow: hidden;
+      text-align: left;
+      transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .window-titlebar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      background: var(--win-titlebar-bg);
+      border-bottom: 1px solid var(--line);
+      transition: background 0.3s ease;
+    }
+
+    .traffic-lights {
+      display: flex;
+      gap: 8px;
+    }
+
+    .t-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .t-red { background: #ff5f56; }
+    .t-yellow { background: #ffbd2e; }
+    .t-green { background: #27c93f; }
+
+    .window-tabs-selector {
+      display: flex;
+      gap: 6px;
+      background: var(--win-tabs-bg);
+      padding: 4px;
+      border-radius: 8px;
+      transition: background 0.3s ease;
+    }
+
+    .win-tab-btn {
+      padding: 5px 14px;
+      border-radius: 6px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: var(--font-geist-sans);
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .win-tab-btn.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .window-body-canvas {
+      padding: 32px;
+    }
+
+    .hud-bar-inline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-radius: 999px;
+      background: var(--win-hud-bg);
+      border: 1px solid var(--line-card);
+      margin-bottom: 24px;
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+
+    .hud-controls-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .mic-record-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      cursor: pointer;
+      color: var(--accent-contrast);
+      box-shadow: 0 0 15px var(--accent-soft);
+      animation: pulseMic 1.8s infinite;
+    }
+
+    @keyframes pulseMic {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); box-shadow: 0 0 25px rgba(56, 189, 248, 0.6); }
+    }
+
+    .waveform-strip {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      height: 24px;
+    }
+
+    .wave-bar {
+      width: 3px;
+      height: 10px;
+      border-radius: 999px;
+      background: linear-gradient(to top, var(--accent-secondary) 0%, var(--accent) 100%);
+      animation: wavePulse 1.2s ease-in-out infinite alternate;
+    }
+
+    .wave-bar:nth-child(2) { height: 18px; animation-delay: 0.1s; }
+    .wave-bar:nth-child(3) { height: 14px; animation-delay: 0.3s; }
+    .wave-bar:nth-child(4) { height: 22px; animation-delay: 0.4s; }
+    .wave-bar:nth-child(5) { height: 16px; animation-delay: 0.2s; }
+    .wave-bar:nth-child(6) { height: 20px; animation-delay: 0.5s; }
+    .wave-bar:nth-child(7) { height: 12px; animation-delay: 0.15s; }
+
+    @keyframes wavePulse {
+      0% { transform: scaleY(0.4); opacity: 0.5; }
+      100% { transform: scaleY(1.2); opacity: 1; }
+    }
+
+    .hud-telemetry-right {
+      display: flex;
+      gap: 16px;
+      font-family: var(--font-geist-mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .hud-val-bold {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .editor-screen-terminal {
+      background: var(--win-editor-bg);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 24px;
+      min-height: 160px;
+      font-family: var(--font-geist-mono);
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: var(--text-bone);
+      transition: background 0.3s ease;
+    }
+
+    .cursor-line {
+      display: inline-block;
+      width: 3px;
+      height: 1.2em;
+      background: var(--accent);
+      vertical-align: text-bottom;
+      margin-left: 4px;
+      animation: blinkCursor 1s step-start infinite;
+    }
+
+    @keyframes blinkCursor { 50% { opacity: 0; } }
+
+    .window-footer-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+    }
+
+    .weights-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .chip-btn {
+      padding: 5px 12px;
+      border-radius: 6px;
+      background: var(--chip-btn-bg);
+      border: 1px solid var(--line);
+      color: var(--text-muted);
+      font-family: var(--font-geist-mono);
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .chip-btn.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Comparison Section */
+    .compare-section {
+      padding: 96px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .compare-grid-2col {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 28px;
+    }
+
+    .card-compare-box {
+      background: var(--card-bg);
+      border: 1px solid var(--line-card);
+      border-radius: 20px;
+      padding: 36px;
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+
+    .card-compare-box.is-local {
+      border-color: var(--line-active);
+      background: var(--card-local-bg);
+      box-shadow: var(--shadow-pop);
+    }
+
+    .compare-pill {
+      display: inline-block;
+      font-family: var(--font-geist-mono);
+      font-size: 0.74rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .pill-cyan { background: var(--accent-soft); color: var(--accent); }
+    .pill-dim { background: var(--win-dim-pill-bg); color: var(--text-muted); }
+
+    .compare-title {
+      font-family: var(--font-geist-sans);
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 24px;
+    }
+
+    .compare-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .compare-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 0.95rem;
+      color: var(--text-bone);
+      line-height: 1.5;
+    }
+
+    .icon-symbol {
+      font-family: var(--font-geist-mono);
+      font-weight: 700;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .icon-cyan { color: var(--accent); }
+    .icon-dim { color: var(--text-dim); }
+
+    /* Footer */
+    .study-footer {
+      padding: 64px 0 48px;
+      background: var(--bg-surface-soft);
+    }
+
+    .footer-flex {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .footer-nav-list {
+      display: flex;
+      gap: 28px;
+      list-style: none;
+    }
+
+    .footer-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.88rem;
+      transition: color 0.18s ease;
+    }
+
+    .footer-link:hover { color: var(--accent); }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .hero-section { grid-template-columns: 1fr; }
+      .compare-grid-2col { grid-template-columns: 1fr; }
+      .drawer-grid-layout { grid-template-columns: 1fr; }
+      .pattern-header-trigger { grid-template-columns: 40px 1fr 30px; }
+      .pattern-signal-text { display: none; }
+      .site-nav { display: none; }
+    }
+  </style>
 </head>
 <body>
 
-  <!-- Navigation -->
+  <!-- Background Mesh, Architectural Grid & Kinetic Sinewave Motion Graphic -->
+  <div class="ambient-background">
+    <div class="ambient-glow-mesh"></div>
+    <div class="grid-fine-lines"></div>
+    <canvas id="acoustic-sinewave-canvas"></canvas>
+  </div>
+
+  <!-- Editorial Site Header -->
   <header class="site-header">
-    <div class="container nav-container">
-      <a href="#" class="brand" aria-label="openflow home">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-          <line x1="12" x2="12" y1="19" y2="22"/>
-        </svg>
-        <span class="brand-title">openflow</span>
-        <span class="status-badge">
-          <span class="status-dot"></span>
-          <span>ane ready</span>
+    <div class="container header-row">
+      <a href="#" class="brand-group" aria-label="Openflow Home">
+        <span class="brand-wave" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="headerSineGrad" x1="2" y1="14" x2="26" y2="14" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#38bdf8"/>
+                <stop offset="50%" stop-color="#bae6fd"/>
+                <stop offset="100%" stop-color="#38bdf8"/>
+              </linearGradient>
+            </defs>
+            <path d="M 2 14 C 4.19 7, 5.81 7, 8 14 C 10.19 21, 11.81 21, 14 14 C 16.19 7, 17.81 7, 20 14 C 22.19 21, 23.81 21, 26 14" stroke="url(#headerSineGrad)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </span>
+        <div class="brand-text-block">
+          <span class="brand-main">openflow</span>
+          <span class="brand-sub">on-device voice companion</span>
+        </div>
       </a>
 
       <nav aria-label="Primary navigation">
-        <ul class="nav-links">
-          <li><a href="#benchmarks" class="nav-link">benchmarks</a></li>
-          <li><a href="#features" class="nav-link">architecture</a></li>
-          <li><a href="#install" class="nav-link">install</a></li>
-          <li><a href="https://github.com/abhilashpanda04/Openflow" class="nav-link" rel="noopener noreferrer">github</a></li>
+        <ul class="site-nav">
+          <li><a href="#capabilities" class="nav-link">Capabilities</a></li>
+          <li><a href="#studio" class="nav-link">Studio</a></li>
+          <li><a href="#comparison" class="nav-link">Hardware vs Cloud</a></li>
+          <li><a href="https://github.com/abhilashpanda04/Openflow" class="nav-link" rel="noopener noreferrer">GitHub</a></li>
         </ul>
       </nav>
 
-      <div>
-        <a href="https://github.com/abhilashpanda04/Openflow/releases/latest" class="btn btn--secondary">
-          <span>download dmg</span>
+      <div class="header-actions">
+        <button class="theme-toggle-btn" id="theme-toggle-btn" type="button" onclick="toggleTheme()" aria-label="Toggle light or dark theme" title="Toggle theme">
+          <span class="theme-track">
+            <svg class="sun-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg class="moon-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+            <span class="theme-thumb"></span>
+          </span>
+        </button>
+
+        <a href="https://github.com/abhilashpanda04/Openflow/releases/latest" class="header-cta-btn">
+          <span>Download DMG</span>
+          <span aria-hidden="true">→</span>
         </a>
       </div>
     </div>
   </header>
 
   <main>
-    <!-- Hero Stage -->
-    <section class="hero-stage">
-      <div class="container hero-layout">
-        <div class="hero-copy">
-          <h1><span class="verb">dictate</span> at 300 words a minute</h1>
-          <p>on-device speech recognition powered by whisperkit and the apple neural engine.</p>
+    <!-- Editorial Hero: Chapter Overview & Outcome Card (Exact Reference Hierarchy) -->
+    <section class="container hero-section">
+      <div>
+        <div class="chapter-eyebrow">
+          <span>Openflow · Apple Silicon Neural Engine</span>
+        </div>
 
-          <div class="btn-group">
-            <a href="https://github.com/abhilashpanda04/Openflow/releases/latest" class="btn btn--primary">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" x2="12" y1="15" y2="3"/>
-              </svg>
-              <span>download for macos</span>
-            </a>
-            
-            <a href="#benchmarks" class="btn btn--secondary">
-              <span>view latency matrix</span>
-            </a>
-          </div>
+        <h1 class="hero-h1">
+          Dictate code, notes, and messages at the <em>speed of thought.</em>
+        </h1>
 
-          <div class="snippet-bar">
+        <p class="hero-lead-summary">
+          Writing on a Mac shouldn’t be bottlenecked by a 45 WPM keyboard. Speak naturally and watch formatted text stream directly into any Mac app at 300+ WPM. Powered 100% locally by WhisperKit CoreML. Zero latency, zero cloud leaks.
+        </p>
+
+        <div class="hero-buttons-row">
+          <a href="https://github.com/abhilashpanda04/Openflow/releases/latest" class="btn-solid-primary">
+            <span>Download for Apple Silicon</span>
+            <span aria-hidden="true">↓</span>
+          </a>
+
+          <div class="terminal-inline-bar">
             <span>curl -fsSL https://abhilashpanda04.github.io/Openflow/install.sh | bash</span>
-            <button class="snippet-copy-btn" id="copy-btn" onclick="copyInstallCmd()" aria-label="Copy install command">
-              <span id="copy-label">copy</span>
+            <button class="btn-copy-tag" onclick="copyInstallCmd()" aria-label="Copy install script">
+              <span id="copy-btn-feedback">Copy</span>
             </button>
           </div>
         </div>
+      </div>
 
-        <!-- Interactive Console -->
-        <div class="well well--blueprint console-well">
-          <div class="console-bar">
-            <div class="console-meta">
-              <span class="status-dot"></span>
-              <span>coreml runtime: active</span>
-            </div>
-            
-            <div class="console-audio-viz" aria-hidden="true">
-              <span class="audio-bar" style="transform: scaleY(0.4);"></span>
-              <span class="audio-bar" style="transform: scaleY(0.8);"></span>
-              <span class="audio-bar" style="transform: scaleY(1.2);"></span>
-              <span class="audio-bar" style="transform: scaleY(0.6);"></span>
-              <span class="audio-bar" style="transform: scaleY(0.9);"></span>
-            </div>
+      <!-- Outcome Overview Card (Blended from Reference Outcome Box) -->
+      <div class="study-outcome-card">
+        <span class="outcome-pill-tag">Core Outcome</span>
+        <p class="outcome-quote-text">
+          “Turn spoken thought into instantly formatted code, messages, and documents directly at your cursor.”
+        </p>
+        
+        <div class="card-divider-hairline"></div>
+
+        <div class="outcome-metrics-grid">
+          <div class="metric-item-block">
+            <div class="metric-caption-label">Latency to Cursor</div>
+            <div class="metric-digit-val highlight">&lt;22ms</div>
           </div>
-
-          <div class="console-window">
-            <div class="transcription-text" id="stream-output">
-              func parseTokens(input: AudioBuffer) -&gt; StreamResult {
-            </div>
-            <div class="console-meta">
-              <span>latency: &lt;24ms</span>
-              <span class="cursor-caret" aria-hidden="true"></span>
-            </div>
+          <div class="metric-item-block">
+            <div class="metric-caption-label">Speech Throughput</div>
+            <div class="metric-digit-val">300+ WPM</div>
           </div>
-
-          <div class="scenario-pills">
-            <button class="scenario-pill active" onclick="switchScenario(0)">code snippet</button>
-            <button class="scenario-pill" onclick="switchScenario(1)">terminal session</button>
-            <button class="scenario-pill" onclick="switchScenario(2)">scratch that edit</button>
+          <div class="metric-item-block">
+            <div class="metric-caption-label">Cloud Telemetry</div>
+            <div class="metric-digit-val highlight">0 Bytes</div>
+          </div>
+          <div class="metric-item-block">
+            <div class="metric-caption-label">License &amp; Cost</div>
+            <div class="metric-digit-val">Free · MIT</div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Benchmarks Matrix -->
-    <section class="section" id="benchmarks">
+    <!-- Core Capabilities (Accordion Card Architecture) -->
+    <section class="patterns-library-section" id="capabilities">
       <div class="container">
-        <div class="section-head">
-          <h2>measured on apple neural engine</h2>
-          <p class="section-lead">direct hardware execution eliminates cloud transmission round trips.</p>
+        
+        <div class="section-editorial-header">
+          <div class="section-kicker-cyan">Core Capabilities</div>
+          <h2 class="section-display-h2">Hardware-accelerated voice to cursor.</h2>
+          <p class="section-lead-muted">
+            Engineered exclusively for Apple Silicon. Explore the six architectural pillars that make Openflow instantaneous, private, and seamlessly integrated into every macOS application.
+          </p>
         </div>
 
-        <div class="bench-grid">
-          <div class="table-well">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th scope="col">model weight</th>
-                  <th scope="col">memory footprint</th>
-                  <th scope="col">processing latency</th>
-                  <th scope="col">ane core load</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr class="active-row">
-                  <td>whisper tiny</td>
-                  <td class="mono-figure">142 mb</td>
-                  <td class="tag-metric">&lt;24ms</td>
-                  <td class="mono-figure">16 / 16</td>
-                </tr>
-                <tr>
-                  <td>whisper base</td>
-                  <td class="mono-figure">210 mb</td>
-                  <td class="tag-metric">&lt;38ms</td>
-                  <td class="mono-figure">16 / 16</td>
-                </tr>
-                <tr>
-                  <td>whisper small</td>
-                  <td class="mono-figure">480 mb</td>
-                  <td class="tag-metric">&lt;65ms</td>
-                  <td class="mono-figure">16 / 16</td>
-                </tr>
-                <tr>
-                  <td>whisper turbo</td>
-                  <td class="mono-figure">920 mb</td>
-                  <td class="tag-metric">&lt;85ms</td>
-                  <td class="mono-figure">16 / 16</td>
-                </tr>
-              </tbody>
-            </table>
+        <div class="pattern-stack-deck">
+          
+          <!-- Capability 01 -->
+          <article class="pattern-accordion-card is-open" id="pattern-01">
+            <button class="pattern-header-trigger" type="button" onclick="togglePattern('pattern-01')" aria-expanded="true">
+              <span class="pattern-index-num">01</span>
+              <span class="pattern-item-title">Universal Cursor Injection</span>
+              <span class="pattern-signal-text">Press your trigger key anywhere in macOS to stream text straight into your active cursor.</span>
+              <span class="pattern-toggle-mark" aria-hidden="true">+</span>
+            </button>
+            <div class="pattern-drawer-body">
+              <div class="drawer-grid-layout">
+                <div>
+                  <div class="drawer-section-kicker">How it works</div>
+                  <p class="drawer-paragraph">
+                    Openflow queries macOS's Accessibility API (AXUIElement) to discover the focused text input across any app—VS Code, Slack, Obsidian, Chrome, Terminal, or Notes—and streams tokens directly without polluting your system clipboard.
+                  </p>
+                  <div class="drawer-section-kicker">Activation Triggers</div>
+                  <div class="drawer-chips-cluster">
+                    <span class="drawer-cue-chip">Double-tap fn or Globe key</span>
+                    <span class="drawer-cue-chip">Global hotkey Option + Space</span>
+                    <span class="drawer-cue-chip">100% of native &amp; Electron apps</span>
+                  </div>
+                </div>
+                <div class="drawer-spec-panel">
+                  <div class="spec-item-row"><span>Engine:</span> <strong>WhisperKit CoreML</strong></div>
+                  <div class="spec-item-row"><span>Target:</span> <strong>Active AXUIElement</strong></div>
+                  <div class="spec-item-row"><span>Dispatch Latency:</span> <strong>&lt;22ms</strong></div>
+                  <div class="spec-item-row"><span>Clipboard Pollute:</span> <strong>None</strong></div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Capability 02 -->
+          <article class="pattern-accordion-card" id="pattern-02">
+            <button class="pattern-header-trigger" type="button" onclick="togglePattern('pattern-02')" aria-expanded="false">
+              <span class="pattern-index-num">02</span>
+              <span class="pattern-item-title">Apple Neural Engine CoreML</span>
+              <span class="pattern-signal-text">Hardware-accelerated Whisper models run directly on M-series unified memory.</span>
+              <span class="pattern-toggle-mark" aria-hidden="true">+</span>
+            </button>
+            <div class="pattern-drawer-body">
+              <div class="drawer-grid-layout">
+                <div>
+                  <div class="drawer-section-kicker">How it works</div>
+                  <p class="drawer-paragraph">
+                    Instead of burning CPU cores or spinning laptop fans, Openflow executes Whisper encoder and decoder graphs directly on Apple Silicon's 16-core Neural Engine (ANE) with negligible battery consumption.
+                  </p>
+                  <div class="drawer-section-kicker">Hardware Optimization</div>
+                  <div class="drawer-chips-cluster">
+                    <span class="drawer-cue-chip">Optimized CoreML FP16 weights</span>
+                    <span class="drawer-cue-chip">Unified memory zero-copy inference</span>
+                    <span class="drawer-cue-chip">Sub-25ms token dispatch</span>
+                  </div>
+                </div>
+                <div class="drawer-spec-panel">
+                  <div class="spec-item-row"><span>Target Cores:</span> <strong>16-Core ANE</strong></div>
+                  <div class="spec-item-row"><span>Memory Model:</span> <strong>Unified Memory</strong></div>
+                  <div class="spec-item-row"><span>Power Impact:</span> <strong>&lt;0.8W active</strong></div>
+                  <div class="spec-item-row"><span>Fan Spin:</span> <strong>None (Silent)</strong></div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Capability 03 -->
+          <article class="pattern-accordion-card" id="pattern-03">
+            <button class="pattern-header-trigger" type="button" onclick="togglePattern('pattern-03')" aria-expanded="false">
+              <span class="pattern-index-num">03</span>
+              <span class="pattern-item-title">100% Air-Gapped Local Privacy</span>
+              <span class="pattern-signal-text">Zero audio packets or transcripts ever leave your Mac. Works completely offline.</span>
+              <span class="pattern-toggle-mark" aria-hidden="true">+</span>
+            </button>
+            <div class="pattern-drawer-body">
+              <div class="drawer-grid-layout">
+                <div>
+                  <div class="drawer-section-kicker">How it works</div>
+                  <p class="drawer-paragraph">
+                    Your voice never touches the internet. Openflow has no cloud telemetry, no analytics tracking, no server backends, and requires zero user accounts. Operates seamlessly on airplanes, subways, or secure enterprise intranets.
+                  </p>
+                  <div class="drawer-section-kicker">Privacy Guarantees</div>
+                  <div class="drawer-chips-cluster">
+                    <span class="drawer-cue-chip">Zero internet connections required</span>
+                    <span class="drawer-cue-chip">No third-party training on your voice</span>
+                    <span class="drawer-cue-chip">HIPAA / NDA compliant by default</span>
+                  </div>
+                </div>
+                <div class="drawer-spec-panel">
+                  <div class="spec-item-row"><span>Network Egress:</span> <strong>0 Bytes</strong></div>
+                  <div class="spec-item-row"><span>User Account:</span> <strong>None required</strong></div>
+                  <div class="spec-item-row"><span>Telemetry / Tracking:</span> <strong>Zero</strong></div>
+                  <div class="spec-item-row"><span>Offline Mode:</span> <strong>Native / Full</strong></div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Capability 04 -->
+          <article class="pattern-accordion-card" id="pattern-04">
+            <button class="pattern-header-trigger" type="button" onclick="togglePattern('pattern-04')" aria-expanded="false">
+              <span class="pattern-index-num">04</span>
+              <span class="pattern-item-title">Intelligent Punctuation &amp; Formatting</span>
+              <span class="pattern-signal-text">Speaks like human conversation, writes like professional publication.</span>
+              <span class="pattern-toggle-mark" aria-hidden="true">+</span>
+            </button>
+            <div class="pattern-drawer-body">
+              <div class="drawer-grid-layout">
+                <div>
+                  <div class="drawer-section-kicker">How it works</div>
+                  <p class="drawer-paragraph">
+                    A local post-processing tokenizer automatically applies capitalization, periods, commas, questions, and numbers based on acoustic pauses and semantic context—without requiring you to speak awkward verbal punctuation commands.
+                  </p>
+                  <div class="drawer-section-kicker">Formatting Rules</div>
+                  <div class="drawer-chips-cluster">
+                    <span class="drawer-cue-chip">Auto capitalization &amp; periods</span>
+                    <span class="drawer-cue-chip">Numeric digits &amp; dates</span>
+                    <span class="drawer-cue-chip">Parentheses &amp; quotation detection</span>
+                  </div>
+                </div>
+                <div class="drawer-spec-panel">
+                  <div class="spec-item-row"><span>Parser:</span> <strong>Native Swift Tokenizer</strong></div>
+                  <div class="spec-item-row"><span>Processing Overhead:</span> <strong>&lt;2ms</strong></div>
+                  <div class="spec-item-row"><span>Syntax Modes:</span> <strong>Prose / Markdown / Code</strong></div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Capability 05 -->
+          <article class="pattern-accordion-card" id="pattern-05">
+            <button class="pattern-header-trigger" type="button" onclick="togglePattern('pattern-05')" aria-expanded="false">
+              <span class="pattern-index-num">05</span>
+              <span class="pattern-item-title">Multi-Model WhisperKit Runtime</span>
+              <span class="pattern-signal-text">Switch between Tiny, Base, Small, and Turbo weights based on your workflow.</span>
+              <span class="pattern-toggle-mark" aria-hidden="true">+</span>
+            </button>
+            <div class="pattern-drawer-body">
+              <div class="drawer-grid-layout">
+                <div>
+                  <div class="drawer-section-kicker">How it works</div>
+                  <p class="drawer-paragraph">
+                    Choose the model that fits your hardware. Use Tiny for lightning-fast quick chats (&lt;22ms), Base for everyday dictation, or Turbo for technical documents, dense jargon, and multi-language accuracy.
+                  </p>
+                  <div class="drawer-section-kicker">Models Available</div>
+                  <div class="drawer-chips-cluster">
+                    <span class="drawer-cue-chip">Tiny (39M · &lt;22ms)</span>
+                    <span class="drawer-cue-chip">Base (74M · &lt;36ms)</span>
+                    <span class="drawer-cue-chip">Small (244M · &lt;62ms)</span>
+                    <span class="drawer-cue-chip">Turbo (809M · &lt;85ms)</span>
+                  </div>
+                </div>
+                <div class="drawer-spec-panel">
+                  <div class="spec-item-row"><span>Quantization:</span> <strong>CoreML FP16 / INT8</strong></div>
+                  <div class="spec-item-row"><span>Footprint:</span> <strong>140 MB – 1.6 GB RAM</strong></div>
+                  <div class="spec-item-row"><span>Model Download:</span> <strong>One-click on demand</strong></div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Capability 06 -->
+          <article class="pattern-accordion-card" id="pattern-06">
+            <button class="pattern-header-trigger" type="button" onclick="togglePattern('pattern-06')" aria-expanded="false">
+              <span class="pattern-index-num">06</span>
+              <span class="pattern-item-title">Native macOS Swift Architecture</span>
+              <span class="pattern-signal-text">A featherlight menu bar companion built purely in native Swift and SwiftUI.</span>
+              <span class="pattern-toggle-mark" aria-hidden="true">+</span>
+            </button>
+            <div class="pattern-drawer-body">
+              <div class="drawer-grid-layout">
+                <div>
+                  <div class="drawer-section-kicker">How it works</div>
+                  <p class="drawer-paragraph">
+                    No Electron bloat, no web views in background processes, and zero idle CPU usage. Openflow docks unobtrusively in your macOS menu bar, ready to respond instantly the moment you tap your shortcut.
+                  </p>
+                  <div class="drawer-section-kicker">Integration</div>
+                  <div class="drawer-chips-cluster">
+                    <span class="drawer-cue-chip">Native SwiftUI status menu</span>
+                    <span class="drawer-cue-chip">Configurable audio devices</span>
+                    <span class="drawer-cue-chip">Customizable global shortcuts</span>
+                  </div>
+                </div>
+                <div class="drawer-spec-panel">
+                  <div class="spec-item-row"><span>Language:</span> <strong>Swift 6 &amp; SwiftUI</strong></div>
+                  <div class="spec-item-row"><span>Idle CPU:</span> <strong>0.0%</strong></div>
+                  <div class="spec-item-row"><span>Idle Memory:</span> <strong>~42 MB</strong></div>
+                  <div class="spec-item-row"><span>Framework:</span> <strong>CoreAudio &amp; Accessibility</strong></div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive macOS Studio Window -->
+    <section class="studio-showcase-section" id="studio">
+      <div class="container">
+        
+        <div class="section-editorial-header">
+          <div class="section-kicker-cyan">Interactive Studio</div>
+          <h2 class="section-display-h2">See Openflow live in action.</h2>
+          <p class="section-lead-muted">
+            Test how voice streaming feels across different Mac apps. Switch environments below or click the microphone to simulate real-time text injection.
+          </p>
+        </div>
+
+        <div class="mac-window-shell">
+          <div class="window-titlebar">
+            <div class="traffic-lights">
+              <div class="t-dot t-red"></div>
+              <div class="t-dot t-yellow"></div>
+              <div class="t-dot t-green"></div>
+            </div>
+
+            <div class="window-tabs-selector">
+              <button class="win-tab-btn active" onclick="switchStudioWorkspace(0)">Xcode (Swift)</button>
+              <button class="win-tab-btn" onclick="switchStudioWorkspace(1)">Cursor (TypeScript)</button>
+              <button class="win-tab-btn" onclick="switchStudioWorkspace(2)">Slack &amp; Notion</button>
+            </div>
+
+            <div style="font-family:var(--font-geist-mono); font-size:0.76rem; color:var(--text-muted);">
+              <span>16 ANE CORES</span> · <span id="studio-wpm-stat" style="color:var(--accent); font-weight:600;">320 WPM</span>
+            </div>
           </div>
 
-          <div class="well well--blueprint console-well">
-            <h3>hardware telemetry</h3>
-            <p class="section-lead">zero network packets leave the device. memory footprint stays within allocated system bounds.</p>
-            <div class="snippet-bar">
-              <span>ANE utilization: 94.2%</span>
-              <span class="tag-metric">zero cloud telemetry</span>
+          <div class="window-body-canvas">
+            <div class="hud-bar-inline">
+              <div class="hud-controls-left">
+                <button class="mic-record-btn" onclick="simulateVoiceStreaming()" title="Click to test voice input">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                  </svg>
+                </button>
+                
+                <div class="waveform-strip" aria-hidden="true">
+                  <div class="wave-bar"></div>
+                  <div class="wave-bar"></div>
+                  <div class="wave-bar"></div>
+                  <div class="wave-bar"></div>
+                  <div class="wave-bar"></div>
+                  <div class="wave-bar"></div>
+                  <div class="wave-bar"></div>
+                </div>
+              </div>
+
+              <div class="hud-telemetry-right">
+                <span>Latency: <span class="hud-val-bold" id="studio-lat-stat">&lt;22ms</span></span>
+                <span>RAM: <span class="hud-val-bold" id="studio-ram-stat">142 MB</span></span>
+                <span>Cloud Egress: <span class="hud-val-bold">0 B</span></span>
+              </div>
+            </div>
+
+            <div class="editor-screen-terminal" id="studio-editor-box">
+              <span class="code-comment">// Openflow typing live into Xcode</span><br/>
+              <span class="code-kw">func</span> <span class="code-fn">transcribeTokens</span>(audio: <span class="code-type">AudioBuffer</span>) async -&gt; Result&lt;<span class="code-type">TextToken</span>, Never&gt; {<br/>
+              &nbsp;&nbsp;<span class="code-kw">let</span> decoder = <span class="code-type">WhisperKit</span>.load(.tiny)<br/>
+              &nbsp;&nbsp;<span class="code-kw">return</span> .success(decoder.<span class="code-fn">streamDirectToCursor</span>())<br/>
+              }<span class="cursor-line"></span>
+            </div>
+
+            <div class="window-footer-strip">
+              <div class="weights-row">
+                <button class="chip-btn active" onclick="pickModelWeight('tiny', 0)">Tiny (&lt;22ms)</button>
+                <button class="chip-btn" onclick="pickModelWeight('base', 1)">Base (&lt;36ms)</button>
+                <button class="chip-btn" onclick="pickModelWeight('small', 2)">Small (&lt;62ms)</button>
+                <button class="chip-btn" onclick="pickModelWeight('turbo', 3)">Turbo (&lt;85ms)</button>
+              </div>
+
+              <button class="btn-copy-tag" onclick="copyInstallCmd()">
+                <span>Copy install command</span>
+              </button>
             </div>
           </div>
         </div>
+
       </div>
     </section>
 
-    <!-- Architecture & Features -->
-    <section class="section" id="features">
+    <!-- Comparison: Hardware-Native vs Cloud Speech APIs -->
+    <section class="compare-section" id="comparison">
       <div class="container">
-        <div class="section-head">
-          <h2>three core systems</h2>
-          <p class="section-lead">engineered specifically for apple silicon unified memory.</p>
+        
+        <div class="section-editorial-header">
+          <div class="section-kicker-cyan">Architectural Choice</div>
+          <h2 class="section-display-h2">Hardware-native vs Remote cloud APIs.</h2>
+          <p class="section-lead-muted">
+            Why send your private voice recordings across the internet when your Mac already has a 16-core Neural Engine designed for machine learning inference?
+          </p>
         </div>
 
-        <div class="feature-grid">
-          <div class="well feature-card">
-            <h3>whisperkit coreml</h3>
-            <p>compiled directly for apple silicon neural engines to process acoustic frames in parallel memory.</p>
+        <div class="compare-grid-2col">
+          
+          <div class="card-compare-box is-local">
+            <span class="compare-pill pill-cyan">OPENFLOW · LOCAL NEURAL</span>
+            <h3 class="compare-title">On-Device Apple Silicon</h3>
+            <ul class="compare-list">
+              <li class="compare-row">
+                <span class="icon-symbol icon-cyan">✓</span>
+                <span><strong>&lt;24ms instant latency:</strong> Zero network roundtrips. Tokens stream as words leave your lips.</span>
+              </li>
+              <li class="compare-row">
+                <span class="icon-symbol icon-cyan">✓</span>
+                <span><strong>100% Air-Gapped Privacy:</strong> No audio recordings ever leave your Mac. Works in airplane mode.</span>
+              </li>
+              <li class="compare-row">
+                <span class="icon-symbol icon-cyan">✓</span>
+                <span><strong>Free &amp; Open Source:</strong> Apache 2.0 / MIT. No $18–$30/mo subscriptions or tier quotas.</span>
+              </li>
+              <li class="compare-row">
+                <span class="icon-symbol icon-cyan">✓</span>
+                <span><strong>Zero Idle Battery Drain:</strong> CoreML sleeps instantly when speech pauses.</span>
+              </li>
+            </ul>
           </div>
 
-          <div class="well feature-card">
-            <h3>smart corrections</h3>
-            <p>voice commands like “scratch that” purge errors from the active target input without key repeats.</p>
+          <div class="card-compare-box">
+            <span class="compare-pill pill-dim">CLOUD DICTATION APPS</span>
+            <h3 class="compare-title">Remote Cloud APIs</h3>
+            <ul class="compare-list">
+              <li class="compare-row">
+                <span class="icon-symbol icon-dim">✗</span>
+                <span><strong>600–1,200ms lag:</strong> Audio chunks must upload, transcribe remotely, and download.</span>
+              </li>
+              <li class="compare-row">
+                <span class="icon-symbol icon-dim">✗</span>
+                <span><strong>Server-Side Voice Storage:</strong> Audio recordings saved on third-party cloud database clusters.</span>
+              </li>
+              <li class="compare-row">
+                <span class="icon-symbol icon-dim">✗</span>
+                <span><strong>$15–$30/mo subscription costs:</strong> Locks everyday productivity behind recurring paywalls.</span>
+              </li>
+              <li class="compare-row">
+                <span class="icon-symbol icon-dim">✗</span>
+                <span><strong>Fails without Wi-Fi:</strong> Completely non-functional on flights, subways, or remote locations.</span>
+              </li>
+            </ul>
           </div>
 
-          <div class="well feature-card">
-            <h3>kokoro tts engine</h3>
-            <p>on-device neural voice synthesizer reads back highlighted text with zero latency.</p>
-          </div>
         </div>
-      </div>
-    </section>
 
-    <!-- System Requirements Node Grid -->
-    <section class="section" id="install">
-      <div class="container">
-        <div class="section-head">
-          <h2>system specifications</h2>
-          <p class="section-lead">compatible with all m-series mac computers.</p>
-        </div>
-
-        <div class="well arch-card">
-          <div class="arch-node">
-            <span class="arch-node-title">processor</span>
-            <span class="arch-node-desc">apple m1, m2, m3, m4</span>
-          </div>
-          <div class="arch-node">
-            <span class="arch-node-title">os version</span>
-            <span class="arch-node-desc">macos 14 sonoma or later</span>
-          </div>
-          <div class="arch-node">
-            <span class="arch-node-title">neural engine</span>
-            <span class="arch-node-desc">16-core coreml runtime</span>
-          </div>
-          <div class="arch-node">
-            <span class="arch-node-title">distribution</span>
-            <span class="arch-node-desc">universal binary, notarized</span>
-          </div>
-        </div>
       </div>
     </section>
   </main>
 
-  <!-- Statement Footer -->
-  <footer class="site-footer">
-    <div class="container footer-layout">
-      <div class="footer-copy">
-        openflow · open source under mit license
+  <!-- Editorial Brand Footer -->
+  <footer class="study-footer">
+    <div class="container footer-flex">
+      <div class="footer-brand">
+        <span class="brand-wave" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="footerSineGrad" x1="2" y1="14" x2="26" y2="14" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#38bdf8"/>
+                <stop offset="50%" stop-color="#bae6fd"/>
+                <stop offset="100%" stop-color="#38bdf8"/>
+              </linearGradient>
+            </defs>
+            <path d="M 2 14 C 4.19 7, 5.81 7, 8 14 C 10.19 21, 11.81 21, 14 14 C 16.19 7, 17.81 7, 20 14 C 22.19 21, 23.81 21, 26 14" stroke="url(#footerSineGrad)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <span style="font-weight:600; font-size:1.05rem;">openflow</span>
+        <span style="color:var(--text-dim); font-size:0.85rem; font-family:var(--font-geist-mono);">· on-device voice companion</span>
       </div>
-      <ul class="footer-links">
-        <li><a href="https://github.com/abhilashpanda04/Openflow" class="footer-link" rel="noopener noreferrer">source code</a></li>
-        <li><a href="https://github.com/abhilashpanda04/Openflow/releases" class="footer-link" rel="noopener noreferrer">releases</a></li>
-        <li><a href="https://github.com/abhilashpanda04/Openflow/blob/main/LICENSE" class="footer-link" rel="noopener noreferrer">mit license</a></li>
+
+      <ul class="footer-nav-list">
+        <li><a href="https://github.com/abhilashpanda04/Openflow" class="footer-link" rel="noopener noreferrer">Source Code</a></li>
+        <li><a href="https://github.com/abhilashpanda04/Openflow/releases" class="footer-link" rel="noopener noreferrer">Releases</a></li>
+        <li><a href="https://github.com/abhilashpanda04/Openflow/blob/main/LICENSE" class="footer-link" rel="noopener noreferrer">MIT License</a></li>
       </ul>
     </div>
   </footer>
 
+  <!-- Scripts -->
   <script>
-    // Copy command helper
-    function copyInstallCmd() {
-      const cmd = 'curl -fsSL https://abhilashpanda04.github.io/Openflow/install.sh | bash';
-      navigator.clipboard.writeText(cmd);
-      const label = document.getElementById('copy-label');
-      if (label) {
-        label.textContent = 'copied';
-        setTimeout(() => { label.textContent = 'copy'; }, 2000);
-      }
+    // 1. Accordion Drawer Controller
+    function togglePattern(cardId) {
+      const card = document.getElementById(cardId);
+      if (!card) return;
+      const isOpen = card.classList.contains('is-open');
+      
+      document.querySelectorAll('.pattern-accordion-card').forEach(c => {
+        if (c !== card) c.classList.remove('is-open');
+      });
+
+      card.classList.toggle('is-open', !isOpen);
+      playClickChime();
     }
 
-    // Interactive Scenario Switcher
-    const scenarios = [
-      "func parseTokens(input: AudioBuffer) -> StreamResult {",
-      "openflow daemon --ane-threads 16 --vad-threshold 0.3",
-      "delete last sentence and replace with unified memory."
+    // 2. Web Audio Synthesizer Chime
+    let audioContext = null;
+    function playClickChime() {
+      try {
+        if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioContext.state === 'suspended') audioContext.resume();
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, audioContext.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(900, audioContext.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.04, audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.18);
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+        osc.start();
+        osc.stop(audioContext.currentTime + 0.18);
+      } catch (e) {}
+    }
+
+    // 3. Studio Workspace Switcher
+    const studioPresets = [
+      {
+        name: "Xcode",
+        html: `<span class="code-comment">// Openflow typing live into Xcode</span><br/><span class="code-kw">func</span> <span class="code-fn">transcribeTokens</span>(audio: <span class="code-type">AudioBuffer</span>) async -&gt; Result&lt;<span class="code-type">TextToken</span>, Never&gt; {<br/>&nbsp;&nbsp;<span class="code-kw">let</span> decoder = <span class="code-type">WhisperKit</span>.load(.tiny)<br/>&nbsp;&nbsp;<span class="code-kw">return</span> .success(decoder.<span class="code-fn">streamDirectToCursor</span>())<br/>}<span class="cursor-line"></span>`
+      },
+      {
+        name: "Cursor",
+        html: `<span class="code-comment">// Voice refactoring in Cursor / VS Code</span><br/><span class="code-kw">export function</span> <span class="code-fn">useSpeechSession</span>() {<br/>&nbsp;&nbsp;<span class="code-kw">const</span> [state, setState] = useState({ aneActive: <span class="code-kw">true</span> });<br/>&nbsp;&nbsp;<span class="code-comment">// Voice macro: "add error boundary and export hook"</span><br/>&nbsp;&nbsp;<span class="code-kw">return</span> { latency: <span class="code-str">"22ms"</span>, tokens: state };<br/>}<span class="cursor-line"></span>`
+      },
+      {
+        name: "Slack",
+        html: `Hey team! Shipped the Openflow on-device speech engine. 300+ WPM dictation directly into any Mac app without cloud round trips. 100% private, zero network access.<span class="cursor-line"></span>`
+      }
     ];
 
-    function switchScenario(index) {
-      document.querySelectorAll('.scenario-pill').forEach((btn, i) => {
-        btn.classList.toggle('active', i === index);
+    function switchStudioWorkspace(idx) {
+      document.querySelectorAll('.win-tab-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', i === idx);
       });
-      const output = document.getElementById('stream-output');
-      if (output) {
-        output.textContent = scenarios[index];
+      playClickChime();
+      document.getElementById('studio-editor-box').innerHTML = studioPresets[idx].html;
+    }
+
+    // 4. Model Weights Switcher
+    const weightsData = {
+      tiny: { lat: "<22ms", ram: "142 MB", wpm: "324 WPM" },
+      base: { lat: "<36ms", ram: "210 MB", wpm: "312 WPM" },
+      small: { lat: "<62ms", ram: "480 MB", wpm: "296 WPM" },
+      turbo: { lat: "<85ms", ram: "920 MB", wpm: "284 WPM" }
+    };
+
+    function pickModelWeight(key, idx) {
+      document.querySelectorAll('.chip-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', i === idx);
+      });
+      playClickChime();
+      const item = weightsData[key];
+      document.getElementById('studio-lat-stat').textContent = item.lat;
+      document.getElementById('studio-ram-stat').textContent = item.ram;
+      document.getElementById('studio-wpm-stat').textContent = item.wpm;
+    }
+
+    // 5. Simulate Streaming Transcription
+    function simulateVoiceStreaming() {
+      playClickChime();
+      if (window.triggerWavePulse) window.triggerWavePulse();
+      const editor = document.getElementById('studio-editor-box');
+      editor.innerHTML = '<span class="code-kw">[WhisperKit CoreML recording...]</span><span class="cursor-line"></span>';
+      
+      const sampleText = "Openflow turns your natural speech into formatted text with zero latency directly on Apple Silicon.";
+      let charI = 0;
+      setTimeout(() => {
+        editor.innerHTML = '';
+        const timer = setInterval(() => {
+          if (charI < sampleText.length) {
+            editor.innerHTML = sampleText.slice(0, charI + 1) + '<span class="cursor-line"></span>';
+            charI++;
+          } else {
+            clearInterval(timer);
+            playClickChime();
+          }
+        }, 18);
+      }, 250);
+    }
+
+    // 6. Copy Command Helper
+    function copyInstallCmd() {
+      const script = 'curl -fsSL https://abhilashpanda04.github.io/Openflow/install.sh | bash';
+      navigator.clipboard.writeText(script);
+      playClickChime();
+      const tag = document.getElementById('copy-btn-feedback');
+      if (tag) {
+        tag.textContent = 'Copied!';
+        setTimeout(() => { tag.textContent = 'Copy'; }, 2000);
       }
     }
+
+    // 7. Theme Toggle & Persistence
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      try {
+        localStorage.setItem('openflow-theme', newTheme);
+      } catch(e) {}
+      playClickChime();
+    }
+
+    // ==========================================================================
+    // 8. Kinetic Acoustic Sinewave Motion Graphics (Graphic Designer Implementation)
+    // Directly mirrors Openflow's Logo Waveform (Audio crest -> Resonant dip -> Crescendo)
+    // With dynamic theme adaptation (Dark glowing cyan vs Warm paper oceanic teal)
+    // ==========================================================================
+    (function initAcousticSinewaveVisualizer() {
+      const canvas = document.getElementById('acoustic-sinewave-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      let width = 0;
+      let height = 0;
+      let dpr = 1;
+      let animationFrameId = null;
+      let time = 0;
+      let voiceEnergy = 1.0;
+      let targetVoiceEnergy = 1.0;
+
+      // Mouse interaction (gentle acoustic deflection)
+      let mouseX = -1000;
+      let mouseY = -1000;
+      let smoothMouseX = -1000;
+      let smoothMouseY = -1000;
+
+      window.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+      }, { passive: true });
+
+      // Expose function to trigger acoustic energy on mic simulation
+      window.triggerWavePulse = function() {
+        voiceEnergy = 2.4;
+      };
+
+      function resize() {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = Math.floor(width * dpr);
+        canvas.height = Math.floor(height * dpr);
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+        ctx.scale(dpr, dpr);
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      // Sound particle nodes inspired by the logo's acoustic circles at cx=156, cx=356
+      const particles = [
+        { progress: 0.18, speed: 0.00032, radius: 4.5, pulseSpeed: 2.2 },
+        { progress: 0.38, speed: 0.00045, radius: 3.5, pulseSpeed: 2.8 },
+        { progress: 0.62, speed: 0.00028, radius: 5.5, pulseSpeed: 1.9 },
+        { progress: 0.82, speed: 0.00038, radius: 4.0, pulseSpeed: 2.5 }
+      ];
+
+      function computeWaveY(x, timeOffset, freqMod, ampMod, isMain) {
+        const nx = x / width;
+        // Asymmetric Speech Packet Envelope matching Openflow logo's waveform shape:
+        // Level entry -> Crest -> Deep acoustic trough -> Crescendo rise -> Smooth taper
+        const env = Math.pow(Math.sin(nx * Math.PI), 1.25) * (1.0 + 0.3 * Math.sin(nx * 2 * Math.PI));
+        
+        // Base sinewave frequencies tuned to match the logo path:
+        // M108 256 C140 208, 172 184, 204 184 C236 184, 252 328, 284 328 C316 328, 348 208, 404 152
+        const w1 = Math.sin(nx * Math.PI * 2.8 * freqMod - time * 0.9 + timeOffset) * 48;
+        const w2 = Math.sin(nx * Math.PI * 5.6 * freqMod - time * 1.4 + timeOffset + 0.8) * 22;
+        const w3 = Math.sin(nx * Math.PI * 8.4 * freqMod - time * 0.6) * 9;
+
+        // Subtle organic breathing modulation
+        const breath = 1.0 + 0.08 * Math.sin(time * 0.7);
+
+        // Optional mouse deflection
+        let mouseDeflect = 0;
+        if (smoothMouseX > 0) {
+          const dist = Math.hypot(x - smoothMouseX, (height * 0.44) - smoothMouseY);
+          if (dist < 320) {
+            mouseDeflect = Math.cos((dist / 320) * (Math.PI / 2)) * 18 * Math.sin(time * 3);
+          }
+        }
+
+        const centerY = height * 0.44;
+        return centerY + ((w1 + w2 + w3) * env * ampMod * breath * voiceEnergy) + mouseDeflect;
+      }
+
+      function render() {
+        time += 0.016;
+
+        // Smooth energy damping back to 1.0
+        voiceEnergy += (targetVoiceEnergy - voiceEnergy) * 0.04;
+
+        // Smooth mouse lerp
+        if (mouseX > 0) {
+          smoothMouseX += (mouseX - smoothMouseX) * 0.06;
+          smoothMouseY += (mouseY - smoothMouseY) * 0.06;
+        }
+
+        ctx.clearRect(0, 0, width, height);
+
+        const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+
+        // Palette Definition
+        // Dark Theme: Radiant electric cyan / sky (#38BDF8) & ice (#BAE6FD) over deep navy
+        // Light Theme: Swiss editorial Logo Oceanic Teal (#0E7490) & Deep Cyan (#0284C7) on archival paper
+        const mainGrad = ctx.createLinearGradient(width * 0.08, 0, width * 0.92, 0);
+        if (isDark) {
+          mainGrad.addColorStop(0, 'rgba(14, 116, 144, 0.0)');
+          mainGrad.addColorStop(0.2, 'rgba(14, 116, 144, 0.65)');
+          mainGrad.addColorStop(0.5, 'rgba(56, 189, 248, 0.95)');
+          mainGrad.addColorStop(0.8, 'rgba(186, 230, 253, 0.9)');
+          mainGrad.addColorStop(1, 'rgba(56, 189, 248, 0.0)');
+        } else {
+          mainGrad.addColorStop(0, 'rgba(14, 116, 144, 0.0)');
+          mainGrad.addColorStop(0.2, 'rgba(14, 116, 144, 0.45)');
+          mainGrad.addColorStop(0.5, 'rgba(14, 116, 144, 0.85)');
+          mainGrad.addColorStop(0.8, 'rgba(2, 132, 199, 0.75)');
+          mainGrad.addColorStop(1, 'rgba(14, 116, 144, 0.0)');
+        }
+
+        // Layer 1: Ethereal Background Chromatic Glow Ribbon
+        ctx.save();
+        ctx.beginPath();
+        const glowPoints = 50;
+        for (let i = 0; i <= glowPoints; i++) {
+          const x = (i / glowPoints) * width;
+          const y = computeWaveY(x, 0, 1.0, 1.0, true);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = isDark ? 'rgba(56, 189, 248, 0.22)' : 'rgba(14, 116, 144, 0.18)';
+        ctx.lineWidth = isDark ? 14 : 9;
+        ctx.lineCap = 'round';
+        ctx.shadowBlur = isDark ? 28 : 16;
+        ctx.shadowColor = isDark ? 'rgba(56, 189, 248, 0.6)' : 'rgba(14, 116, 144, 0.3)';
+        ctx.stroke();
+        ctx.restore();
+
+        // Layer 2: Harmonic Multi-Ribbons (4 layered voice overtones)
+        const ribbons = [
+          { timeOffset: -0.6, freq: 0.94, amp: 0.65, width: 1.1, alpha: isDark ? 0.25 : 0.2 },
+          { timeOffset: -0.3, freq: 0.97, amp: 0.82, width: 1.4, alpha: isDark ? 0.4 : 0.3 },
+          { timeOffset: 0.3,  freq: 1.03, amp: 0.78, width: 1.4, alpha: isDark ? 0.4 : 0.3 },
+          { timeOffset: 0.6,  freq: 1.06, amp: 0.62, width: 1.1, alpha: isDark ? 0.25 : 0.2 }
+        ];
+
+        ribbons.forEach((r) => {
+          ctx.save();
+          ctx.beginPath();
+          const step = 8;
+          for (let x = 0; x <= width; x += step) {
+            const y = computeWaveY(x, r.timeOffset, r.freq, r.amp, false);
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.strokeStyle = isDark 
+            ? `rgba(56, 189, 248, ${r.alpha})`
+            : `rgba(14, 116, 144, ${r.alpha})`;
+          ctx.lineWidth = r.width;
+          ctx.stroke();
+          ctx.restore();
+        });
+
+        // Layer 3: Primary Master Sinewave (Exact Logo Hero Wave)
+        ctx.save();
+        ctx.beginPath();
+        const step = 6;
+        for (let x = 0; x <= width; x += step) {
+          const y = computeWaveY(x, 0, 1.0, 1.0, true);
+          if (x === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = mainGrad;
+        ctx.lineWidth = isDark ? 2.6 : 2.2;
+        ctx.lineCap = 'round';
+        if (isDark) {
+          ctx.shadowBlur = 14;
+          ctx.shadowColor = 'rgba(56, 189, 248, 0.75)';
+        } else {
+          ctx.shadowBlur = 8;
+          ctx.shadowColor = 'rgba(14, 116, 144, 0.35)';
+        }
+        ctx.stroke();
+        ctx.restore();
+
+        // Layer 4: Acoustic Sound Nodes (Circular beads traversing wave crests, from logo.svg)
+        particles.forEach((p) => {
+          p.progress += p.speed;
+          if (p.progress > 0.94) p.progress = 0.08;
+
+          const px = p.progress * width;
+          const py = computeWaveY(px, 0, 1.0, 1.0, true);
+          const pulse = 1.0 + 0.28 * Math.sin(time * p.pulseSpeed);
+          const rad = p.radius * pulse;
+
+          ctx.save();
+          // Halo glow
+          ctx.beginPath();
+          ctx.arc(px, py, rad * 2.4, 0, Math.PI * 2);
+          ctx.fillStyle = isDark ? 'rgba(56, 189, 248, 0.18)' : 'rgba(14, 116, 144, 0.12)';
+          ctx.fill();
+
+          // Core node
+          ctx.beginPath();
+          ctx.arc(px, py, rad, 0, Math.PI * 2);
+          if (isDark) {
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowBlur = 12;
+            ctx.shadowColor = 'rgba(186, 230, 253, 0.95)';
+          } else {
+            ctx.fillStyle = '#0e7490';
+            ctx.shadowBlur = 6;
+            ctx.shadowColor = 'rgba(14, 116, 144, 0.4)';
+          }
+          ctx.fill();
+
+          // Center micro dot
+          ctx.beginPath();
+          ctx.arc(px, py, rad * 0.45, 0, Math.PI * 2);
+          ctx.fillStyle = isDark ? '#38bdf8' : '#ffffff';
+          ctx.fill();
+
+          ctx.restore();
+        });
+
+        if (!document.hidden) {
+          animationFrameId = requestAnimationFrame(render);
+        }
+      }
+
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && !animationFrameId) {
+          render();
+        } else if (document.hidden && animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+          animationFrameId = null;
+        }
+      });
+
+      render();
+    })();
   </script>
 </body>
 </html>
