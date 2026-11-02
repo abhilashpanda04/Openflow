@@ -29,26 +29,55 @@ private extension Color {
     }
 }
 
-// MARK: - Theme Constants
+// MARK: - Design System Tokens (Swiss Editorial & Apple Craft)
 private enum PopoverTheme {
     static var isDark: Bool { AppThemeManager.shared.isDark }
-    static var base: Color { isDark ? Color(hex: "0e121d") : Color.white }
-    static var surface: Color { isDark ? Color(hex: "0f131c") : Color(hex: "f8fafc") }
-    static var elevated: Color { isDark ? Color(hex: "181b25") : Color(hex: "f1f5f9") }
-    static var border: Color { isDark ? Color(hex: "222736") : Color(hex: "e2e8f0") }
-    static var borderLight: Color { isDark ? Color.white.opacity(0.09) : Color(hex: "cbd5e1").opacity(0.8) }
-    static var textPrimary: Color { isDark ? Color.white : Color(hex: "0f172a") }
-    static var textMuted: Color { isDark ? Color.white.opacity(0.55) : Color(hex: "64748b") }
-    static var textSubtle: Color { isDark ? Color.white.opacity(0.40) : Color(hex: "94a3b8") }
-    static var chipBg: Color { isDark ? Color.white.opacity(0.08) : Color(hex: "e2e8f0").opacity(0.70) }
-    static var cardBg: Color { isDark ? Color.white.opacity(0.03) : Color(hex: "f8fafc") }
-    static var cardBorder: Color { isDark ? Color.white.opacity(0.06) : Color(hex: "e2e8f0") }
-    static var bottomBarBg: Color { isDark ? Color(hex: "0a0d14").opacity(0.80) : Color(hex: "f1f5f9").opacity(0.95) }
-    static let coral = Color(hex: "ff5c5c")
-    static let violet = Color(hex: "6366f1")
-    static let cyan = Color(hex: "06b6d4")
+
+    // Surfaces
+    static var baseBg: Color {
+        isDark ? Color(hex: "080d1a") : Color(hex: "ffffff")
+    }
+    static var cardBg: Color {
+        isDark ? Color.white.opacity(0.04) : Color(hex: "f8fafc")
+    }
+    static var cardBorder: Color {
+        isDark ? Color.white.opacity(0.08) : Color(hex: "0f172a").opacity(0.08)
+    }
+    static var subtleDivider: Color {
+        isDark ? Color.white.opacity(0.06) : Color(hex: "0f172a").opacity(0.06)
+    }
+    static var hoverBg: Color {
+        isDark ? Color.white.opacity(0.06) : Color(hex: "f1f5f9")
+    }
+    static var chipBg: Color {
+        isDark ? Color.white.opacity(0.07) : Color(hex: "e2e8f0").opacity(0.75)
+    }
+
+    // Typography
+    static var textPrimary: Color {
+        isDark ? Color.white : Color(hex: "090d16")
+    }
+    static var textSecondary: Color {
+        isDark ? Color.white.opacity(0.72) : Color(hex: "334155")
+    }
+    static var textMuted: Color {
+        isDark ? Color.white.opacity(0.48) : Color(hex: "64748b")
+    }
+    static var textSubtle: Color {
+        isDark ? Color.white.opacity(0.30) : Color(hex: "94a3b8")
+    }
+
+    // Brand Accents
+    static let cyan = Color(hex: "0ea5e9")
+    static let sky = Color(hex: "38bdf8")
+    static let navy = Color(hex: "0a2540")
+    static let teal = Color(hex: "0e7490")
+    static let ice = Color(hex: "bae6fd")
+
+    // Semantic Status
     static let emerald = Color(hex: "10b981")
     static let amber = Color(hex: "f59e0b")
+    static let coral = Color(hex: "f43f5e")
 }
 
 // MARK: - Observable State for Menu Bar Popover
@@ -108,6 +137,8 @@ public final class MenuBarPopoverState: ObservableObject {
 public struct MenuBarPopoverView: View {
     @ObservedObject public var state: MenuBarPopoverState
     @ObservedObject private var themeManager = AppThemeManager.shared
+    @State private var showDiagnostics: Bool = false
+    @State private var copiedTranscript: Bool = false
 
     public init(state: MenuBarPopoverState) {
         self.state = state
@@ -115,55 +146,67 @@ public struct MenuBarPopoverView: View {
 
     public var body: some View {
         VStack(spacing: 0) {
-            // Top Header / App Banner
-            headerView
+            // 1. Sleek Brand Header
+            headerBar
 
-            // Menu Body Container
-            VStack(spacing: 8) {
-                // Section 0: Permission Warning Banner (if any required permission missing)
+            // 2. Primary Body Content
+            VStack(spacing: 10) {
+                // Permissions Callout (Contextual, refined amber tone)
                 if !state.isMicrophonePermissionGranted || !state.isAccessibilityPermissionGranted {
-                    permissionAlertBanner
+                    permissionCallout
                 }
 
-                // Section 1: Primary Action Items
-                primaryActionsSection
+                // Voice Recording Hero Instrument
+                recordingHeroCard
 
-                // Section 2: Engine Diagnostics Card
-                telemetryCardSection
+                // Recent Flow Note (Editorial transcription card)
+                recentTranscriptCard
 
-                // Section 3: Service Management (If Remote Server)
+                // Hardware & Neural Engine Instrument Strip
+                hardwareInstrumentStrip
+
+                // Expandable Telemetry Drawer (RAM, CPU, Latency - Clean by default!)
+                if showDiagnostics {
+                    diagnosticsDrawer
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+
+                // Service Controls (If Remote Server Mode)
                 if state.isRemoteServer {
                     serviceControlsSection
                 }
 
-                // Section 4: Settings & Quit System Actions
-                footerActionsSection
+                // System Actions & Utilities
+                footerActionsList
             }
-            .padding(10)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
 
-            // Popover Bottom Notch & Tip Indicator
-            bottomNotchBar
+            // 3. Bottom Whisper Status Bar
+            bottomBar
         }
-        .frame(width: 390)
-        .background(PopoverTheme.base)
+        .frame(width: 370)
+        .background(PopoverTheme.baseBg)
         .preferredColorScheme(themeManager.colorScheme)
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: showDiagnostics)
+        .animation(.easeInOut(duration: 0.2), value: state.isRecording)
     }
 
-    // MARK: - Header
-    private var headerView: some View {
+    // MARK: - 1. Sleek Brand Header
+    private var headerBar: some View {
         HStack(alignment: .center, spacing: 10) {
-            // Unified Official Openflow Brand Logo
-            OpenflowLogoView(size: 34, cornerRadius: 10)
-                .shadow(color: Color(hex: "0284c7").opacity(0.35), radius: 8, x: 0, y: 2)
+            // Official Openflow Squircle Logo
+            OpenflowLogoView(size: 28, cornerRadius: 8)
+                .shadow(color: PopoverTheme.cyan.opacity(PopoverTheme.isDark ? 0.35 : 0.2), radius: 6, x: 0, y: 2)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 1.5) {
                 HStack(spacing: 6) {
                     Text("Openflow")
-                        .font(.system(size: 14, weight: .bold))
+                        .font(.system(size: 13.5, weight: .bold, design: .default))
                         .foregroundStyle(PopoverTheme.textPrimary)
 
                     Text("v0.1.0")
-                        .font(.system(size: 9.5, weight: .bold))
+                        .font(.system(size: 9, weight: .semibold, design: .monospaced))
                         .padding(.horizontal, 5)
                         .padding(.vertical, 1.5)
                         .background(PopoverTheme.chipBg)
@@ -171,38 +214,39 @@ public struct MenuBarPopoverView: View {
                         .clipShape(Capsule())
                 }
 
-                Text("Real-time On-Device Neural Speech")
-                    .font(.system(size: 11))
+                Text("On-Device Voice Engine")
+                    .font(.system(size: 10.5))
                     .foregroundStyle(PopoverTheme.textMuted)
             }
 
             Spacer()
 
-            // Quick Status Indicator
+            // Status Indicator Pill
             let allPermsGranted = state.isMicrophonePermissionGranted && state.isAccessibilityPermissionGranted
             HStack(spacing: 5) {
                 Circle()
-                    .fill(allPermsGranted ? Color(hex: "10b981") : Color(hex: "f59e0b"))
+                    .fill(allPermsGranted ? PopoverTheme.emerald : PopoverTheme.amber)
                     .frame(width: 6, height: 6)
-                    .shadow(color: (allPermsGranted ? Color(hex: "10b981") : Color(hex: "f59e0b")).opacity(0.8), radius: 4)
+                    .shadow(color: (allPermsGranted ? PopoverTheme.emerald : PopoverTheme.amber).opacity(0.6), radius: 3)
 
-                Text(allPermsGranted ? "Online" : "Needs Access")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(allPermsGranted ? Color(hex: "10b981") : Color(hex: "f59e0b"))
+                Text(allPermsGranted ? "Ready" : "Setup Needed")
+                    .font(.system(size: 10.5, weight: .semibold))
+                    .foregroundStyle(allPermsGranted ? PopoverTheme.emerald : PopoverTheme.amber)
             }
             .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background((allPermsGranted ? Color(hex: "10b981") : Color(hex: "f59e0b")).opacity(0.12))
+            .padding(.vertical, 3.5)
+            .background((allPermsGranted ? PopoverTheme.emerald : PopoverTheme.amber).opacity(PopoverTheme.isDark ? 0.12 : 0.08))
             .clipShape(Capsule())
             .overlay(
-                Capsule().stroke((allPermsGranted ? Color(hex: "10b981") : Color(hex: "f59e0b")).opacity(0.25), lineWidth: 1)
+                Capsule()
+                    .stroke((allPermsGranted ? PopoverTheme.emerald : PopoverTheme.amber).opacity(0.22), lineWidth: 1)
             )
         }
         .padding(.horizontal, 14)
-        .padding(.vertical, 12)
+        .padding(.vertical, 11)
         .background(
             LinearGradient(
-                colors: [PopoverTheme.isDark ? Color.white.opacity(0.06) : Color.black.opacity(0.02), Color.clear],
+                colors: [PopoverTheme.isDark ? Color.white.opacity(0.04) : Color.black.opacity(0.015), Color.clear],
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -210,22 +254,22 @@ public struct MenuBarPopoverView: View {
         .overlay(
             VStack {
                 Spacer()
-                Rectangle().fill(PopoverTheme.borderLight).frame(height: 1)
+                Rectangle().fill(PopoverTheme.subtleDivider).frame(height: 1)
             }
         )
     }
 
-    // MARK: - Section 0: Permission Alert Banner
-    private var permissionAlertBanner: some View {
+    // MARK: - 2. Permission Callout (Warm Architectural Style)
+    private var permissionCallout: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(Color(hex: "f59e0b"))
+                Image(systemName: "hand.raised.fill")
+                    .font(.system(size: 10.5))
+                    .foregroundStyle(PopoverTheme.amber)
 
                 Text("PERMISSIONS REQUIRED")
-                    .font(.system(size: 9.5, weight: .bold))
-                    .foregroundStyle(Color(hex: "f59e0b"))
+                    .font(.system(size: 9.5, weight: .bold, design: .monospaced))
+                    .foregroundStyle(PopoverTheme.amber)
                     .tracking(0.5)
 
                 Spacer()
@@ -233,19 +277,15 @@ public struct MenuBarPopoverView: View {
 
             let micMissing = !state.isMicrophonePermissionGranted
             let accMissing = !state.isAccessibilityPermissionGranted
-            let message: String = {
-                if micMissing && accMissing {
-                    return "Microphone access is needed to capture speech, and Accessibility is required to type text into active apps."
-                } else if micMissing {
-                    return "Microphone access is needed to record your voice."
-                } else {
-                    return "Accessibility permission is required to paste transcribed text and run voice commands."
-                }
-            }()
+            let msg = (micMissing && accMissing)
+                ? "Microphone and Accessibility permissions are needed to dictate and type into your active apps."
+                : (micMissing
+                    ? "Microphone access is needed to capture speech on Apple Silicon."
+                    : "Accessibility permission is required to type transcribed text into active fields.")
 
-            Text(message)
+            Text(msg)
                 .font(.system(size: 10.5))
-                .foregroundStyle(PopoverTheme.isDark ? Color.white.opacity(0.85) : Color(hex: "92400e"))
+                .foregroundStyle(PopoverTheme.textSecondary)
                 .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
 
@@ -254,20 +294,20 @@ public struct MenuBarPopoverView: View {
                     Button {
                         state.onRequestMicrophonePermission?()
                     } label: {
-                        HStack(spacing: 3) {
+                        HStack(spacing: 4) {
                             Image(systemName: "mic.fill")
                                 .font(.system(size: 9))
                             Text("Grant Mic")
                                 .font(.system(size: 10, weight: .semibold))
                         }
-                        .padding(.horizontal, 7)
-                        .padding(.vertical, 3.5)
-                        .background(Color(hex: "ef4444").opacity(0.25))
-                        .foregroundStyle(PopoverTheme.isDark ? Color(hex: "fca5a5") : Color(hex: "b91c1c"))
-                        .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(PopoverTheme.amber.opacity(PopoverTheme.isDark ? 0.18 : 0.12))
+                        .foregroundStyle(PopoverTheme.amber)
+                        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 5, style: .continuous)
-                                .stroke(Color(hex: "ef4444").opacity(0.5), lineWidth: 1)
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .stroke(PopoverTheme.amber.opacity(0.35), lineWidth: 1)
                         )
                     }
                     .buttonStyle(.plain)
@@ -277,20 +317,20 @@ public struct MenuBarPopoverView: View {
                     Button {
                         state.onRequestAccessibilityPermission?()
                     } label: {
-                        HStack(spacing: 3) {
-                            Image(systemName: "hand.raised.fill")
+                        HStack(spacing: 4) {
+                            Image(systemName: "lock.open.fill")
                                 .font(.system(size: 9))
                             Text("Grant Accessibility")
                                 .font(.system(size: 10, weight: .semibold))
                         }
-                        .padding(.horizontal, 7)
-                        .padding(.vertical, 3.5)
-                        .background(Color(hex: "f59e0b").opacity(0.25))
-                        .foregroundStyle(PopoverTheme.isDark ? Color(hex: "fcd34d") : Color(hex: "b45309"))
-                        .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(PopoverTheme.amber.opacity(PopoverTheme.isDark ? 0.18 : 0.12))
+                        .foregroundStyle(PopoverTheme.amber)
+                        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 5, style: .continuous)
-                                .stroke(Color(hex: "f59e0b").opacity(0.5), lineWidth: 1)
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .stroke(PopoverTheme.amber.opacity(0.35), lineWidth: 1)
                         )
                     }
                     .buttonStyle(.plain)
@@ -301,688 +341,492 @@ public struct MenuBarPopoverView: View {
                 Button {
                     state.onOpenSettings?()
                 } label: {
-                    Text("Resolve in Settings →")
+                    Text("Settings →")
                         .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(Color(hex: "3b82f6"))
+                        .foregroundStyle(PopoverTheme.textMuted)
                 }
                 .buttonStyle(.plain)
             }
-            .padding(.top, 1)
+            .padding(.top, 2)
         }
-        .padding(8)
+        .padding(9)
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(PopoverTheme.isDark ? Color(hex: "b45309").opacity(0.18) : Color(hex: "fef3c7"))
+                .fill(PopoverTheme.amber.opacity(PopoverTheme.isDark ? 0.08 : 0.05))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .stroke(Color(hex: "f59e0b").opacity(PopoverTheme.isDark ? 0.4 : 0.6), lineWidth: 1)
+                .stroke(PopoverTheme.amber.opacity(0.20), lineWidth: 1)
         )
     }
 
-    // MARK: - Section 1: Primary Actions
-    private var primaryActionsSection: some View {
-        VStack(spacing: 6) {
-            // Start / Stop Recording Hero Button
-            Button {
-                state.onStartStopRecording?()
-            } label: {
-                HStack(spacing: 12) {
-                    if state.isRecording {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                .fill(
-                                    LinearGradient(
-                                        colors: [Color(hex: "ef4444"), Color(hex: "dc2626")],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .frame(width: 30, height: 30)
-                                .shadow(color: Color(hex: "ef4444").opacity(0.55), radius: 6)
-
-                            Image(systemName: "stop.fill")
-                                .font(.system(size: 13, weight: .bold))
-                                .foregroundStyle(Color.white)
-                        }
-                    } else {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                .fill(
-                                    LinearGradient(
-                                        colors: [Color(hex: "0284c7"), Color(hex: "0369a1")],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .frame(width: 30, height: 30)
-                                .shadow(color: Color(hex: "0284c7").opacity(0.35), radius: 6, x: 0, y: 1)
-
-                            Image(systemName: "mic.fill")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundStyle(Color.white)
-                        }
-                    }
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(state.isRecording ? "Stop Recording" : "Start Recording")
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(PopoverTheme.textPrimary)
-
-                        Text(state.isRecording ? "Transcribing & typing output..." : "Stream microphone directly into active field")
-                            .font(.system(size: 10))
-                            .foregroundStyle(state.isRecording ? Color(hex: "ef4444") : PopoverTheme.textMuted)
-                    }
-
-                    Spacer()
-
-                    // Keycap Pills
-                    keycapsView(for: state.hotkeyDisplay)
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 8)
-                .background(
+    // MARK: - 3. Voice Recording Hero Instrument
+    private var recordingHeroCard: some View {
+        Button {
+            state.onStartStopRecording?()
+        } label: {
+            HStack(spacing: 12) {
+                // Tactile Record Icon / Equalizer Visualizer
+                ZStack {
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .fill(
                             state.isRecording
-                                ? LinearGradient(
-                                    colors: [Color(hex: "ef4444").opacity(PopoverTheme.isDark ? 0.22 : 0.14), Color(hex: "f43f5e").opacity(PopoverTheme.isDark ? 0.12 : 0.08), Color.clear],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                                : LinearGradient(
-                                    colors: [Color(hex: "0284c7").opacity(PopoverTheme.isDark ? 0.22 : 0.12), Color(hex: "0369a1").opacity(PopoverTheme.isDark ? 0.12 : 0.06), Color.clear],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
+                                ? LinearGradient(colors: [Color(hex: "f43f5e"), Color(hex: "e11d48")], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                : LinearGradient(colors: [PopoverTheme.navy, PopoverTheme.teal], startPoint: .topLeading, endPoint: .bottomTrailing)
                         )
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .stroke(
-                            state.isRecording
-                                ? Color(hex: "ef4444").opacity(0.40)
-                                : Color(hex: "0284c7").opacity(PopoverTheme.isDark ? 0.35 : 0.25),
-                            lineWidth: 1
+                        .frame(width: 38, height: 38)
+                        .shadow(
+                            color: state.isRecording ? PopoverTheme.coral.opacity(0.55) : PopoverTheme.cyan.opacity(0.25),
+                            radius: state.isRecording ? 8 : 4,
+                            x: 0,
+                            y: 2
                         )
-                )
-            }
-            .buttonStyle(.plain)
 
-            // Show Last Transcript Row
-            Button {
-                state.onShowLastTranscript?()
-            } label: {
-                HStack(spacing: 10) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .fill(PopoverTheme.chipBg)
-                            .frame(width: 26, height: 26)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                    .stroke(PopoverTheme.borderLight, lineWidth: 1)
-                            )
-
-                        Image(systemName: "doc.text")
-                            .font(.system(size: 12))
-                            .foregroundStyle(PopoverTheme.textPrimary.opacity(0.80))
+                    if state.isRecording {
+                        // Live dancing acoustic waveform inside button
+                        HStack(spacing: 2) {
+                            ForEach(0..<4, id: \.self) { idx in
+                                let barH = min(18.0, max(4.0, 4.0 + state.audioLevel * CGFloat(idx + 2) * 4.5))
+                                RoundedRectangle(cornerRadius: 1)
+                                    .fill(Color.white)
+                                    .frame(width: 2.2, height: barH)
+                            }
+                        }
+                    } else {
+                        Image(systemName: "mic.fill")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(Color.white)
                     }
-
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text("Show Last Transcript")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(PopoverTheme.textPrimary.opacity(0.90))
-
-                        let preview = state.lastTranscript.isEmpty
-                            ? "No dictations stored yet"
-                            : "“\(state.lastTranscript.prefix(28))...”"
-                        Text(preview)
-                            .font(.system(size: 10))
-                            .foregroundStyle(PopoverTheme.textMuted)
-                            .lineLimit(1)
-                    }
-
-                    Spacer()
-
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(PopoverTheme.textSubtle)
                 }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 6)
-                .background(Color.clear)
-            }
-            .buttonStyle(.plain)
-        }
-        .padding(6)
-        .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(PopoverTheme.cardBg)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(PopoverTheme.cardBorder, lineWidth: 1)
-        )
-    }
 
-    // MARK: - Section 2: Engine Diagnostics Card
-    private var telemetryCardSection: some View {
-        VStack(spacing: 8) {
-            // Header with mini audio equalizer
-            HStack {
-                Text("ENGINE DIAGNOSTICS & STATUS")
-                    .font(.system(size: 9.5, weight: .bold))
-                    .foregroundStyle(PopoverTheme.textSubtle)
-                    .tracking(0.6)
+                // Contextual Typography
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(state.isRecording ? "Listening & Typing..." : "Start Dictating")
+                        .font(.system(size: 13.5, weight: .semibold))
+                        .foregroundStyle(state.isRecording ? PopoverTheme.coral : PopoverTheme.textPrimary)
+
+                    Text(state.isRecording ? "Tap to finish transcription" : "Speak naturally into active field")
+                        .font(.system(size: 10.5))
+                        .foregroundStyle(PopoverTheme.textMuted)
+                }
 
                 Spacer()
 
-                HStack(spacing: 5) {
-                    Text("Input level")
-                        .font(.system(size: 9.5))
-                        .foregroundStyle(PopoverTheme.textSubtle)
-
-                    HStack(spacing: 2) {
-                        ForEach(0..<5, id: \.self) { idx in
-                            let h: CGFloat = state.isRecording
-                                ? min(14, max(3, 3 + state.audioLevel * CGFloat(idx + 2) * 2.5))
-                                : 3.0
-                            RoundedRectangle(cornerRadius: 1)
-                                .fill(state.isRecording ? Color(hex: "10b981") : (PopoverTheme.isDark ? Color.white.opacity(0.20) : Color.black.opacity(0.15)))
-                                .frame(width: 2, height: h)
-                        }
-                    }
-                    .frame(height: 14)
-                }
+                // Authentic Apple Mechanical Keycap Badge
+                keycapsBadge(for: state.hotkeyDisplay)
             }
-            .padding(.bottom, 2)
-            .overlay(
-                VStack {
-                    Spacer()
-                    Rectangle().fill(PopoverTheme.cardBorder).frame(height: 1)
-                }
+            .padding(.horizontal, 11)
+            .padding(.vertical, 9)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(
+                        state.isRecording
+                            ? PopoverTheme.coral.opacity(PopoverTheme.isDark ? 0.12 : 0.07)
+                            : PopoverTheme.cardBg
+                    )
             )
-
-            // Diagnostic Rows
-            VStack(spacing: 6) {
-                // Engine Row
-                diagnosticRow(
-                    icon: "cpu",
-                    iconColor: Color(hex: "818cf8"),
-                    title: "Engine"
-                ) {
-                    HStack(spacing: 5) {
-                        Text(state.engineTitle)
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(PopoverTheme.textPrimary)
-
-                        Text(state.engineBadge)
-                            .font(.system(size: 9.5, weight: .semibold))
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 1)
-                            .background(PopoverTheme.chipBg)
-                            .foregroundStyle(PopoverTheme.textMuted)
-                            .cornerRadius(4)
-                    }
-                }
-
-                // Model State Row
-                diagnosticRow(
-                    icon: "checkmark.shield.fill",
-                    iconColor: Color(hex: "38bdf8"),
-                    title: "Model State"
-                ) {
-                    HStack(spacing: 5) {
-                        Circle()
-                            .fill(state.isDownloadingModel ? Color(hex: "f59e0b") : Color(hex: "10b981"))
-                            .frame(width: 5, height: 5)
-                        Text(state.isDownloadingModel ? "Downloading (\(Int(state.modelDownloadProgress * 100))%)" : state.modelState)
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(state.isDownloadingModel ? Color(hex: "f59e0b") : Color(hex: "10b981"))
-                    }
-                }
-
-                // Active Download Progress Bar (When Downloading)
-                if state.isDownloadingModel {
-                    VStack(alignment: .leading, spacing: 5) {
-                        HStack {
-                            Text(state.modelDownloadName.isEmpty ? "Downloading Weights" : state.modelDownloadName)
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundStyle(PopoverTheme.textPrimary)
-                            Spacer()
-                            Text("\(Int(state.modelDownloadProgress * 100))%")
-                                .font(.system(size: 10.5, weight: .bold, design: .monospaced))
-                                .foregroundStyle(PopoverTheme.cyan)
-                        }
-
-                        ProgressView(value: state.modelDownloadProgress)
-                            .progressViewStyle(.linear)
-                            .tint(PopoverTheme.cyan)
-
-                        Text(state.modelDownloadStatus.isEmpty ? "Fetching CoreML model from Hugging Face..." : state.modelDownloadStatus)
-                            .font(.system(size: 9))
-                            .foregroundStyle(PopoverTheme.textMuted)
-                            .lineLimit(1)
-                    }
-                    .padding(8)
-                    .background(Color(hex: "06b6d4").opacity(PopoverTheme.isDark ? 0.08 : 0.05))
-                    .cornerRadius(6)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 6)
-                            .stroke(Color(hex: "06b6d4").opacity(0.25), lineWidth: 1)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(
+                        state.isRecording
+                            ? PopoverTheme.coral.opacity(0.35)
+                            : PopoverTheme.cardBorder,
+                        lineWidth: 1
                     )
-                }
+            )
+        }
+        .buttonStyle(.plain)
+    }
 
-                // Backend Status Row
-                diagnosticRow(
-                    icon: "bolt.horizontal.fill",
-                    iconColor: Color(hex: "10b981"),
-                    title: "Backend"
-                ) {
-                    HStack(spacing: 4) {
-                        Circle()
-                            .fill(Color(hex: "10b981"))
-                            .frame(width: 5, height: 5)
-                        Text(state.backendStatus)
-                            .font(.system(size: 10, design: .monospaced))
-                            .foregroundStyle(PopoverTheme.isDark ? Color(hex: "6ee7b7") : Color(hex: "065f46"))
-                    }
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(Color(hex: "10b981").opacity(PopoverTheme.isDark ? 0.12 : 0.15))
-                    .cornerRadius(4)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 4)
-                            .stroke(Color(hex: "10b981").opacity(0.25), lineWidth: 1)
-                    )
-                }
-
-                // Output Target Row
-                diagnosticRow(
-                    icon: "arrow.right.to.line.compact",
-                    iconColor: Color(hex: "fbbf24"),
-                    title: "Output Target"
-                ) {
+    // MARK: - 4. Recent Flow Note (Editorial Transcript Preview)
+    private var recentTranscriptCard: some View {
+        Button {
+            state.onShowLastTranscript?()
+        } label: {
+            VStack(alignment: .leading, spacing: 5) {
+                HStack(alignment: .center) {
                     HStack(spacing: 5) {
-                        RoundedRectangle(cornerRadius: 2)
-                            .fill(Color(hex: "6366f1"))
-                            .frame(width: 6, height: 6)
+                        Image(systemName: "text.quote")
+                            .font(.system(size: 10.5))
+                            .foregroundStyle(PopoverTheme.cyan)
 
-                        Text(state.outputTarget)
-                            .font(.system(size: 10.5, weight: .medium))
-                            .foregroundStyle(PopoverTheme.textPrimary.opacity(0.90))
+                        Text("LAST DICTATION")
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .foregroundStyle(PopoverTheme.textSubtle)
+                            .tracking(0.6)
                     }
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(PopoverTheme.chipBg)
-                    .cornerRadius(4)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 4)
-                            .stroke(PopoverTheme.cardBorder, lineWidth: 1)
-                    )
-                }
 
-                // Microphone Input Device Selector Row
-                diagnosticRow(
-                    icon: "mic.fill",
-                    iconColor: Color(hex: "f43f5e"),
-                    title: "Microphone"
-                ) {
-                    Menu {
+                    Spacer()
+
+                    if !state.lastTranscript.isEmpty {
                         Button {
-                            state.onSelectMicrophone?("default")
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(state.lastTranscript, forType: .string)
+                            copiedTranscript = true
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                copiedTranscript = false
+                            }
+                        } label: {
+                            HStack(spacing: 3) {
+                                Image(systemName: copiedTranscript ? "checkmark" : "doc.on.doc")
+                                    .font(.system(size: 8.5))
+                                Text(copiedTranscript ? "Copied" : "Copy")
+                                    .font(.system(size: 9, weight: .medium))
+                            }
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 1.5)
+                            .background(PopoverTheme.chipBg)
+                            .foregroundStyle(copiedTranscript ? PopoverTheme.emerald : PopoverTheme.textMuted)
+                            .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+
+                let previewText = state.lastTranscript.isEmpty
+                    ? "Ready for your next thought. Press the hotkey in any app."
+                    : "“\(state.lastTranscript)”"
+
+                Text(previewText)
+                    .font(.system(size: 11, weight: state.lastTranscript.isEmpty ? .regular : .medium))
+                    .foregroundStyle(state.lastTranscript.isEmpty ? PopoverTheme.textMuted : PopoverTheme.textPrimary)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .multilineTextAlignment(.leading)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(PopoverTheme.cardBg)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(PopoverTheme.cardBorder, lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - 5. Hardware & Neural Engine Strip
+    private var hardwareInstrumentStrip: some View {
+        HStack(spacing: 8) {
+            // Microphone Selector Dropdown
+            Menu {
+                Button {
+                    state.onSelectMicrophone?("default")
+                } label: {
+                    HStack {
+                        Text("System Default")
+                        if state.selectedMicrophoneID == "default" {
+                            Image(systemName: "checkmark")
+                        }
+                    }
+                }
+
+                if !state.availableMicrophones.isEmpty {
+                    Divider()
+                    ForEach(state.availableMicrophones) { device in
+                        Button {
+                            state.onSelectMicrophone?(device.id)
                         } label: {
                             HStack {
-                                Text("System Default")
-                                if state.selectedMicrophoneID == "default" {
+                                Text(device.name)
+                                if state.selectedMicrophoneID == device.id {
                                     Image(systemName: "checkmark")
                                 }
                             }
                         }
-
-                        if !state.availableMicrophones.isEmpty {
-                            Divider()
-                            ForEach(state.availableMicrophones) { device in
-                                Button {
-                                    state.onSelectMicrophone?(device.id)
-                                } label: {
-                                    HStack {
-                                        Text(device.name)
-                                        if state.selectedMicrophoneID == device.id {
-                                            Image(systemName: "checkmark")
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    } label: {
-                        HStack(spacing: 4) {
-                            Text(state.currentMicrophoneName)
-                                .font(.system(size: 10.5, weight: .medium))
-                                .foregroundStyle(PopoverTheme.textPrimary.opacity(0.95))
-                                .lineLimit(1)
-                                .truncationMode(.tail)
-                                .frame(maxWidth: 165, alignment: .trailing)
-
-                            Image(systemName: "chevron.up.chevron.down")
-                                .font(.system(size: 8))
-                                .foregroundStyle(PopoverTheme.textSubtle)
-                        }
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2.5)
-                        .background(PopoverTheme.chipBg)
-                        .cornerRadius(4)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 4)
-                                .stroke(PopoverTheme.cardBorder, lineWidth: 1)
-                        )
                     }
-                    .menuStyle(.borderlessButton)
-                    .fixedSize()
                 }
+            } label: {
+                HStack(spacing: 5) {
+                    Image(systemName: "mic.fill")
+                        .font(.system(size: 10))
+                        .foregroundStyle(PopoverTheme.cyan)
 
-                // Application Capacity & Live Process Metrics (RAM & CPU)
-                VStack(spacing: 4) {
-                    HStack(spacing: 6) {
-                        HStack(spacing: 3.5) {
-                            Image(systemName: "memorychip")
-                                .font(.system(size: 9))
-                                .foregroundStyle(Color(hex: "0284c7"))
-                            Text(state.memoryUsage)
-                                .font(.system(size: 9.5, weight: .bold, design: .monospaced))
-                                .foregroundStyle(Color(hex: "0284c7"))
-                        }
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2.5)
-                        .background(Color(hex: "0284c7").opacity(0.12))
-                        .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                    Text(state.currentMicrophoneName)
+                        .font(.system(size: 10.5, weight: .medium))
+                        .foregroundStyle(PopoverTheme.textPrimary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .frame(maxWidth: 130, alignment: .leading)
 
-                        HStack(spacing: 3.5) {
-                            Image(systemName: "gauge.medium")
-                                .font(.system(size: 9))
-                                .foregroundStyle(Color(hex: "10b981"))
-                            Text(state.cpuUsage)
-                                .font(.system(size: 9.5, weight: .bold, design: .monospaced))
-                                .foregroundStyle(Color(hex: "10b981"))
-                        }
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2.5)
-                        .background(Color(hex: "10b981").opacity(0.12))
-                        .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.system(size: 7.5))
+                        .foregroundStyle(PopoverTheme.textSubtle)
+                }
+                .padding(.horizontal, 7)
+                .padding(.vertical, 4)
+                .background(PopoverTheme.chipBg)
+                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .stroke(PopoverTheme.cardBorder, lineWidth: 1)
+                )
+            }
+            .menuStyle(.borderlessButton)
+            .fixedSize()
 
+            Spacer()
+
+            // Engine & Neural Badge + Diagnostics Chevron
+            Button {
+                withAnimation(.spring(response: 0.25, dampingFraction: 0.8)) {
+                    showDiagnostics.toggle()
+                }
+            } label: {
+                HStack(spacing: 5) {
+                    Circle()
+                        .fill(PopoverTheme.emerald)
+                        .frame(width: 4.5, height: 4.5)
+
+                    Text("ANE · CoreML")
+                        .font(.system(size: 9.5, weight: .semibold, design: .monospaced))
+                        .foregroundStyle(PopoverTheme.textSecondary)
+
+                    Image(systemName: showDiagnostics ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 7.5, weight: .bold))
+                        .foregroundStyle(PopoverTheme.textSubtle)
+                }
+                .padding(.horizontal, 6)
+                .padding(.vertical, 3.5)
+                .background(PopoverTheme.chipBg)
+                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .stroke(PopoverTheme.cardBorder, lineWidth: 1)
+                )
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    // MARK: - 6. Diagnostics Drawer (Discreet Expandable Tray)
+    private var diagnosticsDrawer: some View {
+        VStack(spacing: 5) {
+            diagnosticMetricRow(title: "Engine Target", value: state.engineTitle, subvalue: state.engineBadge)
+            diagnosticMetricRow(title: "Model Status", value: state.modelState, subvalue: nil)
+            diagnosticMetricRow(title: "Pipeline Latency", value: state.backendStatus, subvalue: nil)
+            diagnosticMetricRow(title: "Process Footprint", value: "\(state.memoryUsage) · \(state.cpuUsage)", subvalue: state.modelFootprint)
+
+            if state.isDownloadingModel {
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack {
+                        Text(state.modelDownloadName.isEmpty ? "Downloading Weights" : state.modelDownloadName)
+                            .font(.system(size: 9.5, weight: .semibold))
+                            .foregroundStyle(PopoverTheme.textPrimary)
                         Spacer()
-
-                        Text(state.modelFootprint)
-                            .font(.system(size: 9, weight: .medium, design: .monospaced))
-                            .foregroundStyle(PopoverTheme.textMuted)
+                        Text("\(Int(state.modelDownloadProgress * 100))%")
+                            .font(.system(size: 9.5, weight: .bold, design: .monospaced))
+                            .foregroundStyle(PopoverTheme.cyan)
                     }
+
+                    ProgressView(value: state.modelDownloadProgress)
+                        .progressViewStyle(.linear)
+                        .tint(PopoverTheme.cyan)
                 }
                 .padding(.top, 2)
             }
         }
-        .padding(10)
+        .padding(8)
         .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(PopoverTheme.elevated.opacity(PopoverTheme.isDark ? 0.70 : 0.85))
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(PopoverTheme.cardBg)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .stroke(PopoverTheme.cardBorder, lineWidth: 1)
         )
     }
 
-    private func diagnosticRow<Content: View>(
+    private func diagnosticMetricRow(title: String, value: String, subvalue: String?) -> some View {
+        HStack {
+            Text(title)
+                .font(.system(size: 10))
+                .foregroundStyle(PopoverTheme.textMuted)
+
+            Spacer()
+
+            HStack(spacing: 4) {
+                Text(value)
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .foregroundStyle(PopoverTheme.textPrimary)
+
+                if let subvalue = subvalue {
+                    Text(subvalue)
+                        .font(.system(size: 8.5, weight: .medium, design: .monospaced))
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 1)
+                        .background(PopoverTheme.chipBg)
+                        .foregroundStyle(PopoverTheme.textMuted)
+                        .cornerRadius(3)
+                }
+            }
+        }
+    }
+
+    // MARK: - Service Management (Remote Server Only)
+    private var serviceControlsSection: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text("SERVER PIPELINE")
+                .font(.system(size: 8.5, weight: .bold, design: .monospaced))
+                .foregroundStyle(PopoverTheme.textSubtle)
+                .tracking(0.6)
+                .padding(.horizontal, 2)
+
+            HStack(spacing: 6) {
+                serviceBtn(title: "Start", icon: "play.fill", color: PopoverTheme.emerald) {
+                    state.onStartBackend?()
+                }
+                serviceBtn(title: "Stop", icon: "stop.fill", color: PopoverTheme.coral) {
+                    state.onStopBackend?()
+                }
+                serviceBtn(title: "Sync", icon: "arrow.clockwise", color: PopoverTheme.cyan) {
+                    state.onRefreshBackend?()
+                }
+            }
+        }
+    }
+
+    private func serviceBtn(title: String, icon: String, color: Color, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.system(size: 8.5))
+                    .foregroundStyle(color)
+                Text(title)
+                    .font(.system(size: 10.5, weight: .medium))
+                    .foregroundStyle(PopoverTheme.textPrimary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 3.5)
+            .background(PopoverTheme.chipBg)
+            .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - 7. Footer Actions List
+    private var footerActionsList: some View {
+        VStack(spacing: 2) {
+            Rectangle()
+                .fill(PopoverTheme.subtleDivider)
+                .frame(height: 1)
+                .padding(.vertical, 2)
+
+            // Theme Switcher Row
+            menuActionRow(
+                icon: themeManager.isDark ? "sun.max" : "moon.stars",
+                iconColor: PopoverTheme.textMuted,
+                title: themeManager.isDark ? "Light Paper Theme" : "Dark Obsidian Theme",
+                shortcut: nil,
+                badge: themeManager.theme.displayName
+            ) {
+                themeManager.toggleTheme()
+            }
+
+            // Speech Reader Row
+            menuActionRow(
+                icon: "waveform.badge.magnifyingglass",
+                iconColor: PopoverTheme.textMuted,
+                title: "Speech Reader (TTS)",
+                shortcut: nil,
+                badge: nil
+            ) {
+                ReaderPanelController.shared.show()
+            }
+
+            // Settings Row
+            menuActionRow(
+                icon: "slider.horizontal.3",
+                iconColor: PopoverTheme.textMuted,
+                title: "Settings...",
+                shortcut: "⌘,",
+                badge: nil
+            ) {
+                state.onOpenSettings?()
+            }
+
+            // Quit Row
+            menuActionRow(
+                icon: "power",
+                iconColor: PopoverTheme.coral.opacity(0.85),
+                title: "Quit Openflow",
+                shortcut: "⌘Q",
+                badge: nil,
+                isDestructive: true
+            ) {
+                state.onQuit?()
+            }
+        }
+    }
+
+    private func menuActionRow(
         icon: String,
         iconColor: Color,
         title: String,
-        @ViewBuilder trailing: () -> Content
+        shortcut: String?,
+        badge: String?,
+        isDestructive: Bool = false,
+        action: @escaping () -> Void
     ) -> some View {
-        HStack {
-            HStack(spacing: 6) {
+        Button(action: action) {
+            HStack(spacing: 8) {
                 Image(systemName: icon)
                     .font(.system(size: 11))
                     .foregroundStyle(iconColor)
                     .frame(width: 14)
 
                 Text(title)
-                    .font(.system(size: 11))
-                    .foregroundStyle(PopoverTheme.textMuted)
-            }
-
-            Spacer()
-
-            trailing()
-        }
-    }
-
-    // MARK: - Section 3: Service Management (Remote Server Only)
-    private var serviceControlsSection: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("DAEMON & PIPELINE CONTROL")
-                .font(.system(size: 9.5, weight: .bold))
-                .foregroundStyle(PopoverTheme.textSubtle)
-                .tracking(0.6)
-                .padding(.horizontal, 4)
-                .padding(.top, 2)
-
-            serviceButton(title: "Start Backend", icon: "play.fill", color: Color(hex: "34d399")) {
-                state.onStartBackend?()
-            }
-
-            serviceButton(title: "Stop Backend", icon: "stop.fill", color: Color(hex: "f87171")) {
-                state.onStopBackend?()
-            }
-
-            serviceButton(title: "Retry Startup", icon: "arrow.clockwise", color: Color(hex: "fbbf24")) {
-                state.onRetryBackend?()
-            }
-
-            serviceButton(title: "Refresh Backend Status", icon: "bolt.fill", color: Color(hex: "38bdf8"), badge: "Sync now") {
-                state.onRefreshBackend?()
-            }
-        }
-    }
-
-    private func serviceButton(title: String, icon: String, color: Color, badge: String? = nil, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack {
-                HStack(spacing: 8) {
-                    Image(systemName: icon)
-                        .font(.system(size: 11))
-                        .foregroundStyle(color)
-
-                    Text(title)
-                        .font(.system(size: 12))
-                        .foregroundStyle(PopoverTheme.textPrimary.opacity(0.85))
-                }
+                    .font(.system(size: 11.5, weight: .regular))
+                    .foregroundStyle(isDestructive ? PopoverTheme.coral : PopoverTheme.textSecondary)
 
                 Spacer()
 
                 if let badge = badge {
                     Text(badge)
-                        .font(.system(size: 9.5, design: .monospaced))
-                        .foregroundStyle(color)
+                        .font(.system(size: 9.5, weight: .medium))
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 1)
+                        .background(PopoverTheme.chipBg)
+                        .foregroundStyle(PopoverTheme.textMuted)
+                        .cornerRadius(3)
+                }
+
+                if let shortcut = shortcut {
+                    Text(shortcut)
+                        .font(.system(size: 10, weight: .medium, design: .monospaced))
+                        .foregroundStyle(PopoverTheme.textSubtle)
                 }
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 5)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 4.5)
             .background(Color.clear)
-            .cornerRadius(6)
+            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
         }
         .buttonStyle(.plain)
     }
 
-    // MARK: - Section 4: Settings & Quit
-    private var footerActionsSection: some View {
-        VStack(spacing: 2) {
-            Divider().background(PopoverTheme.cardBorder).padding(.vertical, 2)
-
-            // Quick Theme Switcher Button
-            Button {
-                themeManager.toggleTheme()
-            } label: {
-                HStack {
-                    HStack(spacing: 8) {
-                        Image(systemName: themeManager.isDark ? "sun.max.fill" : "moon.stars.fill")
-                            .font(.system(size: 12))
-                            .foregroundStyle(themeManager.isDark ? Color(hex: "fbbf24") : Color(hex: "6366f1"))
-
-                        Text(themeManager.isDark ? "Light Theme (White)" : "Dark Theme")
-                            .font(.system(size: 12.5, weight: .medium))
-                            .foregroundStyle(PopoverTheme.textPrimary.opacity(0.90))
-                    }
-
-                    Spacer()
-
-                    Text(themeManager.theme.displayName)
-                        .font(.system(size: 10, weight: .semibold))
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 1.5)
-                        .background(PopoverTheme.chipBg)
-                        .foregroundStyle(PopoverTheme.textMuted)
-                        .cornerRadius(4)
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 5)
-                .background(Color.clear)
-                .cornerRadius(6)
-            }
-            .buttonStyle(.plain)
-
-            // Speech Reader (Text-to-Speech)
-            Button {
-                ReaderPanelController.shared.show()
-            } label: {
-                HStack {
-                    HStack(spacing: 8) {
-                        Image(systemName: "book.fill")
-                            .font(.system(size: 12))
-                            .foregroundStyle(Color(hex: "38bdf8"))
-
-                        Text("Speech Reader (Read Aloud)")
-                            .font(.system(size: 12.5, weight: .medium))
-                            .foregroundStyle(PopoverTheme.textPrimary.opacity(0.90))
-                    }
-
-                    Spacer()
-
-                    Text("TTS")
-                        .font(.system(size: 9.5, weight: .bold))
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 1)
-                        .background(Color(hex: "0284c7").opacity(0.2))
-                        .foregroundStyle(Color(hex: "38bdf8"))
-                        .cornerRadius(3)
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 5)
-                .background(Color.clear)
-                .cornerRadius(6)
-            }
-            .buttonStyle(.plain)
-
-            // Settings...
-            Button {
-                state.onOpenSettings?()
-            } label: {
-                HStack {
-                    HStack(spacing: 8) {
-                        Image(systemName: "gearshape")
-                            .font(.system(size: 12))
-                            .foregroundStyle(PopoverTheme.textMuted)
-
-                        Text("Settings...")
-                            .font(.system(size: 12.5, weight: .medium))
-                            .foregroundStyle(PopoverTheme.textPrimary.opacity(0.90))
-                    }
-
-                    Spacer()
-
-                    HStack(spacing: 2) {
-                        keycapLabel("⌘")
-                        keycapLabel(",")
-                    }
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 5)
-                .background(Color.clear)
-                .cornerRadius(6)
-            }
-            .buttonStyle(.plain)
-
-            // Check for Updates...
-            Button {
-                UpdateManager.shared.checkForUpdates()
-            } label: {
-                HStack {
-                    HStack(spacing: 8) {
-                        Image(systemName: "arrow.triangle.2.circlepath")
-                            .font(.system(size: 12))
-                            .foregroundStyle(PopoverTheme.textMuted)
-
-                        Text("Check for Updates...")
-                            .font(.system(size: 12.5, weight: .medium))
-                            .foregroundStyle(PopoverTheme.textPrimary.opacity(0.90))
-                    }
-
-                    Spacer()
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 5)
-                .background(Color.clear)
-                .cornerRadius(6)
-            }
-            .buttonStyle(.plain)
-
-            // Quit Openflow
-            Button {
-                state.onQuit?()
-            } label: {
-                HStack {
-                    HStack(spacing: 8) {
-                        Image(systemName: "power")
-                            .font(.system(size: 12))
-                            .foregroundStyle(Color(hex: "f87171"))
-
-                        Text("Quit Openflow")
-                            .font(.system(size: 12.5, weight: .medium))
-                            .foregroundStyle(PopoverTheme.textPrimary.opacity(0.80))
-                    }
-
-                    Spacer()
-
-                    HStack(spacing: 2) {
-                        keycapLabel("⌘")
-                        keycapLabel("Q")
-                    }
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 5)
-                .background(Color.clear)
-                .cornerRadius(6)
-            }
-            .buttonStyle(.plain)
-        }
-    }
-
-    // MARK: - Bottom Notch Bar
-    private var bottomNotchBar: some View {
+    // MARK: - 8. Bottom Whisper Status Bar
+    private var bottomBar: some View {
         HStack {
             HStack(spacing: 3) {
                 Text("Press")
-                    .font(.system(size: 10))
+                    .font(.system(size: 9.5))
                     .foregroundStyle(PopoverTheme.textSubtle)
 
                 Text("Esc")
-                    .font(.system(size: 9.5, weight: .semibold, design: .monospaced))
+                    .font(.system(size: 9, weight: .semibold, design: .monospaced))
                     .padding(.horizontal, 4)
                     .padding(.vertical, 1)
                     .background(PopoverTheme.chipBg)
-                    .foregroundStyle(PopoverTheme.textPrimary.opacity(0.85))
+                    .foregroundStyle(PopoverTheme.textMuted)
                     .cornerRadius(3)
 
                 Text("to close")
-                    .font(.system(size: 10))
+                    .font(.system(size: 9.5))
                     .foregroundStyle(PopoverTheme.textSubtle)
             }
 
@@ -990,49 +834,48 @@ public struct MenuBarPopoverView: View {
 
             HStack(spacing: 4) {
                 Circle()
-                    .fill(Color(hex: "10b981"))
-                    .frame(width: 5, height: 5)
+                    .fill(PopoverTheme.emerald)
+                    .frame(width: 4.5, height: 4.5)
 
                 Text("Apple Silicon Neural Engine Active")
-                    .font(.system(size: 10))
+                    .font(.system(size: 9.5))
                     .foregroundStyle(PopoverTheme.textSubtle)
             }
         }
         .padding(.horizontal, 14)
-        .padding(.vertical, 8)
-        .background(PopoverTheme.bottomBarBg)
+        .padding(.vertical, 7)
+        .background(
+            PopoverTheme.isDark ? Color.black.opacity(0.25) : Color(hex: "f8fafc")
+        )
         .overlay(
             VStack {
-                Rectangle().fill(PopoverTheme.cardBorder).frame(height: 1)
+                Rectangle().fill(PopoverTheme.subtleDivider).frame(height: 1)
                 Spacer()
             }
         )
     }
 
-    // MARK: - Helper Views & Animation
-    private func keycapsView(for text: String) -> some View {
+    // MARK: - Mechanical Keycap View
+    private func keycapsBadge(for text: String) -> some View {
         let parts = text.split(separator: "+").map { String($0).trimmingCharacters(in: .whitespaces) }
-        return HStack(spacing: 2) {
+        return HStack(spacing: 3) {
             ForEach(parts, id: \.self) { part in
-                keycapLabel(keycapSymbol(for: part))
+                Text(keycapSymbol(for: part))
+                    .font(.system(size: 9.5, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(PopoverTheme.textPrimary)
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 2.5)
+                    .background(
+                        RoundedRectangle(cornerRadius: 4, style: .continuous)
+                            .fill(PopoverTheme.chipBg)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 4, style: .continuous)
+                            .stroke(PopoverTheme.cardBorder, lineWidth: 1)
+                    )
+                    .shadow(color: Color.black.opacity(PopoverTheme.isDark ? 0.2 : 0.04), radius: 1, x: 0, y: 1)
             }
         }
-    }
-
-    private func keycapLabel(_ text: String) -> some View {
-        Text(text)
-            .font(.system(size: 10, weight: .semibold, design: .monospaced))
-            .foregroundStyle(PopoverTheme.textPrimary.opacity(0.90))
-            .padding(.horizontal, 5)
-            .padding(.vertical, 2)
-            .background(
-                RoundedRectangle(cornerRadius: 4, style: .continuous)
-                    .fill(PopoverTheme.chipBg)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 4, style: .continuous)
-                    .stroke(PopoverTheme.borderLight, lineWidth: 1)
-            )
     }
 
     private func keycapSymbol(for token: String) -> String {
