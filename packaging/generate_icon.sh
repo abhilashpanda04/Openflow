@@ -46,13 +46,14 @@ func saveIcon(size: Int, name: String) throws {
     context.setFillColor(CGColor(red: 0, green: 0, blue: 0, alpha: 0))
     context.fill(rect)
 
-    let inset = CGFloat(size) * 0.08
-    let baseRect = rect.insetBy(dx: inset, dy: inset)
-    let radius = CGFloat(size) * 0.23
+    let s = CGFloat(size) / 512.0
+    let baseRect = CGRect(x: 32.0 * s, y: 32.0 * s, width: 448.0 * s, height: 448.0 * s)
+    let radius = 104.0 * s
 
+    // 1. Official Openflow Gradient: #0A2540 to #0E7490
     let gradientColors = [
-        CGColor(red: 0.07, green: 0.20, blue: 0.42, alpha: 1.0),
-        CGColor(red: 0.04, green: 0.12, blue: 0.26, alpha: 1.0),
+        CGColor(red: 10.0 / 255.0, green: 37.0 / 255.0, blue: 64.0 / 255.0, alpha: 1.0),
+        CGColor(red: 14.0 / 255.0, green: 116.0 / 255.0, blue: 144.0 / 255.0, alpha: 1.0),
     ] as CFArray
     let gradientLocations: [CGFloat] = [0, 1]
     guard let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: gradientLocations) else {
@@ -65,36 +66,70 @@ func saveIcon(size: Int, name: String) throws {
     context.clip()
     context.drawLinearGradient(
         gradient,
-        start: CGPoint(x: baseRect.midX, y: baseRect.maxY),
-        end: CGPoint(x: baseRect.midX, y: baseRect.minY),
+        start: CGPoint(x: 64.0 * s, y: 448.0 * s),
+        end: CGPoint(x: 448.0 * s, y: 64.0 * s),
+        options: []
+    )
+
+    // 2. Ambient Circular Halo
+    context.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 0.08))
+    context.fillEllipse(in: CGRect(x: (256.0 - 148.0) * s, y: (256.0 - 148.0) * s, width: 296.0 * s, height: 296.0 * s))
+    context.restoreGState()
+
+    // 3. Subtle Squircle Edge Highlight
+    context.addPath(basePath)
+    context.setStrokeColor(CGColor(red: 1, green: 1, blue: 1, alpha: 0.14))
+    context.setLineWidth(max(0.5, 1.5 * s))
+    context.strokePath()
+
+    // 4. Flowing Audio Sine Wave Path (Exact logo.svg vector)
+    let waveColors = [
+        CGColor(red: 248.0 / 255.0, green: 250.0 / 255.0, blue: 252.0 / 255.0, alpha: 1.0), // #F8FAFC
+        CGColor(red: 186.0 / 255.0, green: 230.0 / 255.0, blue: 253.0 / 255.0, alpha: 1.0), // #BAE6FD
+    ] as CFArray
+    guard let waveGrad = CGGradient(colorsSpace: colorSpace, colors: waveColors, locations: gradientLocations) else {
+        throw NSError(domain: "OpenflowIcon", code: 2)
+    }
+
+    let wavePath = CGMutablePath()
+    wavePath.move(to: CGPoint(x: 108.0 * s, y: 256.0 * s))
+    wavePath.addCurve(
+        to: CGPoint(x: 204.0 * s, y: 184.0 * s),
+        control1: CGPoint(x: 140.0 * s, y: 208.0 * s),
+        control2: CGPoint(x: 172.0 * s, y: 184.0 * s)
+    )
+    wavePath.addCurve(
+        to: CGPoint(x: 284.0 * s, y: 328.0 * s),
+        control1: CGPoint(x: 236.0 * s, y: 184.0 * s),
+        control2: CGPoint(x: 252.0 * s, y: 328.0 * s)
+    )
+    wavePath.addCurve(
+        to: CGPoint(x: 404.0 * s, y: 152.0 * s),
+        control1: CGPoint(x: 316.0 * s, y: 328.0 * s),
+        control2: CGPoint(x: 348.0 * s, y: 208.0 * s)
+    )
+
+    context.saveGState()
+    context.addPath(wavePath)
+    context.setLineWidth(max(1.5, 24.0 * s))
+    context.setLineCap(.round)
+    context.setLineJoin(.round)
+    context.replacePathWithStrokedPath()
+    context.clip()
+    context.drawLinearGradient(
+        waveGrad,
+        start: CGPoint(x: 108.0 * s, y: 256.0 * s),
+        end: CGPoint(x: 404.0 * s, y: 256.0 * s),
         options: []
     )
     context.restoreGState()
 
-    context.addPath(basePath)
-    context.setStrokeColor(CGColor(red: 1, green: 1, blue: 1, alpha: 0.18))
-    context.setLineWidth(max(1.0, CGFloat(size) * 0.015))
-    context.strokePath()
+    // 5. Sound Node Particles (cx=156, cx=356 from logo.svg)
+    context.setFillColor(CGColor(red: 248.0 / 255.0, green: 250.0 / 255.0, blue: 252.0 / 255.0, alpha: 1.0))
+    context.fillEllipse(in: CGRect(x: (156.0 - 16.0) * s, y: (256.0 - 16.0) * s, width: 32.0 * s, height: 32.0 * s))
 
-    let left = baseRect.minX + baseRect.width * 0.17
-    let right = baseRect.maxX - baseRect.width * 0.17
-    let centerY = baseRect.midY
-    let amp = baseRect.height * 0.20
-    let segments = 6
-
-    context.beginPath()
-    context.move(to: CGPoint(x: left, y: centerY))
-    for step in 1...segments {
-        let t = CGFloat(step) / CGFloat(segments)
-        let x = left + (right - left) * t
-        let y = centerY + sin(t * .pi * 2.0) * amp * 0.75
-        context.addLine(to: CGPoint(x: x, y: y))
-    }
-    context.setLineWidth(max(2.0, CGFloat(size) * 0.075))
-    context.setLineCap(.round)
-    context.setLineJoin(.round)
-    context.setStrokeColor(CGColor(red: 1, green: 1, blue: 1, alpha: 0.95))
-    context.strokePath()
+    context.setFillColor(CGColor(red: 224.0 / 255.0, green: 242.0 / 255.0, blue: 254.0 / 255.0, alpha: 1.0))
+    context.fillEllipse(in: CGRect(x: (356.0 - 16.0) * s, y: (208.0 - 16.0) * s, width: 32.0 * s, height: 32.0 * s))
 
     guard let image = context.makeImage() else {
         throw NSError(domain: "OpenflowIcon", code: 3)

@@ -297,33 +297,27 @@
       color: var(--text-ink);
     }
 
+    .brand-logo-mark,
     .brand-wave {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      color: var(--accent);
       flex-shrink: 0;
-      transition: transform 0.25s ease, filter 0.25s ease;
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), filter 0.25s ease;
+      filter: drop-shadow(0 2px 6px rgba(10, 37, 64, 0.3));
     }
 
+    .brand-logo-mark svg,
     .brand-wave svg {
       display: block;
     }
 
+    .brand-group:hover .brand-logo-mark,
     .brand-group:hover .brand-wave,
+    .footer-brand:hover .brand-logo-mark,
     .footer-brand:hover .brand-wave {
-      transform: scale(1.12);
-      filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.7));
-    }
-
-    /* Dynamic SVG stop colors for header and footer sinewave */
-    #headerSineGrad stop:first-child, #headerSineGrad stop:last-child,
-    #footerSineGrad stop:first-child, #footerSineGrad stop:last-child {
-      stop-color: var(--wave-stop-1);
-    }
-    #headerSineGrad stop:nth-child(2),
-    #footerSineGrad stop:nth-child(2) {
-      stop-color: var(--wave-stop-2);
+      transform: translateY(-1px) scale(1.06);
+      filter: drop-shadow(0 4px 14px rgba(14, 116, 144, 0.5));
     }
 
     .brand-text-block {
@@ -1255,16 +1249,23 @@
   <header class="site-header">
     <div class="container header-row">
       <a href="#" class="brand-group" aria-label="Openflow Home">
-        <span class="brand-wave" aria-hidden="true">
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <span class="brand-logo-mark" aria-hidden="true">
+          <svg width="30" height="30" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="headerSineGrad" x1="2" y1="14" x2="26" y2="14" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stop-color="#38bdf8"/>
-                <stop offset="50%" stop-color="#bae6fd"/>
-                <stop offset="100%" stop-color="#38bdf8"/>
+              <linearGradient id="headerLogoBg" x1="64" y1="64" x2="448" y2="448" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#0A2540"/>
+                <stop offset="1" stop-color="#0E7490"/>
+              </linearGradient>
+              <linearGradient id="headerLogoWave" x1="108" y1="256" x2="404" y2="256" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#F8FAFC"/>
+                <stop offset="1" stop-color="#BAE6FD"/>
               </linearGradient>
             </defs>
-            <path d="M 2 14 C 4.19 7, 5.81 7, 8 14 C 10.19 21, 11.81 21, 14 14 C 16.19 7, 17.81 7, 20 14 C 22.19 21, 23.81 21, 26 14" stroke="url(#headerSineGrad)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="32" y="32" width="448" height="448" rx="104" fill="url(#headerLogoBg)"/>
+            <circle cx="256" cy="256" r="148" fill="#FFFFFF" fill-opacity="0.08"/>
+            <path d="M108 256C140 208 172 184 204 184C236 184 252 328 284 328C316 328 348 208 404 152" stroke="url(#headerLogoWave)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="156" cy="256" r="16" fill="#F8FAFC"/>
+            <circle cx="356" cy="208" r="16" fill="#E0F2FE"/>
           </svg>
         </span>
         <div class="brand-text-block">
@@ -1736,16 +1737,23 @@
   <footer class="study-footer">
     <div class="container footer-flex">
       <div class="footer-brand">
-        <span class="brand-wave" aria-hidden="true">
-          <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <span class="brand-logo-mark" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="footerSineGrad" x1="2" y1="14" x2="26" y2="14" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stop-color="#38bdf8"/>
-                <stop offset="50%" stop-color="#bae6fd"/>
-                <stop offset="100%" stop-color="#38bdf8"/>
+              <linearGradient id="footerLogoBg" x1="64" y1="64" x2="448" y2="448" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#0A2540"/>
+                <stop offset="1" stop-color="#0E7490"/>
+              </linearGradient>
+              <linearGradient id="footerLogoWave" x1="108" y1="256" x2="404" y2="256" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#F8FAFC"/>
+                <stop offset="1" stop-color="#BAE6FD"/>
               </linearGradient>
             </defs>
-            <path d="M 2 14 C 4.19 7, 5.81 7, 8 14 C 10.19 21, 11.81 21, 14 14 C 16.19 7, 17.81 7, 20 14 C 22.19 21, 23.81 21, 26 14" stroke="url(#footerSineGrad)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="32" y="32" width="448" height="448" rx="104" fill="url(#footerLogoBg)"/>
+            <circle cx="256" cy="256" r="148" fill="#FFFFFF" fill-opacity="0.08"/>
+            <path d="M108 256C140 208 172 184 204 184C236 184 252 328 284 328C316 328 348 208 404 152" stroke="url(#footerLogoWave)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="156" cy="256" r="16" fill="#F8FAFC"/>
+            <circle cx="356" cy="208" r="16" fill="#E0F2FE"/>
           </svg>
         </span>
         <span style="font-weight:600; font-size:1.05rem;">openflow</span>
