@@ -1080,6 +1080,133 @@
 
     @keyframes blinkCursor { 50% { opacity: 0; } }
 
+    /* Video Showcase Frame */
+    .video-showcase-wrapper {
+      position: relative;
+      width: 100%;
+      background: #000;
+      border-radius: 0 0 20px 20px;
+      overflow: hidden;
+    }
+
+    .video-player-frame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #050508;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .video-player-frame video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      background: #000;
+    }
+
+    .video-overlay-controls {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.90) 0%, rgba(0, 0, 0, 0.4) 65%, transparent 100%);
+      opacity: 0;
+      transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 10;
+    }
+
+    .video-player-frame:hover .video-overlay-controls,
+    .video-overlay-controls:focus-within {
+      opacity: 1;
+    }
+
+    .video-control-btn {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 50%;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .video-control-btn:hover {
+      background: rgba(255, 255, 255, 0.35);
+      transform: scale(1.08);
+      color: var(--accent);
+    }
+
+    .video-timeline-container {
+      flex: 1;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.25);
+      border-radius: 999px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: height 0.15s ease;
+    }
+
+    .video-timeline-container:hover {
+      height: 9px;
+    }
+
+    .video-timeline-progress {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #38bdf8, #0ea5e9);
+      border-radius: 999px;
+      transition: width 0.08s linear;
+    }
+
+    .video-time-tag {
+      font-family: var(--font-geist-mono);
+      font-size: 0.76rem;
+      color: rgba(255, 255, 255, 0.9);
+      font-weight: 500;
+      min-width: 75px;
+      text-align: right;
+      letter-spacing: 0.02em;
+    }
+
+    .btn-ghost-demo {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 999px;
+      background: var(--card-bg);
+      border: 1px solid var(--line-card);
+      color: var(--text-ink);
+      font-family: var(--font-geist-sans);
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .btn-ghost-demo:hover {
+      background: var(--card-hover);
+      border-color: var(--accent);
+      color: var(--accent);
+      transform: translateY(-1px);
+    }
+
     .window-footer-strip {
       display: flex;
       align-items: center;
@@ -1332,6 +1459,11 @@
           <a href="https://github.com/abhilashpanda04/Openflow/releases/latest" class="btn-solid-primary">
             <span>Download for Apple Silicon</span>
             <span aria-hidden="true">↓</span>
+          </a>
+
+          <a href="#studio" class="btn-ghost-demo" onclick="switchToVideoTab()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            <span>Watch Demo (0:57)</span>
           </a>
 
           <div class="terminal-inline-bar">
@@ -1587,10 +1719,10 @@
       <div class="container">
         
         <div class="section-editorial-header">
-          <div class="section-kicker-cyan">Interactive Studio</div>
+          <div class="section-kicker-cyan">Live Demo &amp; Studio</div>
           <h2 class="section-display-h2">See Openflow live in action.</h2>
           <p class="section-lead-muted">
-            Test how voice streaming feels across different Mac apps. Switch environments below or click the microphone to simulate real-time text injection.
+            Watch real-time voice dictation streaming on Apple Silicon without cloud latency. Switch between the 4K desktop recording and the interactive simulator below.
           </p>
         </div>
 
@@ -1603,9 +1735,10 @@
             </div>
 
             <div class="window-tabs-selector">
-              <button class="win-tab-btn active" onclick="switchStudioWorkspace(0)">Xcode (Swift)</button>
-              <button class="win-tab-btn" onclick="switchStudioWorkspace(1)">Cursor (TypeScript)</button>
-              <button class="win-tab-btn" onclick="switchStudioWorkspace(2)">Slack &amp; Notion</button>
+              <button class="win-tab-btn active" onclick="switchStudioMode('video')">▶ Product Demo (4K)</button>
+              <button class="win-tab-btn" onclick="switchStudioMode('xcode')">Xcode Simulator</button>
+              <button class="win-tab-btn" onclick="switchStudioMode('cursor')">Cursor Simulator</button>
+              <button class="win-tab-btn" onclick="switchStudioMode('slack')">Slack Simulator</button>
             </div>
 
             <div style="font-family:var(--font-geist-mono); font-size:0.76rem; color:var(--text-muted);">
@@ -1613,7 +1746,44 @@
             </div>
           </div>
 
-          <div class="window-body-canvas">
+          <!-- Video Showcase Frame -->
+          <div class="video-showcase-wrapper" id="studio-video-box">
+            <div class="video-player-frame">
+              <video
+                id="openflow-showcase-video"
+                src="assets/Openflow.mp4"
+                poster="assets/Openflow-poster.jpg"
+                autoplay
+                loop
+                muted
+                playsinline
+                preload="metadata"
+              ></video>
+              
+              <div class="video-overlay-controls">
+                <button class="video-control-btn" id="video-play-toggle" onclick="toggleMainVideo()" title="Play / Pause" aria-label="Play or Pause Video">
+                  <svg id="video-play-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                  </svg>
+                </button>
+
+                <div class="video-timeline-container" onclick="seekMainVideo(event)" title="Seek playback">
+                  <div class="video-timeline-progress" id="video-progress-bar"></div>
+                </div>
+
+                <div class="video-time-tag" id="video-time-display">0:00 / 0:57</div>
+
+                <button class="video-control-btn" onclick="toggleVideoFullscreen()" title="Fullscreen" aria-label="Toggle Fullscreen">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive Simulator Frame -->
+          <div class="window-body-canvas" id="studio-simulator-box" style="display: none;">
             <div class="hud-bar-inline">
               <div class="hud-controls-left">
                 <button class="mic-record-btn" onclick="simulateVoiceStreaming()" title="Click to test voice input">
@@ -1804,7 +1974,7 @@
       } catch (e) {}
     }
 
-    // 3. Studio Workspace Switcher
+    // 3. Studio Workspace & Video Mode Switcher
     const studioPresets = [
       {
         name: "Xcode",
@@ -1820,12 +1990,96 @@
       }
     ];
 
-    function switchStudioWorkspace(idx) {
-      document.querySelectorAll('.win-tab-btn').forEach((btn, i) => {
-        btn.classList.toggle('active', i === idx);
-      });
+    function switchStudioMode(mode) {
+      const videoBox = document.getElementById('studio-video-box');
+      const simBox = document.getElementById('studio-simulator-box');
+      const vid = document.getElementById('openflow-showcase-video');
+      const btns = document.querySelectorAll('.win-tab-btn');
       playClickChime();
-      document.getElementById('studio-editor-box').innerHTML = studioPresets[idx].html;
+
+      if (mode === 'video') {
+        btns.forEach((b, i) => b.classList.toggle('active', i === 0));
+        if (videoBox) videoBox.style.display = 'block';
+        if (simBox) simBox.style.display = 'none';
+        if (vid && vid.paused) vid.play().catch(() => {});
+      } else {
+        const simIdx = mode === 'xcode' ? 1 : (mode === 'cursor' ? 2 : 3);
+        btns.forEach((b, i) => b.classList.toggle('active', i === simIdx));
+        if (videoBox) {
+          videoBox.style.display = 'none';
+          if (vid && !vid.paused) vid.pause();
+        }
+        if (simBox) simBox.style.display = 'block';
+        const presetIdx = mode === 'xcode' ? 0 : (mode === 'cursor' ? 1 : 2);
+        document.getElementById('studio-editor-box').innerHTML = studioPresets[presetIdx].html;
+      }
+    }
+
+    function switchToVideoTab() {
+      switchStudioMode('video');
+      const studioSec = document.getElementById('studio');
+      if (studioSec) {
+        studioSec.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    // Video Player Custom Controls
+    const mainVideo = document.getElementById('openflow-showcase-video');
+    const playIcon = document.getElementById('video-play-icon');
+    const progressBar = document.getElementById('video-progress-bar');
+    const timeDisplay = document.getElementById('video-time-display');
+
+    function toggleMainVideo() {
+      if (!mainVideo) return;
+      if (mainVideo.paused) {
+        mainVideo.play().catch(() => {});
+        updatePlayIcon(true);
+      } else {
+        mainVideo.pause();
+        updatePlayIcon(false);
+      }
+    }
+
+    function updatePlayIcon(isPlaying) {
+      if (!playIcon) return;
+      if (isPlaying) {
+        playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+      } else {
+        playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+      }
+    }
+
+    if (mainVideo) {
+      mainVideo.addEventListener('timeupdate', () => {
+        if (!mainVideo.duration) return;
+        const pct = (mainVideo.currentTime / mainVideo.duration) * 100;
+        if (progressBar) progressBar.style.width = pct + '%';
+        if (timeDisplay) {
+          const curM = Math.floor(mainVideo.currentTime / 60);
+          const curS = Math.floor(mainVideo.currentTime % 60).toString().padStart(2, '0');
+          const durM = Math.floor(mainVideo.duration / 60);
+          const durS = Math.floor(mainVideo.duration % 60).toString().padStart(2, '0');
+          timeDisplay.textContent = `${curM}:${curS} / ${durM}:${durS}`;
+        }
+      });
+      mainVideo.addEventListener('play', () => updatePlayIcon(true));
+      mainVideo.addEventListener('pause', () => updatePlayIcon(false));
+    }
+
+    function seekMainVideo(e) {
+      if (!mainVideo || !mainVideo.duration) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      mainVideo.currentTime = pos * mainVideo.duration;
+    }
+
+    function toggleVideoFullscreen() {
+      if (!mainVideo) return;
+      if (mainVideo.requestFullscreen) {
+        mainVideo.requestFullscreen();
+      } else if (mainVideo.webkitRequestFullscreen) {
+        mainVideo.webkitRequestFullscreen();
+      }
     }
 
     // 4. Model Weights Switcher
